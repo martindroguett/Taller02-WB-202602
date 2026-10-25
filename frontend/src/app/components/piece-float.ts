@@ -23,9 +23,9 @@ import { PieceArt } from './piece-art';
         <vt-catalog-tag class="ficha" [categoria]="pieza().categoria" [numero]="pieza().numero" />
       </div>
       <h3 class="title">{{ pieza().nombre }}</h3>
-      <a class="dueno" [routerLink]="['/perfil', dueno().usuario]">
-        <vt-avatar [nombre]="dueno().nombre" [tam]="32" />
-        <span class="caption">&#64;{{ dueno().usuario }}</span>
+      <a class="dueno" [routerLink]="['/perfil', dueno().username]">
+        <vt-avatar [nombre]="dueno().username" [tam]="32" />
+        <span class="caption">&#64;{{ dueno().username }}</span>
       </a>
       <div class="fila">
         <vt-like-button [pieza]="pieza()" />

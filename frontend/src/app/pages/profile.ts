@@ -36,7 +36,7 @@ import { Pieza } from '../models/vitrina';
         @if (esMio()) {
           <vt-tabs [opciones]="opciones" etiqueta="Tu perfil" [(valor)]="pestana" />
         } @else {
-          <h2 class="title">Colección de &#64;{{ u.usuario }}</h2>
+          <h2 class="title">Colección de &#64;{{ u.username }}</h2>
         }
 
         @if (lista().length) {

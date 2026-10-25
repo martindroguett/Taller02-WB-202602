@@ -10,9 +10,9 @@ import { Avatar } from './avatar';
   imports: [Avatar, RouterLink],
   template: `
     <a [routerLink]="['/pieza', pieza().id]">
-      <vt-avatar [nombre]="usuario().nombre" [tam]="44" />
+      <vt-avatar [nombre]="usuario().username" [tam]="44" />
       <span class="txt">
-        <span class="body-strong">{{ usuario().nombre }}</span>
+        <span class="body-strong">{{ usuario().username }}</span>
         <span class="body"> agregó {{ pieza().nombre }}</span>
         <span class="caption vt-muted">{{ cuando() }}</span>
       </span>

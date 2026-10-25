@@ -6,40 +6,35 @@ import { ToastService } from './toast.service';
 const USUARIOS: Usuario[] = [
   {
     id: 1,
-    nombre: 'Tomás Araya',
-    usuario: 'tomas_retro',
+    username: 'tomas_retro',
     bio: 'Cartuchos, vinilos de primera prensa y mucho polvo. Santiago.',
     seguidores: 1284,
     siguiendo: 48,
   },
   {
     id: 2,
-    nombre: 'Rocío Fuentes',
-    usuario: 'rocio_cartas',
+    username: 'rocio_cartas',
     bio: 'Cartas desde 1999. Cambio repetidas por holos.',
     seguidores: 862,
     siguiendo: 120,
   },
   {
     id: 3,
-    nombre: 'Matías Vega',
-    usuario: 'mati_vinilos',
+    username: 'mati_vinilos',
     bio: 'Prensas en color y ediciones limitadas.',
     seguidores: 2410,
     siguiendo: 76,
   },
   {
     id: 4,
-    nombre: 'Fernanda Soto',
-    usuario: 'fer_juguetes',
+    username: 'fer_juguetes',
     bio: 'Juguetes de hojalata y figuras de los 80.',
     seguidores: 540,
     siguiendo: 64,
   },
   {
     id: 5,
-    nombre: 'Diego Muñoz',
-    usuario: 'diego_8bit',
+    username: 'diego_8bit',
     bio: 'Consolas portátiles, de la Game Boy en adelante.',
     seguidores: 395,
     siguiendo: 88,
@@ -146,54 +141,6 @@ const PIEZAS: Pieza[] = [
     guardados: 120,
     hace: 60 * 50,
   },
-  {
-    id: 9,
-    nombre: 'Carta holo 1ª edición',
-    descripcion: 'Holo de 1999 en funda rígida. Bordes perfectos, sin marcas de uso.',
-    categoria: 'cartas',
-    imagen_url: null,
-    duenoId: 1,
-    numero: 233,
-    megusta: 586,
-    guardados: 190,
-    hace: 60 * 24 * 6,
-  },
-  {
-    id: 10,
-    nombre: 'Pack de 3 cartuchos Sega',
-    descripcion: 'Tres cartuchos con su caja original. Probados en una Genesis.',
-    categoria: 'videojuegos',
-    imagen_url: null,
-    duenoId: 1,
-    numero: 103,
-    megusta: 203,
-    guardados: 44,
-    hace: 60 * 24 * 9,
-  },
-  {
-    id: 11,
-    nombre: 'Figura de acción sin abrir',
-    descripcion: 'Blíster sellado, de 1986. Solo el cartón tiene una esquina doblada.',
-    categoria: 'juguetes',
-    imagen_url: null,
-    duenoId: 3,
-    numero: 42,
-    megusta: 98,
-    guardados: 17,
-    hace: 60 * 24 * 12,
-  },
-  {
-    id: 12,
-    nombre: 'Single de 7 pulgadas, 1983',
-    descripcion: 'Con su funda de papel original y una dedicatoria a lápiz.',
-    categoria: 'vinilos',
-    imagen_url: null,
-    duenoId: 2,
-    numero: 157,
-    megusta: 145,
-    guardados: 29,
-    hace: 60 * 24 * 15,
-  },
 ];
 
 @Injectable({ providedIn: 'root' })
@@ -222,7 +169,7 @@ export class CatalogoService {
   }
 
   usuarioPorHandle(handle: string): Usuario | undefined {
-    return this.usuarios.find((u) => u.usuario === handle);
+    return this.usuarios.find((u) => u.username === handle);
   }
 
   piezasDe(usuarioId: number): Pieza[] {
@@ -257,7 +204,7 @@ export class CatalogoService {
     const seguia = this.siguiendo().has(id);
     this.siguiendo.update((s) => alternar(s, id));
     this.toast.show(
-      seguia ? 'Dejaste de seguir' : `Sigues a @${this.usuario(id).usuario}`,
+      seguia ? 'Dejaste de seguir' : `Sigues a @${this.usuario(id).username}`,
       'success',
     );
   }

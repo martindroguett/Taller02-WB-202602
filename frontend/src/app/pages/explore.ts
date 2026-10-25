@@ -34,7 +34,7 @@ import { CatalogoService } from '../services/catalogo.service';
       <main class="principal">
         <vt-top-bar titulo="Explorar">
           <a routerLink="/perfil" aria-label="Ir a tu perfil"
-            ><vt-avatar [nombre]="catalogo.yo.nombre" anillo="brand" [tam]="44"
+            ><vt-avatar [nombre]="catalogo.yo.username" anillo="brand" [tam]="44"
           /></a>
         </vt-top-bar>
         <vt-search-field

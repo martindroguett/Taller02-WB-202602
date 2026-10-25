@@ -33,8 +33,18 @@ const injector = createEnvironmentInjector([
 const catalogo = injector.get(CatalogoService);
 
 try {
+  for (const pieza of catalogo.piezas()) {
+    assert(
+      typeof pieza.imagen_url === 'string' &&
+        pieza.imagen_url.length > 0 &&
+        pieza.imagen_url.length <= 500,
+      `La pieza ${pieza.id} debe tener una URL de imagen de hasta 500 caracteres`,
+    );
+    await readFile(new URL(`../public${pieza.imagen_url}`, import.meta.url));
+  }
+  assert.equal(catalogo.usuarioPorHandle('tomas_retro'), catalogo.yo);
   assert(catalogo.feed().every((p) => catalogo.siguiendo().has(p.duenoId)));
-  const diego = catalogo.usuarios.find((u) => u.usuario === 'diego_8bit');
+  const diego = catalogo.usuarios.find((u) => u.username === 'diego_8bit');
   assert(!catalogo.feed().some((p) => p.duenoId === diego.id));
   catalogo.toggleSeguir(diego.id);
   assert(

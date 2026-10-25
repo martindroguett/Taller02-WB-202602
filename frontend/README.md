@@ -33,7 +33,7 @@ No se incluyen chat, sets ni cargas simuladas.
 Se puede buscar y filtrar, abrir perfiles y piezas, seguir y dejar de seguir, dar likes, guardar favoritos, copiar enlaces y agregar, editar o eliminar piezas propias.
 El formulario pide nombre (máximo 100 caracteres), descripción, categoría y foto JPG, PNG o WebP de hasta 5 MB.
 
-Ingreso y registro son una vista previa con validación: no crean cuentas ni autentican. La demostración utiliza siempre a Tomás Araya.
+Ingreso y registro son una vista previa con validación: no crean cuentas ni autentican. La demostración utiliza siempre a `tomas_retro`.
 La edición de perfil, la sesión real, el cierre de sesión y la persistencia se implementarán al integrar el backend.
 Las comprobaciones de propietario del frontend ayudan a la demostración; la API deberá autorizar cada modificación.
 
@@ -42,6 +42,7 @@ Las comprobaciones de propietario del frontend ayudan a la demostración; la API
 Reemplazar las operaciones locales del catálogo por llamadas HTTP cuando estén definidos los endpoints de FastAPI.
 Los métodos CRUD actuales son síncronos; sus pantallas deberán esperar las respuestas y mostrar carga y errores reales.
 Adaptar los datos recibidos a `Usuario` y `Pieza`: `hace` representa minutos de muestra y deberá calcularse desde la fecha del backend.
+Los usuarios se muestran por su `username`. `duenoId` corresponde a `usuario_id`, y el slug de `categoria` deberá resolverse desde `categoria_id` y el catálogo de categorías.
 La foto actualmente se lee para previsualizarla en memoria; con la API deberá enviarse el archivo y conservarse la URL que responda el servidor.
 El número de catálogo es decorativo y no reemplaza al `id` de la base de datos.
 

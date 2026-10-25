@@ -20,9 +20,8 @@ export const categoriaDe = (slug: CategoriaSlug): Categoria =>
 
 export interface Usuario {
   id: number;
-  nombre: string;
   /** Sin la @ */
-  usuario: string;
+  username: string;
   bio: string;
   seguidores: number;
   siguiendo: number;
@@ -33,7 +32,7 @@ export interface Pieza {
   nombre: string;
   descripcion: string;
   categoria: CategoriaSlug;
-  imagen_url: string | null;
+  imagen_url: string;
   duenoId: number;
   /** Número de catálogo: CRT · #0231 */
   numero: number;

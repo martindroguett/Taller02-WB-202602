@@ -83,11 +83,10 @@ import { Location } from '@angular/common';
           </dl>
 
           <div class="dueno">
-            <a class="persona" [routerLink]="['/perfil', dueno().usuario]">
-              <vt-avatar [nombre]="dueno().nombre" [tam]="52" />
+            <a class="persona" [routerLink]="['/perfil', dueno().username]">
+              <vt-avatar [nombre]="dueno().username" [tam]="52" />
               <span class="quien">
-                <span class="body-strong">{{ dueno().nombre }}</span>
-                <span class="catalog vt-muted">&#64;{{ dueno().usuario }}</span>
+                <span class="body-strong">&#64;{{ dueno().username }}</span>
               </span>
             </a>
             @if (!esMia()) {

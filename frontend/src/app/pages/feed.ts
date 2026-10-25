@@ -18,9 +18,9 @@ import { CatalogoService } from '../services/catalogo.service';
           <h2 class="title">Coleccionistas que sigues</h2>
           <div class="vt-rail">
             @for (u of catalogo.seguidos(); track u.id) {
-              <a class="persona" [routerLink]="['/perfil', u.usuario]">
-                <vt-avatar [nombre]="u.nombre" [tam]="52" />
-                <span class="caption">{{ u.nombre.split(' ')[0] }}</span>
+              <a class="persona" [routerLink]="['/perfil', u.username]">
+                <vt-avatar [nombre]="u.username" [tam]="52" />
+                <span class="caption">{{ u.username }}</span>
               </a>
             }
           </div>

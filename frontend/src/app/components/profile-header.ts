@@ -31,7 +31,7 @@ import { PieceArt } from './piece-art';
     <div class="cuerpo">
       <vt-avatar
         class="avatar"
-        [nombre]="usuario().nombre"
+        [nombre]="usuario().username"
         [tam]="88"
         [anillo]="esMio() ? 'brand' : 'none'"
       />
@@ -45,8 +45,7 @@ import { PieceArt } from './piece-art';
         }
       </div>
       <div class="quien">
-        <h1 class="title">{{ usuario().nombre }}</h1>
-        <p class="catalog usuario">&#64;{{ usuario().usuario }}</p>
+        <h1 class="title">&#64;{{ usuario().username }}</h1>
         <p class="body bio">{{ usuario().bio }}</p>
       </div>
       <dl class="cifras">
@@ -135,10 +134,6 @@ import { PieceArt } from './piece-art';
       display: flex;
       flex-direction: column;
       gap: 2px;
-    }
-    .usuario {
-      color: var(--ink-muted);
-      text-transform: none;
     }
     .bio {
       margin-top: var(--space-2);

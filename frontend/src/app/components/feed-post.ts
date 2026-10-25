@@ -16,11 +16,11 @@ import { PieceArt } from './piece-art';
   template: `
     <article>
       <header>
-        <a class="autor" [routerLink]="['/perfil', autor().usuario]">
-          <vt-avatar [nombre]="autor().nombre" [tam]="44" />
+        <a class="autor" [routerLink]="['/perfil', autor().username]">
+          <vt-avatar [nombre]="autor().username" [tam]="44" />
           <span class="quien">
-            <span class="body-strong">{{ autor().nombre }}</span>
-            <span class="caption vt-muted">&#64;{{ autor().usuario }} · {{ cuando() }}</span>
+            <span class="body-strong">&#64;{{ autor().username }}</span>
+            <span class="caption vt-muted">{{ cuando() }}</span>
           </span>
         </a>
       </header>

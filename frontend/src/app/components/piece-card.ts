@@ -46,8 +46,8 @@ import { PieceArt } from './piece-art';
         }
         <a class="nombre" [routerLink]="['/pieza', pieza().id]">{{ pieza().nombre }}</a>
         <p class="meta caption">
-          <a class="dueno" [routerLink]="['/perfil', dueno().usuario]"
-            >&#64;{{ dueno().usuario }}</a
+          <a class="dueno" [routerLink]="['/perfil', dueno().username]"
+            >&#64;{{ dueno().username }}</a
           >
           <span class="dato"
             ><vt-icon name="favorite" [size]="14" [filled]="true" />{{ megusta() }}</span

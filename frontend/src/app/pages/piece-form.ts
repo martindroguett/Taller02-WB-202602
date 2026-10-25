@@ -174,7 +174,8 @@ export class PieceFormPage implements OnChanges {
     ev.preventDefault();
     this.intento.set(true);
     const categoria = this.categoria();
-    if (Object.values(this.errores()).some(Boolean)) {
+    const imagen = this.imagen();
+    if (Object.values(this.errores()).some(Boolean) || !imagen) {
       this.toast.show('Revisa el formulario: faltan datos de tu pieza.', 'danger');
       return;
     }
@@ -182,7 +183,7 @@ export class PieceFormPage implements OnChanges {
       nombre: this.nombre().trim(),
       descripcion: this.descripcion().trim(),
       categoria: categoria!,
-      imagen_url: this.imagen(),
+      imagen_url: imagen,
     };
     const id = this.id();
     if (id !== undefined) {
