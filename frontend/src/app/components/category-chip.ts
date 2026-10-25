@@ -13,7 +13,10 @@ import { Icon } from './icon';
   template: `<span class="disco"
       ><vt-icon [name]="categoria().icono" [size]="20" [filled]="active()"
     /></span>
-    <span>{{ categoria().nombre }}</span>`,
+    <span>{{ categoria().nombre }}</span>
+    @if (cuenta() !== null) {
+      <span class="cuenta">{{ cuenta() }}</span>
+    }`,
   styles: `
     :host {
       display: inline-flex;
@@ -44,6 +47,10 @@ import { Icon } from './icon';
       background: var(--c-soft);
       color: var(--c-ink);
     }
+    .cuenta {
+      font: var(--text-catalog);
+      opacity: 0.8;
+    }
     :host(.on) {
       background: var(--c);
       border-color: var(--c);
@@ -60,11 +67,16 @@ import { Icon } from './icon';
     :host(.vt-c-todas.on) {
       color: var(--on-ink);
     }
+    :host(.vt-c-todas.on) .disco {
+      background: var(--brand);
+      color: var(--on-brand);
+    }
   `,
 })
 export class CategoryChip {
   readonly slug = input.required<Filtro>();
   readonly active = input(false);
+  readonly cuenta = input<number | null>(null);
 
   protected readonly categoria = computed(() => {
     const slug = this.slug();

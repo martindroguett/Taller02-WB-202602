@@ -9,7 +9,7 @@ import { Logo } from './logo';
   template: `
     <nav aria-label="Principal">
       <a class="logo" routerLink="/" aria-label="Vitrina, ir a Explorar"
-        ><vt-logo [soloMarca]="true" tono="invert" [tam]="40"
+        ><vt-logo [soloMarca]="true" [tam]="40"
       /></a>
       @for (it of items; track it.ruta; let i = $index) {
         @if (i === 2) {
@@ -21,10 +21,15 @@ import { Logo } from './logo';
           class="item"
           [routerLink]="it.ruta"
           routerLinkActive="activo"
-          [routerLinkActiveOptions]="{ exact: !!it.exacto }"
+          ariaCurrentWhenActive="page"
+          [routerLinkActiveOptions]="{
+            paths: it.exacto ? 'exact' : 'subset',
+            queryParams: 'ignored',
+            matrixParams: 'ignored',
+            fragment: 'ignored'
+          }"
           #rla="routerLinkActive"
           [attr.aria-label]="it.nombre"
-          [attr.aria-current]="rla.isActive ? 'page' : null"
         >
           <vt-icon [name]="it.icono" [filled]="rla.isActive" [size]="24" />
           <span class="txt">{{ it.nombre }}</span>
@@ -37,7 +42,7 @@ import { Logo } from './logo';
       position: fixed;
       z-index: 20;
       left: 50%;
-      bottom: var(--space-3);
+      bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
       transform: translateX(-50%);
       width: min(calc(100% - 2 * var(--space-4)), 420px);
       height: var(--tabbar-height);
@@ -85,7 +90,7 @@ import { Logo } from './logo';
       place-items: center;
       width: 56px;
       height: 56px;
-      margin-top: -24px;
+      margin-top: 0;
       border-radius: 34%;
       background: var(--brand);
       color: var(--on-brand);
@@ -100,15 +105,35 @@ import { Logo } from './logo';
     .item:focus-visible {
       outline-color: var(--on-night);
     }
+    @media (max-width: 360px) {
+      .item.activo .txt {
+        display: none;
+      }
+      .item.activo {
+        padding: 0;
+      }
+      .agregar {
+        width: 48px;
+        height: 48px;
+      }
+    }
 
+    @media (prefers-reduced-motion: reduce) {
+      .item:active {
+        transform: none;
+      }
+      .agregar:active {
+        transform: rotate(-8deg);
+      }
+    }
     @media (min-width: 600px) {
       nav {
         left: var(--space-4);
-        top: 50%;
-        bottom: auto;
-        transform: translateY(-50%);
+        top: var(--space-4);
+        bottom: var(--space-4);
+        transform: none;
         width: 72px;
-        height: max-content;
+        height: auto;
         max-height: calc(100dvh - 2 * var(--space-4));
         overflow-y: auto;
         overscroll-behavior: contain;
@@ -117,6 +142,8 @@ import { Logo } from './logo';
         justify-content: flex-start;
         gap: var(--space-2);
         border-radius: var(--radius-xl);
+        background: var(--surface);
+        box-shadow: var(--shadow-card);
       }
       nav > * {
         flex-shrink: 0;
@@ -128,15 +155,25 @@ import { Logo } from './logo';
       .item {
         width: 48px;
         height: 48px;
+        color: var(--ink-muted);
       }
       .item.activo {
         padding: 0;
+        background: var(--night);
+        color: var(--on-night);
+      }
+      .item:focus-visible,
+      .agregar:focus-visible {
+        outline-color: var(--focus);
       }
       .item.activo .txt {
         display: none;
       }
       .agregar {
-        margin: var(--space-2) 0;
+        order: 1;
+        margin: auto 0 0;
+        width: 48px;
+        height: 48px;
       }
     }
   `,

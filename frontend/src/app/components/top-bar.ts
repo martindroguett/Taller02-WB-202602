@@ -20,7 +20,12 @@ import { IconButton } from './icon-button';
       <h1 class="chico">{{ titulo() }}</h1>
       <span class="relleno"><ng-content /></span>
     } @else {
-      <h1 class="display-lg">{{ titulo() }}</h1>
+      <div>
+        @if (subtitulo()) {
+          <p class="vt-muted saludo">{{ subtitulo() }}</p>
+        }
+        <h1 class="display-lg">{{ titulo() }}</h1>
+      </div>
       <span class="relleno"><ng-content /></span>
     }
   `,
@@ -34,6 +39,10 @@ import { IconButton } from './icon-button';
     }
     h1 {
       min-width: 0;
+    }
+    .saludo {
+      margin-bottom: 3px;
+      font: var(--text-body);
     }
     .chico {
       flex: 1;
@@ -53,6 +62,7 @@ export class TopBar {
   private readonly location = inject(Location);
   private readonly router = inject(Router);
   readonly titulo = input.required<string>();
+  readonly subtitulo = input('');
   readonly small = input(false);
   readonly icono = input<'arrow_back' | 'close'>('arrow_back');
 

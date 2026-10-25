@@ -46,6 +46,9 @@ import { Icon } from './icon';
     .corazon {
       display: inline-flex;
     }
+    .num {
+      white-space: nowrap;
+    }
   `,
 })
 export class LikeButton {

@@ -9,6 +9,9 @@ let siguienteId = 0;
   template: `
     <label class="label" [for]="id">{{ label() }}</label>
     <div class="caja" [class.error]="!!error()">
+      @if (icono()) {
+        <vt-icon class="prefijo" [name]="icono()" [size]="22" />
+      }
       @if (multilinea()) {
         <textarea
           [id]="id"
@@ -62,6 +65,13 @@ let siguienteId = 0;
     }
     .caja:focus-within {
       border-color: var(--ink);
+    }
+    .prefijo {
+      margin-left: 16px;
+      color: var(--ink-muted);
+    }
+    .prefijo + input {
+      padding-left: 10px;
     }
     .caja.error {
       border: 2px solid var(--danger);
@@ -122,6 +132,7 @@ let siguienteId = 0;
 export class TextField {
   protected readonly id = `vt-campo-${++siguienteId}`;
   readonly label = input.required<string>();
+  readonly icono = input('');
   readonly valor = model('');
   readonly tipo = input<'text' | 'email' | 'password'>('text');
   readonly placeholder = input('');

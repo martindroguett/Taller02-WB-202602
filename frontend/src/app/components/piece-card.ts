@@ -6,11 +6,16 @@ import { Pieza } from '../models/vitrina';
 import { IconButton } from './icon-button';
 import { Icon } from './icon';
 import { PieceArt } from './piece-art';
+import { Avatar } from './avatar';
+import { CatalogTag } from './catalog-tag';
 
 @Component({
   selector: 'vt-piece-card',
-  imports: [RouterLink, IconButton, Icon, PieceArt],
-  host: { '[class]': '"vt-c-" + pieza().categoria', '[attr.data-variante]': 'variante()' },
+  imports: [RouterLink, IconButton, Icon, PieceArt, Avatar, CatalogTag],
+  host: {
+    '[class]': '"vt-c-" + pieza().categoria',
+    '[attr.data-variante]': 'variante()',
+  },
   template: `
     <article class="tarjeta" [class.destacada]="pieza().destacada && variante() === 'grid'">
       <div class="imagen">
@@ -26,6 +31,12 @@ import { PieceArt } from './piece-art';
           }
         </a>
         @if (variante() === 'grid') {
+          <vt-catalog-tag
+            class="catalogo"
+            [categoria]="pieza().categoria"
+            [numero]="pieza().numero"
+            [compacta]="true"
+          />
           <button
             type="button"
             vt-icon-button
@@ -46,11 +57,18 @@ import { PieceArt } from './piece-art';
         }
         <a class="nombre" [routerLink]="['/pieza', pieza().id]">{{ pieza().nombre }}</a>
         <p class="meta caption">
-          <a class="dueno" [routerLink]="['/perfil', dueno().username]"
-            >&#64;{{ dueno().username }}</a
+          <a class="dueno" [routerLink]="['/perfil', dueno().username]">
+            @if (variante() === 'grid') {
+              <vt-avatar [nombre]="dueno().username" [tam]="24" />
+            }
+            <span>&#64;{{ dueno().username }}</span></a
           >
-          <span class="dato"
-            ><vt-icon name="favorite" [size]="14" [filled]="true" />{{ megusta() }}</span
+          <span class="dato" [class.gustado]="catalogo.gustadas().has(pieza().id)"
+            ><vt-icon
+              name="favorite"
+              [size]="16"
+              [filled]="catalogo.gustadas().has(pieza().id)"
+            />{{ megusta() }}</span
           >
           @if (variante() === 'row') {
             <span>{{ cuando() }}</span>
@@ -69,7 +87,7 @@ import { PieceArt } from './piece-art';
       display: flex;
       flex-direction: column;
       height: 100%;
-      padding: 6px 6px var(--space-3);
+      padding: 8px 8px var(--space-3);
       gap: var(--space-2);
       border: 1px solid transparent;
       border-radius: var(--radius-lg);
@@ -84,16 +102,13 @@ import { PieceArt } from './piece-art';
     }
     .imagen {
       position: relative;
-      padding: 6px;
-      border-radius: calc(var(--radius-lg) - 6px);
-      background: var(--c-soft);
+      border-radius: 16px;
     }
     .enlace {
       display: block;
       aspect-ratio: 1;
-      border: 3px solid var(--surface);
       overflow: hidden;
-      border-radius: calc(var(--radius-lg) - 6px);
+      border-radius: 16px;
       background: var(--c-soft);
     }
     img,
@@ -106,6 +121,16 @@ import { PieceArt } from './piece-art';
       position: absolute;
       top: var(--space-2);
       right: var(--space-2);
+    }
+    img {
+      outline: 1px solid oklch(0 0 0 / 0.1);
+      outline-offset: -1px;
+    }
+    .catalogo {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      max-width: calc(100% - 60px);
     }
     .info {
       display: flex;
@@ -125,17 +150,38 @@ import { PieceArt } from './piece-art';
     .meta {
       color: var(--ink-muted);
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
       gap: 2px var(--space-2);
+      margin-top: auto;
     }
     .dueno {
-      overflow-wrap: anywhere;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      flex: 1;
+    }
+    .dueno span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .dato {
       display: inline-flex;
       align-items: center;
       gap: 2px;
+      white-space: nowrap;
+    }
+    .dato.gustado {
+      color: var(--like);
+    }
+    @media (max-width: 420px) {
+      .catalogo {
+        display: none;
+      }
+      .meta {
+        flex-wrap: wrap;
+      }
     }
     .insignia {
       width: fit-content;

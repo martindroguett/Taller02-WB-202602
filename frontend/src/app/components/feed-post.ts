@@ -5,13 +5,13 @@ import { relativo } from '../models/format';
 import { Pieza } from '../models/vitrina';
 import { Avatar } from './avatar';
 import { CatalogTag } from './catalog-tag';
-import { IconButton } from './icon-button';
+import { Icon } from './icon';
 import { LikeButton } from './like-button';
 import { PieceArt } from './piece-art';
 
 @Component({
   selector: 'vt-feed-post',
-  imports: [RouterLink, Avatar, CatalogTag, IconButton, LikeButton, PieceArt],
+  imports: [RouterLink, Avatar, CatalogTag, Icon, LikeButton, PieceArt],
   host: { '[class]': '"vt-c-" + pieza().categoria' },
   template: `
     <article>
@@ -20,10 +20,11 @@ import { PieceArt } from './piece-art';
           <vt-avatar [nombre]="autor().username" [tam]="44" />
           <span class="quien">
             <span class="body-strong">&#64;{{ autor().username }}</span>
-            <span class="caption vt-muted">{{ cuando() }}</span>
+            <span class="caption vt-muted">Compartió una pieza · {{ cuando() }}</span>
           </span>
         </a>
       </header>
+      <p class="texto">{{ pieza().descripcion }}</p>
       <div class="media">
         <a
           class="foto"
@@ -35,30 +36,34 @@ import { PieceArt } from './piece-art';
           } @else {
             <vt-piece-art [categoria]="pieza().categoria" />
           }
-          <span class="placa title">{{ pieza().nombre }}</span>
+          <span class="placa">
+            <vt-catalog-tag [categoria]="pieza().categoria" [numero]="pieza().numero" />
+            <span class="nombre">{{ pieza().nombre }}</span>
+          </span>
         </a>
-        <vt-catalog-tag class="ficha" [categoria]="pieza().categoria" [numero]="pieza().numero" />
       </div>
-      <p class="texto">{{ pieza().descripcion }}</p>
       <footer>
         <vt-like-button [pieza]="pieza()" />
-        <span class="espacio"></span>
         <button
           type="button"
-          vt-icon-button
-          icon="bookmark"
-          [label]="guardada() ? 'Quitar de favoritos' : 'Guardar en favoritos'"
-          [active]="guardada()"
-          [pressed]="guardada()"
+          class="accion"
+          [class.guardada]="guardada()"
+          [attr.aria-label]="guardada() ? 'Quitar de favoritos' : 'Guardar en favoritos'"
+          [attr.aria-pressed]="guardada()"
           (click)="catalogo.toggleGuardar(pieza().id)"
-        ></button>
+        >
+          <vt-icon name="bookmark" [filled]="guardada()" [size]="20" />{{
+            guardada() ? 'Guardada' : 'Guardar'
+          }}
+        </button>
         <button
           type="button"
-          vt-icon-button
-          icon="link"
-          label="Compartir enlace"
+          class="accion compartir"
+          aria-label="Compartir enlace"
           (click)="catalogo.compartir(pieza().id)"
-        ></button>
+        >
+          <vt-icon name="link" [size]="20" /><span class="compartir-label">Compartir</span>
+        </button>
       </footer>
     </article>
   `,
@@ -71,7 +76,7 @@ import { PieceArt } from './piece-art';
       display: flex;
       flex-direction: column;
       gap: var(--space-3);
-      padding: var(--space-3);
+      padding: var(--space-4);
       background: var(--surface);
       border-radius: var(--radius-xl);
       box-shadow: var(--shadow-card);
@@ -90,8 +95,8 @@ import { PieceArt } from './piece-art';
     .foto {
       position: relative;
       display: block;
-      aspect-ratio: 5 / 4;
-      border-radius: var(--radius-lg);
+      aspect-ratio: 1;
+      border-radius: 16px;
       overflow: hidden;
       background: var(--c-soft);
     }
@@ -101,39 +106,86 @@ import { PieceArt } from './piece-art';
       height: 100%;
       object-fit: cover;
     }
+    .foto img {
+      outline: 1px solid oklch(0 0 0 / 0.1);
+      outline-offset: -1px;
+    }
     .placa {
       position: absolute;
       left: var(--space-3);
       right: var(--space-3);
-      top: var(--space-3);
-      width: fit-content;
-      max-width: calc(100% - 2 * var(--space-3));
-      padding: 6px 14px;
+      bottom: var(--space-3);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 12px 14px;
       border-radius: var(--radius-md);
       background: var(--glass);
       color: var(--ink);
-      font-size: 15px;
-      line-height: 20px;
+    }
+    .placa vt-catalog-tag {
+      background: transparent;
+      box-shadow: none;
+      padding: 0;
+    }
+    .nombre {
+      font: var(--text-body-strong);
     }
     .media {
       position: relative;
     }
-    .ficha {
-      position: absolute;
-      left: var(--space-5);
-      bottom: 0;
-      transform: translateY(50%);
-    }
     .texto {
-      padding: var(--space-3) var(--space-2) 0;
+      padding-inline: 2px;
+      line-height: 1.65;
     }
     footer {
       display: flex;
       align-items: center;
-      gap: var(--space-1);
+      justify-content: space-between;
+      gap: 6px;
     }
-    .espacio {
-      flex: 1;
+    .accion {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 44px;
+      padding: 0 10px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-pill);
+      font: var(--text-label);
+      cursor: pointer;
+      white-space: nowrap;
+      background: var(--surface-sunken);
+      color: var(--ink);
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .accion {
+        transition: transform 150ms ease-out;
+      }
+      .accion:active {
+        transform: scale(0.96);
+      }
+    }
+    .accion.guardada {
+      color: var(--brand);
+      background: var(--brand-soft);
+    }
+    @media (max-width: 360px) {
+      article {
+        padding: 12px;
+        border-radius: 28px;
+      }
+      .accion {
+        padding-inline: 10px;
+      }
+      .compartir {
+        width: 44px;
+      }
+      .compartir-label {
+        display: none;
+      }
     }
   `,
 })

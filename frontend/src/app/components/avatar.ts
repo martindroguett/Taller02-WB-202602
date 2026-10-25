@@ -24,8 +24,8 @@ import { CATEGORIAS } from '../models/vitrina';
       place-items: center;
       flex: none;
       border-radius: 34%;
-      background: var(--c-soft);
-      color: var(--c-ink);
+      background: var(--c);
+      color: var(--ink);
       font-family: var(--font-sans);
       font-weight: 800;
       overflow: hidden;
@@ -44,6 +44,7 @@ import { CATEGORIAS } from '../models/vitrina';
         0 0 0 5px var(--spark);
     }
     img {
+      border-radius: inherit;
       width: 100%;
       height: 100%;
       object-fit: cover;
