@@ -1,0 +1,113 @@
+/* Colores, espaciado y tipografía compartidos. */
+:root,
+[data-theme='light'] {
+  --bg: #f1f2f6;
+  --surface: #ffffff;
+  --surface-sunken: #f6f7fa;
+  --ink: #15172b;
+  --ink-muted: #5b5e70;
+  --on-ink: #ffffff;
+  --line: #e3e5ec;
+  --line-strong: #848999;
+  --brand: #2b4cff;
+  --brand-soft: #e5e9ff;
+  --on-brand: #ffffff;
+  --on-brand-muted: #e6eaff;
+  --night: #15172b;
+  --on-night: #f3f1ec;
+  --on-night-muted: #b3b1c4;
+  --night-dot: rgba(255, 255, 255, 0.16);
+  --glass: rgba(255, 255, 255, 0.9);
+  --spark: #ff5a3c;
+  --on-vivid: #15172b;
+  --cartas: #ff6fae;
+  --cartas-soft: #ffe3f0;
+  --cartas-ink: #b0145c;
+  --videojuegos: #9b85ff;
+  --videojuegos-soft: #ece8ff;
+  --videojuegos-ink: #5a3fd6;
+  --juguetes: #ffb547;
+  --juguetes-soft: #fff1d9;
+  --juguetes-ink: #8f5500;
+  --vinilos: #22c7a0;
+  --vinilos-soft: #d8f6ee;
+  --vinilos-ink: #077a5f;
+  --like: #f0304f;
+  --danger: #c4231b;
+  --danger-soft: #fde8e6;
+  --success: #0f7a4a;
+  --on-danger: #ffffff;
+  --focus: #2b4cff;
+  --shadow-card: 0 1px 2px rgba(21, 23, 43, 0.06), 0 8px 24px rgba(21, 23, 43, 0.07);
+  --shadow-pop: 0 12px 28px rgba(21, 23, 43, 0.18);
+  --shadow-float: 0 18px 40px rgba(21, 23, 43, 0.28);
+  --shadow-brand: 0 10px 24px rgba(43, 76, 255, 0.32);
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+
+  --tap-target: 44px;
+  --tabbar-height: 68px;
+  --content-max: 1440px;
+  --font-display: 'Unbounded', 'Arial Black', system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --text-display-xl: 800 40px/42px var(--font-display);
+  --text-display-lg: 800 28px/32px var(--font-display);
+  --text-title: 700 18px/24px var(--font-display);
+  --text-stat: 800 20px/24px var(--font-display);
+  --text-body: 500 15px/22px var(--font-sans);
+  --text-body-strong: 700 15px/20px var(--font-sans);
+  --text-piece-name: 700 14px/18px var(--font-sans);
+  --text-label: 700 13px/18px var(--font-sans);
+  --text-caption: 500 12px/16px var(--font-sans);
+  --text-catalog: 600 11px/14px var(--font-mono);
+}
+.display-xl {
+  font: var(--text-display-xl);
+  letter-spacing: -0.03em;
+}
+.display-lg {
+  font: var(--text-display-lg);
+  letter-spacing: -0.02em;
+}
+.title {
+  font: var(--text-title);
+  letter-spacing: -0.01em;
+}
+.stat {
+  font: var(--text-stat);
+  letter-spacing: 0;
+}
+.body {
+  font: var(--text-body);
+  letter-spacing: 0;
+}
+.body-strong {
+  font: var(--text-body-strong);
+  letter-spacing: 0;
+}
+.label {
+  font: var(--text-label);
+  letter-spacing: 0;
+}
+.caption {
+  font: var(--text-caption);
+  letter-spacing: 0;
+}
+.catalog {
+  font: var(--text-catalog);
+  letter-spacing: 0.06em;
+}
