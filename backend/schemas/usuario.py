@@ -4,8 +4,9 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class UsuarioRegistro(BaseModel):
+    # Letras, números, _ y punto, igual que el formulario de Angular (/^[\w.]{3,30}$/).
     # El mínimo de 3 caracteres también impide registrar "yo", que es una ruta (/usuarios/yo).
-    username: str = Field(min_length=3, max_length=30, pattern=r"^[a-zA-Z0-9_]+$")
+    username: str = Field(min_length=3, max_length=30, pattern=r"^[a-zA-Z0-9_.]+$")
     email: EmailStr
     password: str = Field(min_length=8, max_length=72)
 
@@ -48,9 +49,17 @@ class UsuarioPrivado(BaseModel):
     username: str
     email: str
     nombre_visible: str | None
-    bio: str | None
+    bio: str
     avatar_url: str | None
+    seguidores: int
+    siguiendo: int
     creado_en: datetime
+
+    @field_validator("bio", mode="before")
+    @classmethod
+    def bio_como_texto(cls, valor: str | None) -> str:
+        # En la base puede estar vacía (NULL); al frontend siempre le llega un texto.
+        return valor or ""
 
 
 class TokenRespuesta(BaseModel):

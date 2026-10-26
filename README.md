@@ -4,6 +4,31 @@ Plataforma para organizar y mostrar coleccionables, descubrir piezas de otros us
 
 ## Cómo ejecutar
 
+### Backend y base de datos
+
+Se necesita **Docker Desktop** abierto. Desde la raíz del repositorio, la primera vez se crea el archivo de variables a partir del ejemplo:
+
+```bash
+cp .env.example .env
+```
+
+Luego se cambia `JWT_SECRET` en `.env` por un texto largo y aleatorio. Se puede generar con `python -c "import secrets; print(secrets.token_urlsafe(48))"`. El archivo `.env` no se sube al repositorio.
+
+```bash
+docker compose up --build
+```
+
+Esto levanta PostgreSQL y la API, aplica las migraciones de Alembic y deja la API en **http://localhost:8000**. La documentación interactiva de los endpoints está en **http://localhost:8000/docs**. Los cambios en `backend/` se recargan solos. Para detener todo, usar `Ctrl+C`, y para borrar también los datos, `docker compose down -v`.
+
+Después de cambiar un modelo, se genera y aplica una migración nueva:
+
+```bash
+docker compose exec api alembic revision --autogenerate -m "describe el cambio"
+docker compose exec api alembic upgrade head
+```
+
+### Frontend
+
 Se necesita **Node.js 24 LTS** con npm. Desde la raíz del repositorio:
 
 ```bash
@@ -28,7 +53,7 @@ Los datos son de muestra y los cambios se pierden al recargar la página. Se uti
 
 ## Tecnologías
 
-El frontend usa **Angular**, con Angular Material para los iconos. La idea del proyecto contempla un backend con **FastAPI**, una API REST, **PostgreSQL**, SQLAlchemy, Alembic y autenticación JWT. Esa integración queda para las siguientes etapas.
+El frontend usa **Angular**, con Angular Material para los iconos. El backend usa **FastAPI** con una API REST en JSON, **PostgreSQL** como base de datos, **SQLAlchemy** como ORM, **Alembic** para las migraciones y autenticación con **JWT**. Las contraseñas se guardan como hash con bcrypt. La conexión entre el frontend y el backend queda para las siguientes etapas.
 
 ## Comprobaciones
 
