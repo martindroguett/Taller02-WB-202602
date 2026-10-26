@@ -10,6 +10,29 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
+    # La API espera a que PostgreSQL acepte conexiones, no solo a que el contenedor arranque.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./backend
+    container_name: wb-api
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db # dentro de Docker, la base se llama como su servicio
+      WATCHFILES_FORCE_POLLING: "true" # --reload detecta cambios hechos desde Windows
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    # El código se monta desde la carpeta, así los cambios se ven sin reconstruir la imagen.
+    volumes:
+      - ./backend:/app
+    command: sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
 
 volumes:
   postgres_data:
