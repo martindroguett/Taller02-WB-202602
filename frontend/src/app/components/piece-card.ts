@@ -1,5 +1,6 @@
 import { Component, computed, inject, input, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ToastService } from '../services/toast.service';
 import { CatalogoService } from '../services/catalogo.service';
 import { compacto, relativo } from '../models/format';
 import { Pieza } from '../models/vitrina';
@@ -38,20 +39,22 @@ import { CatalogTag } from './catalog-tag';
             [numero]="numero()"
             [compacta]="true"
           />
-          @if (!esPublica()) {
-            <button
-              type="button"
-              vt-icon-button
-              class="guardar"
-              tone="glass"
-              size="sm"
-              icon="bookmark"
-              [label]="guardada() ? 'Quitar de favoritos' : 'Guardar en favoritos'"
-              [active]="guardada()"
-              [pressed]="guardada()"
-              (click)="catalogo.toggleGuardar(pieza().id)"
-            ></button>
-          }
+          <button
+            type="button"
+            vt-icon-button
+            class="guardar"
+            tone="glass"
+            size="sm"
+            icon="bookmark"
+            [label]="
+              (esPublica() ? 'Pendiente de conectar: ' : '') +
+              (guardada() ? 'Quitar de favoritos' : 'Guardar en favoritos')
+            "
+            [title]="esPublica() ? 'Pendiente de conectar' : ''"
+            [active]="guardada()"
+            [pressed]="guardada()"
+            (click)="alternarGuardar()"
+          ></button>
         }
       </div>
       <div class="info">
@@ -61,10 +64,16 @@ import { CatalogTag } from './catalog-tag';
         <a class="nombre" [routerLink]="['/pieza', pieza().id]">{{ pieza().nombre }}</a>
         <p class="meta caption">
           @if (esPublica()) {
-            <span class="dueno"
+            <a
+              class="dueno publico"
+              [routerLink]="['/perfil', dueno().username]"
+              title="Perfil de demostración"
               ><vt-avatar [nombre]="dueno().username" [tam]="24" /><span
                 >&#64;{{ dueno().username }}</span
-              ></span
+              ></a
+            >
+            <span class="dato" [class.gustado]="gustada()"
+              ><vt-icon name="favorite" [size]="16" [filled]="gustada()" />{{ megusta() }}</span
             >
             <span>{{ cuando() }}</span>
           } @else {
@@ -194,7 +203,7 @@ import { CatalogTag } from './catalog-tag';
       .meta {
         flex-wrap: wrap;
       }
-      .meta > span.dueno {
+      .meta > .dueno.publico {
         flex-basis: 100%;
       }
     }
@@ -252,7 +261,20 @@ export class PieceCard {
     this.pieza().imagen_url;
     return false;
   });
-  protected readonly guardada = computed(() => this.catalogo.guardadas().has(this.pieza().id));
+  private readonly toast = inject(ToastService);
+  protected readonly guardada = computed(() => {
+    const p = this.pieza();
+    return 'dueno' in p ? p.guardada : this.catalogo.guardadas().has(p.id);
+  });
+  protected readonly gustada = computed(() => {
+    const p = this.pieza();
+    return 'dueno' in p ? p.gustada : this.catalogo.gustadas().has(p.id);
+  });
+  protected alternarGuardar(): void {
+    const p = this.pieza();
+    if ('dueno' in p) this.toast.show('Favoritos está pendiente de conectar');
+    else this.catalogo.toggleGuardar(p.id);
+  }
   protected readonly esPublica = computed(() => 'dueno' in this.pieza());
   protected readonly dueno = computed(() => {
     const p = this.pieza();
@@ -268,7 +290,7 @@ export class PieceCard {
   });
   protected readonly megusta = computed(() => {
     const p = this.pieza();
-    return 'dueno' in p ? '' : compacto(this.catalogo.megusta(p));
+    return compacto('dueno' in p ? p.megusta : this.catalogo.megusta(p));
   });
   protected readonly cuando = computed(() => {
     const p = this.pieza();

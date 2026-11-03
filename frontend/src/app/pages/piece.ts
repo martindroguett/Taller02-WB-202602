@@ -8,17 +8,30 @@ import { Avatar } from '../components/avatar';
 import { Button } from '../components/button';
 import { CatalogTag } from '../components/catalog-tag';
 import { EmptyState } from '../components/empty-state';
+import { LikeButton } from '../components/like-button';
+import { FollowButton } from '../components/follow-button';
 import { IconButton } from '../components/icon-button';
 import { Icon } from '../components/icon';
 import { PieceArt } from '../components/piece-art';
-import { relativo } from '../models/format';
+import { compacto, relativo } from '../models/format';
 import { categoriaDe } from '../models/vitrina';
 import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publico.service';
 import { ToastService } from '../services/toast.service';
 
 @Component({
   selector: 'vt-piece-page',
-  imports: [Avatar, Button, CatalogTag, EmptyState, Icon, IconButton, PieceArt, RouterLink],
+  imports: [
+    Avatar,
+    Button,
+    CatalogTag,
+    EmptyState,
+    FollowButton,
+    Icon,
+    IconButton,
+    LikeButton,
+    PieceArt,
+    RouterLink,
+  ],
   template: `
     @if (pieza(); as p) {
       <div class="detalle vt-c-{{ p.categoria }}">
@@ -37,6 +50,20 @@ import { ToastService } from '../services/toast.service';
               label="Volver"
               (click)="volver()"
             ></button>
+            <button
+              type="button"
+              vt-icon-button
+              tone="glass"
+              icon="bookmark"
+              [label]="
+                (p.guardada ? 'Quitar de favoritos' : 'Guardar en favoritos') +
+                ': pendiente de conectar'
+              "
+              [active]="p.guardada"
+              [pressed]="p.guardada"
+              title="Pendiente de conectar"
+              (click)="pendiente('Favoritos')"
+            ></button>
           </div>
         </div>
         <article class="hoja">
@@ -49,15 +76,58 @@ import { ToastService } from '../services/toast.service';
             · {{ cuando(p.creado_en) }}
           </p>
           <p class="body">{{ p.descripcion }}</p>
+          <dl class="cifras">
+            <div>
+              <dd class="stat">{{ compacto(p.megusta) }}</dd>
+              <dt class="caption vt-muted">Me gusta</dt>
+            </div>
+            <div>
+              <dd class="stat">{{ compacto(p.guardados) }}</dd>
+              <dt class="caption vt-muted">Favoritos</dt>
+            </div>
+          </dl>
           <div class="dueno">
-            <span class="persona"
+            <a
+              class="persona"
+              [routerLink]="['/perfil', p.dueno.username]"
+              title="Perfil de demostración"
               ><vt-avatar [nombre]="p.dueno.username" [tam]="52" /><span class="body-strong"
                 >&#64;{{ p.dueno.username }}</span
-              ></span
+              ></a
             >
+            <vt-follow-button [usuarioId]="p.dueno.id" [pendiente]="true" />
+          </div>
+          <p class="caption vt-muted">
+            Perfiles: demostración. Las acciones sociales están pendientes de conexión.
+          </p>
+          <div>
+            <p class="caption vt-muted">Gestión de pieza: vista previa, pendiente de sesión</p>
+            <div class="gestion">
+              <button
+                type="button"
+                vt-button
+                variant="secondary"
+                icon="edit"
+                disabled
+                title="Pendiente de conectar la sesión"
+              >
+                Editar pieza
+              </button>
+              <button
+                type="button"
+                vt-button
+                variant="danger"
+                icon="delete"
+                disabled
+                title="Pendiente de conectar la sesión"
+              >
+                Eliminar
+              </button>
+            </div>
           </div>
         </article>
         <div class="accion-fija">
+          <vt-like-button [pieza]="p" />
           <button
             type="button"
             vt-button
@@ -237,6 +307,10 @@ export class PiecePage {
   protected readonly fallo = signal(false);
   protected readonly reintentar = new Subject<void>();
   protected readonly categoriaDe = categoriaDe;
+  protected readonly compacto = compacto;
+  protected pendiente(accion: string): void {
+    this.toast.show(`${accion} está pendiente de conectar`);
+  }
 
   constructor() {
     this.route.paramMap

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { transpileModule, ModuleKind, ScriptTarget } from 'typescript';
 import '@angular/compiler';
-import { createEnvironmentInjector, PendingTasks } from '@angular/core';
+import { createEnvironmentInjector, PendingTasks, ɵSIGNAL } from '@angular/core';
 import { provideHttpClient, withNoXsrfProtection } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
@@ -36,6 +36,10 @@ async function preparar(path = '') {
 await preparar();
 const { ExplorePage } = await import(new URL('pages/explore.mjs', dest));
 const { PiecePage } = await import(new URL('pages/piece.mjs', dest));
+const { PieceCard } = await import(new URL('components/piece-card.mjs', dest));
+const { LikeButton } = await import(new URL('components/like-button.mjs', dest));
+const { FollowButton } = await import(new URL('components/follow-button.mjs', dest));
+const { CatalogoService } = await import(new URL('services/catalogo.service.mjs', dest));
 const { CatalogoPublicoService } = await import(
   new URL('services/catalogo-publico.service.mjs', dest)
 );
@@ -59,6 +63,10 @@ const injector = createEnvironmentInjector([
   provideHttpClient(withNoXsrfProtection()),
   provideHttpClientTesting(),
   CatalogoPublicoService,
+  CatalogoService,
+  PieceCard,
+  LikeButton,
+  FollowButton,
   ExplorePage,
   PiecePage,
   { provide: PendingTasks, useValue: { add: () => () => {} } },
@@ -125,6 +133,28 @@ try {
   request(0).flush(page([], 0));
   assert.equal(explore.total(), 0);
   assert.equal(explore.resultados().length, 0);
+  // Los identificadores públicos pueden coincidir con los del mock: nunca deben modificarlo.
+  const mock = injector.get(CatalogoService);
+  const publicPiece = { ...fixture(1), guardada: false, gustada: false, megusta: 8 };
+  const setInput = (input, value) => input[ɵSIGNAL].applyValueToInputSignal(input[ɵSIGNAL], value);
+  const saved = [...mock.guardadas()];
+  const likes = [...mock.gustadas()];
+  const follows = [...mock.siguiendo()];
+  const card = injector.get(PieceCard);
+  setInput(card.pieza, publicPiece);
+  assert.equal(card.guardada(), false);
+  assert.equal(card.megusta(), '8');
+  card.alternarGuardar();
+  const like = injector.get(LikeButton);
+  setInput(like.pieza, publicPiece);
+  like.alternar();
+  const follow = injector.get(FollowButton);
+  setInput(follow.usuarioId, 2);
+  setInput(follow.pendiente, true);
+  follow.alternar();
+  assert.deepEqual([...mock.guardadas()], saved);
+  assert.deepEqual([...mock.gustadas()], likes);
+  assert.deepEqual([...mock.siguiendo()], follows);
   const detail = injector.get(PiecePage);
   http.expectOne('/api/piezas/7').flush('error', { status: 500, statusText: 'Error' });
   assert.equal(detail.estado(), 'error');

@@ -39,7 +39,7 @@ npm start
 
 Abrir **http://localhost:4200/** en el navegador. Para detener el servidor, usar `Ctrl+C` en la terminal.
 
-Explorar y el detalle de piezas consultan la API; requieren el backend y la base de datos en ejecución. El servidor de desarrollo redirige `/api` a `http://localhost:8000`. Las otras pantallas usan datos de demostración.
+Explorar y el detalle de piezas consultan la API; requieren el backend y la base de datos en ejecución. El servidor de desarrollo redirige `/api` a `http://localhost:8000`. Los paneles de comunidad y las otras pantallas usan datos de demostración. Los controles sociales del detalle público están pendientes de conexión y la gestión de piezas requiere integrar sesión.
 
 ## Funciones
 

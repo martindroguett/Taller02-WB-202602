@@ -33,7 +33,7 @@ No se incluyen chat, sets ni cargas simuladas.
 
 ## Qué funciona y qué queda pendiente
 
-Explorar consulta piezas reales, permite buscar y filtrar por categoría, y carga páginas de 20 resultados. La URL conserva los filtros al volver desde el detalle. La pantalla informa carga, ausencia de resultados y errores con reintento; el detalle permite copiar su enlace. Los nombres de propietarios públicos aún no enlazan a perfiles.
+Explorar consulta piezas reales, permite buscar y filtrar por categoría, y carga páginas de 20 resultados. La URL conserva los filtros al volver desde el detalle. La pantalla informa carga, ausencia de resultados y errores con reintento; el detalle permite copiar su enlace. Los paneles laterales de perfil y coleccionistas son de demostración. En el detalle, el enlace del propietario lleva a un perfil de demostración; sus acciones sociales están visibles pero pendientes de conexión, y la gestión está deshabilitada hasta integrar sesión.
 
 Feed, perfiles, favoritos, interacciones sociales y formularios siguen siendo una demostración en memoria, con `tomas_retro` como usuario fijo. El ingreso y registro no autentican. Los enlaces a piezas de estas pantallas abren el detalle público por ID, por lo que los datos de muestra no necesariamente corresponden a la API. Las modificaciones de la demostración no se guardan en el backend.
 
@@ -47,7 +47,7 @@ Feed, perfiles, favoritos, interacciones sociales y formularios siguen siendo un
 6. Abrir la confirmación, recorrer sus botones con Tab y Shift+Tab, y cerrarla con Escape. El foco debe permanecer dentro y volver al control de origen.
 7. Revisar móvil (320 y 390 px), tableta y escritorio: sin desplazamiento horizontal ni controles superpuestos.
 
-`npm test` verifica el catálogo de muestra y utiliza `HttpTestingController` para comprobar filtros, cancelación, paginación, errores, reintentos y detalle público.
+`npm test` verifica el catálogo de muestra y utiliza `HttpTestingController` para comprobar filtros, cancelación, paginación, errores, reintentos, detalle público y aislamiento de las acciones públicas respecto de los datos de muestra.
 
 ## Fotos de muestra
 
