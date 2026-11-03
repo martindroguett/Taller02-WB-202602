@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import DateTime, String, func, select
-from sqlalchemy.orm import Mapped, column_property, mapped_column
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from database import Base
 
@@ -34,3 +34,5 @@ class Usuario(Base):
         .correlate_except(Seguimiento)
         .scalar_subquery()
     )
+
+    piezas: Mapped[list["Pieza"]] = relationship('Pieza', back_populates="usuario", cascade="all, delete-orphan", passive_deletes=True)

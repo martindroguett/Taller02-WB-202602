@@ -10,8 +10,8 @@ Los nombres de los campos siguen el modelo del frontend (`frontend/src/app/model
 | --- | --- |
 | Autenticación: registro, login y usuario actual | Listo |
 | Usuarios: perfil, editar perfil, seguir y dejar de seguir | Pendiente (la tabla `seguimientos` ya existe) |
-| Categorías | Pendiente |
-| Piezas: CRUD, Explorar e imágenes | Pendiente |
+| Categorías | Listo |
+| Piezas: CRUD, Explorar e imágenes | Listo |
 | Me gusta, guardados (favoritos) y feed | Pendiente |
 
 ## Convenciones
@@ -176,7 +176,7 @@ Router `routers/categorias.py`.
 
 | Método y ruta | Acceso | Envía | Responde | Errores | Estado |
 | --- | --- | --- | --- | --- | --- |
-| `GET /categorias` | Pública | — | `200` + `[{id, slug, nombre}]` | — | Pendiente |
+| `GET /categorias` | Pública | — | `200` + `[{id, slug, nombre}]` | — | Listo |
 
 Las cuatro categorías (`cartas`, `videojuegos`, `juguetes`, `vinilos`) se cargan en una migración. No hay rutas para crearlas ni borrarlas.
 
@@ -186,12 +186,12 @@ Router `routers/piezas.py`, prefijo `/api/piezas`.
 
 | Método y ruta | Acceso | Envía | Responde | Errores | Estado |
 | --- | --- | --- | --- | --- | --- |
-| `GET /piezas` | Opcional | `?q&categoria&orden&limite&desplazamiento` | `200` + página de `Pieza` | `422` | Pendiente |
-| `GET /piezas/{id}` | Opcional | — | `200` + `Pieza` | `404` | Pendiente |
-| `GET /piezas/{id}/imagen` | Pública | — | `200` + la imagen (`image/jpeg`, `image/png` o `image/webp`) | `404` | Pendiente |
-| `POST /piezas` | Token | `DatosPieza` | `201` + `Pieza` | `400`, `401`, `422` | Pendiente |
-| `PUT /piezas/{id}` | Dueño | `DatosPieza` | `200` + `Pieza` | `400`, `401`, `403`, `404`, `422` | Pendiente |
-| `DELETE /piezas/{id}` | Dueño | — | `204` | `401`, `403`, `404` | Pendiente |
+| `GET /piezas` | Opcional | `?q&categoria&orden&limite&desplazamiento` | `200` + página de `Pieza` | `422` | Listo |
+| `GET /piezas/{id}` | Opcional | — | `200` + `Pieza` | `404` | Listo |
+| `GET /piezas/{id}/imagen` | Pública | — | `200` + la imagen (`image/jpeg`, `image/png` o `image/webp`) | `404` | Listo |
+| `POST /piezas` | Token | `DatosPieza` | `201` + `Pieza` | `400`, `401`, `422` | Listo |
+| `PUT /piezas/{id}` | Dueño | `DatosPieza` | `200` + `Pieza` | `400`, `401`, `403`, `404`, `422` | Listo |
+| `DELETE /piezas/{id}` | Dueño | — | `204` | `401`, `403`, `404` | Listo |
 
 **Filtros de `GET /piezas` (Explorar):**
 
@@ -248,8 +248,8 @@ Seis tablas en PostgreSQL, creadas con migraciones de Alembic (`backend/migratio
 | --- | --- | --- |
 | `usuarios` | `id`, `username` y `email` (únicos), `password_hash`, `nombre_visible`, `bio`, `avatar_url`, `creado_en` | Lista (migración `0001`) |
 | `seguimientos` | `seguidor_id` y `seguido_id` (juntos forman la clave primaria), `creado_en`. `CHECK` para no seguirse a uno mismo | Lista (migración `0002`) |
-| `categorias` | `id`, `slug` y `nombre` (únicos) | Pendiente |
-| `piezas` | `id`, `usuario_id`, `categoria_id`, `nombre`, `descripcion`, `imagen_url` o la imagen guardada (`imagen_datos`, `imagen_tipo`), `creado_en`, `actualizado_en` | Pendiente |
+| `categorias` | `id`, `slug` y `nombre` (únicos) | Listo (migracion 003) |
+| `piezas` | `id`, `usuario_id`, `categoria_id`, `nombre`, `descripcion`, `imagen_url` o la imagen guardada (`imagen_datos`, `imagen_tipo`), `creado_en`, `actualizado_en` | Listo (migracion 003) |
 | `megusta` | `usuario_id` y `pieza_id` (juntos forman la clave primaria), `creado_en` | Pendiente |
 | `guardados` | `usuario_id` y `pieza_id` (juntos forman la clave primaria), `creado_en` | Pendiente |
 
