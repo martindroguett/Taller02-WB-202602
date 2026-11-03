@@ -1,36 +1,24 @@
-import { Component, computed, inject, input, numberAttribute, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Location } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { switchMap, of, catchError, map, startWith, Subject } from 'rxjs';
 import { Avatar } from '../components/avatar';
 import { Button } from '../components/button';
 import { CatalogTag } from '../components/catalog-tag';
-import { ConfirmSheet } from '../components/confirm-sheet';
 import { EmptyState } from '../components/empty-state';
-import { FollowButton } from '../components/follow-button';
 import { IconButton } from '../components/icon-button';
-import { LikeButton } from '../components/like-button';
-import { PieceArt } from '../components/piece-art';
-import { CatalogoService } from '../services/catalogo.service';
-import { ToastService } from '../services/toast.service';
-import { compacto, relativo } from '../models/format';
-import { categoriaDe } from '../models/vitrina';
 import { Icon } from '../components/icon';
-import { Location } from '@angular/common';
+import { PieceArt } from '../components/piece-art';
+import { relativo } from '../models/format';
+import { categoriaDe } from '../models/vitrina';
+import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publico.service';
+import { ToastService } from '../services/toast.service';
 
 @Component({
   selector: 'vt-piece-page',
-  imports: [
-    Avatar,
-    Button,
-    CatalogTag,
-    ConfirmSheet,
-    EmptyState,
-    FollowButton,
-    Icon,
-    IconButton,
-    LikeButton,
-    PieceArt,
-    RouterLink,
-  ],
+  imports: [Avatar, Button, CatalogTag, EmptyState, Icon, IconButton, PieceArt, RouterLink],
   template: `
     @if (pieza(); as p) {
       <div class="detalle vt-c-{{ p.categoria }}">
@@ -49,104 +37,58 @@ import { Location } from '@angular/common';
               label="Volver"
               (click)="volver()"
             ></button>
-            <button
-              type="button"
-              vt-icon-button
-              tone="glass"
-              icon="bookmark"
-              [label]="guardada() ? 'Quitar de favoritos' : 'Guardar en favoritos'"
-              [active]="guardada()"
-              [pressed]="guardada()"
-              (click)="catalogo.toggleGuardar(p.id)"
-            ></button>
           </div>
         </div>
-
         <article class="hoja">
-          <vt-catalog-tag class="ficha" [categoria]="p.categoria" [numero]="p.numero" />
+          <vt-catalog-tag class="ficha" [categoria]="p.categoria" [numero]="p.id" />
           <h1 class="display-lg nombre">{{ p.nombre }}</h1>
           <p class="categoria caption">
-            <vt-icon [name]="categoria().icono" [size]="16" />{{ categoria().nombre }} ·
-            {{ cuando() }}
+            <vt-icon [name]="categoriaDe(p.categoria).icono" [size]="16" />{{
+              categoriaDe(p.categoria).nombre
+            }}
+            · {{ cuando(p.creado_en) }}
           </p>
           <p class="body">{{ p.descripcion }}</p>
-
-          <dl class="cifras">
-            <div>
-              <dd class="stat">{{ compacto(catalogo.megusta(p)) }}</dd>
-              <dt class="caption vt-muted">Me gusta</dt>
-            </div>
-            <div>
-              <dd class="stat">{{ compacto(p.guardados + (guardada() ? 1 : 0)) }}</dd>
-              <dt class="caption vt-muted">Favoritos</dt>
-            </div>
-          </dl>
-
           <div class="dueno">
-            <a class="persona" [routerLink]="['/perfil', dueno().username]">
-              <vt-avatar [nombre]="dueno().username" [tam]="52" />
-              <span class="quien">
-                <span class="body-strong">&#64;{{ dueno().username }}</span>
-              </span>
-            </a>
-            @if (!esMia()) {
-              <vt-follow-button [usuarioId]="dueno().id" />
-            }
+            <span class="persona"
+              ><vt-avatar [nombre]="p.dueno.username" [tam]="52" /><span class="body-strong"
+                >&#64;{{ p.dueno.username }}</span
+              ></span
+            >
           </div>
-
-          @if (esMia()) {
-            <div class="gestion">
-              <a
-                vt-button
-                variant="secondary"
-                icon="edit"
-                [routerLink]="['/coleccion', p.id, 'editar']"
-                >Editar pieza</a
-              >
-              <button
-                type="button"
-                vt-button
-                variant="danger"
-                icon="delete"
-                (click)="confirmando.set(true)"
-              >
-                Eliminar
-              </button>
-            </div>
-          }
         </article>
-
         <div class="accion-fija">
-          <vt-like-button [pieza]="p" />
           <button
             type="button"
             vt-button
             class="compartir"
             variant="secondary"
             icon="link"
-            (click)="catalogo.compartir(p.id)"
+            (click)="compartir()"
           >
             Compartir enlace
           </button>
         </div>
       </div>
-
-      <vt-confirm-sheet
-        [categoria]="p.categoria"
-        [abierto]="confirmando()"
-        titulo="¿Eliminar esta pieza?"
-        [texto]="'Vas a quitar «' + p.nombre + '» de tu colección. No se puede deshacer.'"
-        (cancelado)="confirmando.set(false)"
-        (confirmado)="eliminar(p.id)"
-      />
+    } @else if (estado() === 'cargando') {
+      <div class="vt-screen"><p role="status">Cargando pieza…</p></div>
+    } @else if (estado() === 'error') {
+      <div class="vt-screen">
+        <vt-empty-state
+          titulo="No pudimos cargar la pieza"
+          texto="Comprueba tu conexión e inténtalo de nuevo."
+          ><button type="button" vt-button (click)="reintentar.next()">
+            Reintentar
+          </button></vt-empty-state
+        >
+      </div>
     } @else {
       <div class="vt-screen">
         <vt-empty-state
-          titulo="Esta pieza ya no está"
+          titulo="Esta pieza no está disponible"
           texto="Puede que la hayan eliminado o que el enlace esté incompleto."
+          ><a vt-button routerLink="/">Volver a Explorar</a></vt-empty-state
         >
-          <a vt-button routerLink="/">Volver a Explorar</a>
-        </vt-empty-state>
       </div>
     }
   `,
@@ -228,6 +170,10 @@ import { Location } from '@angular/common';
       min-width: 0;
       min-height: var(--tap-target);
     }
+    .persona .body-strong {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
     .quien {
       display: flex;
       flex-direction: column;
@@ -280,33 +226,63 @@ import { Location } from '@angular/common';
   `,
 })
 export class PiecePage {
-  protected readonly catalogo = inject(CatalogoService);
-  private readonly toast = inject(ToastService);
+  private readonly api = inject(CatalogoPublicoService);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
-
-  readonly id = input.required<number, string>({ transform: numberAttribute });
-
-  protected readonly compacto = compacto;
+  private readonly toast = inject(ToastService);
+  private readonly destroy = inject(DestroyRef);
+  protected readonly pieza = signal<PiezaPublica | null>(null);
+  protected readonly estado = signal<'cargando' | 'error' | 'no-encontrada'>('cargando');
   protected readonly fallo = signal(false);
-  protected readonly confirmando = signal(false);
+  protected readonly reintentar = new Subject<void>();
+  protected readonly categoriaDe = categoriaDe;
 
-  protected readonly pieza = computed(() => this.catalogo.pieza(this.id()));
-  protected readonly dueno = computed(() => this.catalogo.usuario(this.pieza()!.duenoId));
-  protected readonly categoria = computed(() => categoriaDe(this.pieza()!.categoria));
-  protected readonly esMia = computed(() => this.pieza()?.duenoId === this.catalogo.yo.id);
-  protected readonly guardada = computed(() => this.catalogo.guardadas().has(this.id()));
-  protected readonly cuando = computed(() => relativo(this.pieza()!.hace));
-
+  constructor() {
+    this.route.paramMap
+      .pipe(
+        switchMap((params) =>
+          this.reintentar.pipe(
+            startWith(undefined),
+            switchMap(() => {
+              this.pieza.set(null);
+              this.fallo.set(false);
+              this.estado.set('cargando');
+              const valor = params.get('id') ?? '';
+              if (!/^[1-9]\d*$/.test(valor) || !Number.isSafeInteger(Number(valor)))
+                return of({ tipo: 'no-encontrada' as const });
+              return this.api.obtener(Number(valor)).pipe(
+                map((pieza) => ({ tipo: 'pieza' as const, pieza })),
+                catchError((e: HttpErrorResponse) =>
+                  of({ tipo: e.status === 404 ? ('no-encontrada' as const) : ('error' as const) }),
+                ),
+              );
+            }),
+          ),
+        ),
+        takeUntilDestroyed(this.destroy),
+      )
+      .subscribe((resultado) => {
+        if (resultado.tipo === 'pieza') this.pieza.set(resultado.pieza);
+        else this.estado.set(resultado.tipo);
+      });
+  }
+  protected cuando(fecha: string): string {
+    return relativo(Math.max(0, Math.floor((Date.now() - Date.parse(fecha)) / 60_000)));
+  }
   protected volver(): void {
     if (window.history.state?.navigationId > 1) this.location.back();
-    else this.router.navigateByUrl('/');
+    else void this.router.navigateByUrl('/');
   }
-
-  protected eliminar(id: number): void {
-    this.catalogo.eliminar(id);
-    this.confirmando.set(false);
-    this.toast.show('Pieza eliminada', 'success');
-    this.router.navigateByUrl('/perfil');
+  protected async compartir(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      this.toast.show('Enlace copiado', 'success');
+    } catch {
+      this.toast.show(
+        'No pudimos copiar el enlace: cópialo desde la barra del navegador.',
+        'danger',
+      );
+    }
   }
 }
