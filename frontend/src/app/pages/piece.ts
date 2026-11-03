@@ -87,18 +87,14 @@ import { ToastService } from '../services/toast.service';
             </div>
           </dl>
           <div class="dueno">
-            <a
-              class="persona"
-              [routerLink]="['/perfil', p.dueno.username]"
-              title="Perfil de demostración"
-              ><vt-avatar [nombre]="p.dueno.username" [tam]="52" /><span class="body-strong"
-                >&#64;{{ p.dueno.username }}</span
-              ></a
-            >
+            <span class="persona" title="Perfil pendiente de conectar">
+              <vt-avatar [nombre]="p.dueno.username" [tam]="52" />
+              <span class="body-strong">&#64;{{ p.dueno.username }}</span>
+            </span>
             <vt-follow-button [usuarioId]="p.dueno.id" [pendiente]="true" />
           </div>
           <p class="caption vt-muted">
-            Perfiles: demostración. Las acciones sociales están pendientes de conexión.
+            El perfil y las acciones sociales están pendientes de conexión.
           </p>
           <div>
             <p class="caption vt-muted">Gestión de pieza: vista previa, pendiente de sesión</p>

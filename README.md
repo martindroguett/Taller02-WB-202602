@@ -49,7 +49,7 @@ Explorar y el detalle de piezas consultan la API; requieren el backend y la base
 - Agregar, editar y eliminar piezas propias.
 - Revisar los formularios de ingreso y registro.
 
-Feed, perfiles, favoritos, formularios e interacciones sociales usan datos de muestra y sus cambios se pierden al recargar la página. Los enlaces a piezas abren el detalle público de la API por ID; los datos de muestra no se sincronizan con este catálogo. Se utiliza un usuario de demostración fijo: `tomas_retro`. El ingreso y registro solo muestran el flujo y validan campos; todavía no crean cuentas ni autentican. El cierre de sesión también está pendiente.
+Feed, perfiles, favoritos, formularios e interacciones sociales usan datos de muestra y sus cambios se pierden al recargar la página. Las piezas de muestra no se enlazan al detalle real. Los nombres de propietarios reales se muestran sin enlace hasta conectar los perfiles. Se utiliza un usuario de demostración fijo: `tomas_retro`. El ingreso y registro solo muestran el flujo y validan campos; todavía no crean cuentas ni autentican. El cierre de sesión también está pendiente.
 
 ## Tecnologías
 

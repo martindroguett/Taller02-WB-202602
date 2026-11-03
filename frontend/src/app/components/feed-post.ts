@@ -26,11 +26,7 @@ import { PieceArt } from './piece-art';
       </header>
       <p class="texto">{{ pieza().descripcion }}</p>
       <div class="media">
-        <a
-          class="foto"
-          [routerLink]="['/pieza', pieza().id]"
-          [attr.aria-label]="'Ver ' + pieza().nombre"
-        >
+        <div class="foto">
           @if (pieza().imagen_url && !fallo()) {
             <img [src]="pieza().imagen_url" alt="" loading="lazy" (error)="fallo.set(true)" />
           } @else {
@@ -40,7 +36,7 @@ import { PieceArt } from './piece-art';
             <vt-catalog-tag [categoria]="pieza().categoria" [numero]="pieza().numero" />
             <span class="nombre">{{ pieza().nombre }}</span>
           </span>
-        </a>
+        </div>
       </div>
       <footer>
         <vt-like-button [pieza]="pieza()" />
@@ -55,14 +51,6 @@ import { PieceArt } from './piece-art';
           <vt-icon name="bookmark" [filled]="guardada()" [size]="20" />{{
             guardada() ? 'Guardada' : 'Guardar'
           }}
-        </button>
-        <button
-          type="button"
-          class="accion compartir"
-          aria-label="Compartir enlace"
-          (click)="catalogo.compartir(pieza().id)"
-        >
-          <vt-icon name="link" [size]="20" /><span class="compartir-label">Compartir</span>
         </button>
       </footer>
     </article>

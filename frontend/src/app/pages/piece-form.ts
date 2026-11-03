@@ -160,7 +160,7 @@ export class PieceFormPage implements OnChanges {
     if (id === undefined) return;
     const p = this.catalogo.pieza(id);
     if (!p || p.duenoId !== this.catalogo.yo.id) {
-      this.router.navigateByUrl(p ? `/pieza/${p.id}` : '/');
+      this.router.navigateByUrl('/perfil');
       return;
     }
     this.nombre.set(p.nombre);
@@ -189,11 +189,11 @@ export class PieceFormPage implements OnChanges {
     if (id !== undefined) {
       this.catalogo.actualizar(id, datos);
       this.toast.show('Cambios guardados', 'success');
-      this.router.navigate(['/pieza', id]);
+      this.router.navigate(['/perfil']);
     } else {
-      const nueva = this.catalogo.agregar(datos);
+      this.catalogo.agregar(datos);
       this.toast.show('Pieza agregada a tu colección', 'success');
-      this.router.navigate(['/pieza', nueva.id]);
+      this.router.navigate(['/perfil']);
     }
   }
 

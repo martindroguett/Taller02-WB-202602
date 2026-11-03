@@ -142,6 +142,8 @@ try {
   const follows = [...mock.siguiendo()];
   const card = injector.get(PieceCard);
   setInput(card.pieza, publicPiece);
+  assert.equal(card.esPublica(), true);
+  assert.deepEqual(card.detalleLink(), ['/pieza', 1]);
   assert.equal(card.guardada(), false);
   assert.equal(card.megusta(), '8');
   card.alternarGuardar();
@@ -155,6 +157,8 @@ try {
   assert.deepEqual([...mock.guardadas()], saved);
   assert.deepEqual([...mock.gustadas()], likes);
   assert.deepEqual([...mock.siguiendo()], follows);
+  setInput(card.pieza, mock.pieza(1));
+  assert.equal(card.detalleLink(), null, 'Una pieza de muestra no debe abrir el detalle público');
   const detail = injector.get(PiecePage);
   http.expectOne('/api/piezas/7').flush('error', { status: 500, statusText: 'Error' });
   assert.equal(detail.estado(), 'error');

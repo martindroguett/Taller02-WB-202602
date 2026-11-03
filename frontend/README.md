@@ -33,9 +33,9 @@ No se incluyen chat, sets ni cargas simuladas.
 
 ## Qué funciona y qué queda pendiente
 
-Explorar consulta piezas reales, permite buscar y filtrar por categoría, y carga páginas de 20 resultados. La URL conserva los filtros al volver desde el detalle. La pantalla informa carga, ausencia de resultados y errores con reintento; el detalle permite copiar su enlace. Los paneles laterales de perfil y coleccionistas son de demostración. En el detalle, el enlace del propietario lleva a un perfil de demostración; sus acciones sociales están visibles pero pendientes de conexión, y la gestión está deshabilitada hasta integrar sesión.
+Explorar consulta piezas reales, permite buscar y filtrar por categoría, y carga páginas de 20 resultados. La URL conserva los filtros al volver desde el detalle. La pantalla informa carga, ausencia de resultados y errores con reintento; el detalle permite copiar su enlace. Los paneles laterales de perfil y coleccionistas son de demostración. Los nombres de propietarios reales se muestran sin enlace hasta conectar los perfiles; las acciones sociales están pendientes de conexión y la gestión está deshabilitada hasta integrar sesión.
 
-Feed, perfiles, favoritos, interacciones sociales y formularios siguen siendo una demostración en memoria, con `tomas_retro` como usuario fijo. El ingreso y registro no autentican. Los enlaces a piezas de estas pantallas abren el detalle público por ID, por lo que los datos de muestra no necesariamente corresponden a la API. Las modificaciones de la demostración no se guardan en el backend.
+Feed, perfiles, favoritos, interacciones sociales y formularios siguen siendo una demostración en memoria, con `tomas_retro` como usuario fijo. El ingreso y registro no autentican. Las piezas de muestra no tienen enlace al detalle real; sus cambios no se guardan en el backend y se pierden al recargar.
 
 ## Comprobación manual antes de presentar
 

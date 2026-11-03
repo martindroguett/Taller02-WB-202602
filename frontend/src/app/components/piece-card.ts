@@ -23,8 +23,8 @@ import { CatalogTag } from './catalog-tag';
       <div class="imagen">
         <a
           class="enlace"
-          [routerLink]="['/pieza', pieza().id]"
-          [attr.aria-label]="'Ver ' + pieza().nombre"
+          [routerLink]="detalleLink()"
+          [attr.aria-label]="esPublica() ? 'Ver ' + pieza().nombre : null"
         >
           @if (pieza().imagen_url && !fallo()) {
             <img [src]="pieza().imagen_url" alt="" loading="lazy" (error)="fallo.set(true)" />
@@ -61,17 +61,13 @@ import { CatalogTag } from './catalog-tag';
         @if (destacada() && variante() === 'grid') {
           <span class="insignia"><vt-icon name="star" [filled]="true" [size]="14" />Destacada</span>
         }
-        <a class="nombre" [routerLink]="['/pieza', pieza().id]">{{ pieza().nombre }}</a>
+        <a class="nombre" [routerLink]="detalleLink()">{{ pieza().nombre }}</a>
         <p class="meta caption">
           @if (esPublica()) {
-            <a
-              class="dueno publico"
-              [routerLink]="['/perfil', dueno().username]"
-              title="Perfil de demostración"
-              ><vt-avatar [nombre]="dueno().username" [tam]="24" /><span
-                >&#64;{{ dueno().username }}</span
-              ></a
-            >
+            <span class="dueno publico" title="Perfil pendiente de conectar">
+              <vt-avatar [nombre]="dueno().username" [tam]="24" />
+              <span>&#64;{{ dueno().username }}</span>
+            </span>
             <span class="dato" [class.gustado]="gustada()"
               ><vt-icon name="favorite" [size]="16" [filled]="gustada()" />{{ megusta() }}</span
             >
@@ -276,6 +272,9 @@ export class PieceCard {
     else this.catalogo.toggleGuardar(p.id);
   }
   protected readonly esPublica = computed(() => 'dueno' in this.pieza());
+  protected readonly detalleLink = computed(() =>
+    this.esPublica() ? ['/pieza', this.pieza().id] : null,
+  );
   protected readonly dueno = computed(() => {
     const p = this.pieza();
     return 'dueno' in p ? p.dueno : this.catalogo.usuario(p.duenoId);
