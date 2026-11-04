@@ -34,6 +34,20 @@ class PiezaRespuesta(BaseModel):
     creado_en: datetime
     actualizado_en: datetime
 
+class EstadoMeGusta(BaseModel):
+    """Respuesta de dar o quitar me gusta: el estado nuevo y el total actualizado para el contador."""
+
+    gustada: bool
+    megusta: int
+
+
+class EstadoGuardado(BaseModel):
+    """Respuesta de guardar o quitar de favoritos."""
+
+    guardada: bool
+    guardados: int
+
+
 T = TypeVar("T")
 
 class Pagina(BaseModel, Generic[T]):

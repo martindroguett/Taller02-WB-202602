@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import configuracion
-from routers import auth, categorias, piezas
+from routers import auth, categorias, interacciones, piezas
 
 app = FastAPI(title="Vitrina API", version="0.1.0")
 
@@ -17,6 +17,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api")
 app.include_router(piezas.router, prefix="/api")
 app.include_router(categorias.router, prefix="/api")
+app.include_router(interacciones.router, prefix="/api")
 
 
 @app.get("/api/salud", tags=["Salud"])
