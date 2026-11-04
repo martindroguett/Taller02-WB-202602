@@ -1,19 +1,22 @@
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response, status
-from sqlalchemy import func, or_, select
+from sqlalchemy import Select, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from database import Sesion
 from imagenes import asignar_imagen, url_imagen
-from models import Categoria, Pieza, Usuario
+from models import Categoria, Guardado, MeGusta, Pieza, Usuario
 from schemas import DatosPieza, Dueno, Pagina, PiezaRespuesta
-from seguridad import UsuarioActual
+from seguridad import UsuarioActual, UsuarioOpcional
 
 router = APIRouter(prefix="/piezas", tags=["Piezas"])
 
+Limite = Annotated[int, Query(ge=1, le=50)]
+Desplazamiento = Annotated[int, Query(ge=0)]
 
-def a_respuesta(pieza: Pieza, request: Request) -> PiezaRespuesta:
+
+def a_respuesta(pieza: Pieza, request: Request, gustada: bool, guardada: bool) -> PiezaRespuesta:
     return PiezaRespuesta(
         id=pieza.id,
         nombre=pieza.nombre,
@@ -21,13 +24,55 @@ def a_respuesta(pieza: Pieza, request: Request) -> PiezaRespuesta:
         categoria=pieza.categoria.slug,
         imagen_url=url_imagen(pieza, request),
         dueno=Dueno.model_validate(pieza.usuario),
-
-        megusta=0,
-        guardados=0,
-        gustada=False,
-        guardada=False,
+        megusta=pieza.megusta,
+        guardados=pieza.guardados,
+        gustada=gustada,
+        guardada=guardada,
         creado_en=pieza.creado_en,
         actualizado_en=pieza.actualizado_en,
+    )
+
+
+def a_respuestas(
+    db: Session, piezas: list[Pieza], request: Request, usuario: Usuario | None
+) -> list[PiezaRespuesta]:
+    """Arma las respuestas y marca qué piezas le gustaron o guardó el usuario del token.
+
+    Hace dos consultas para toda la lista, no dos por pieza: busca de una vez los ids marcados.
+    """
+    ids = [pieza.id for pieza in piezas]
+    gustadas: set[int] = set()
+    guardadas: set[int] = set()
+    if usuario is not None and ids:
+        gustadas = set(db.scalars(
+            select(MeGusta.pieza_id).where(MeGusta.usuario_id == usuario.id, MeGusta.pieza_id.in_(ids))
+        ))
+        guardadas = set(db.scalars(
+            select(Guardado.pieza_id).where(Guardado.usuario_id == usuario.id, Guardado.pieza_id.in_(ids))
+        ))
+    return [a_respuesta(pieza, request, pieza.id in gustadas, pieza.id in guardadas) for pieza in piezas]
+
+
+def paginar(
+    db: Session,
+    consulta: Select,
+    request: Request,
+    usuario: Usuario | None,
+    limite: int,
+    desplazamiento: int,
+) -> Pagina[PiezaRespuesta]:
+    """Cuenta el total y trae una página de piezas. La consulta ya debe venir ordenada."""
+    total = db.scalar(select(func.count()).select_from(consulta.order_by(None).subquery()))
+    piezas = db.scalars(
+        consulta.options(selectinload(Pieza.usuario), selectinload(Pieza.categoria))
+        .limit(limite)
+        .offset(desplazamiento)
+    ).all()
+    return Pagina(
+        items=a_respuestas(db, list(piezas), request, usuario),
+        total=total,
+        limite=limite,
+        desplazamiento=desplazamiento,
     )
 
 
@@ -57,43 +102,37 @@ def categoria_por_slug(db: Session, slug: str) -> Categoria:
 def listar_piezas(
     request: Request,
     db: Sesion,
+    usuario: UsuarioOpcional,
     q: str | None = None,
     categoria: str | None = None,
     orden: Literal["recientes", "populares"] = "recientes",
-    limite: Annotated[int, Query(ge=1, le=50)] = 20,
-    desplazamiento: Annotated[int, Query(ge=0)] = 0,
+    limite: Limite = 20,
+    desplazamiento: Desplazamiento = 0,
 ):
     consulta = select(Pieza)
     if q and q.strip():
         texto = q.strip()
-    
+
         consulta = consulta.where(
             or_(Pieza.nombre.icontains(texto, autoescape=True), Pieza.descripcion.icontains(texto, autoescape=True))
         )
     if categoria:
-    
+
         consulta = consulta.join(Pieza.categoria).where(Categoria.slug == categoria)
 
-    total = db.scalar(select(func.count()).select_from(consulta.subquery()))
+    recientes = (Pieza.creado_en.desc(), Pieza.id.desc())
+    if orden == "populares":
+        # Más me gusta primero; si empatan, la más nueva.
+        consulta = consulta.order_by(Pieza.megusta.desc(), *recientes)
+    else:
+        consulta = consulta.order_by(*recientes)
 
-    piezas = db.scalars(
-        consulta.options(selectinload(Pieza.usuario), selectinload(Pieza.categoria))
-        .order_by(Pieza.creado_en.desc(), Pieza.id.desc())
-        .limit(limite)
-        .offset(desplazamiento)
-    ).all()
-
-    return Pagina(
-        items=[a_respuesta(pieza, request) for pieza in piezas],
-        total=total,
-        limite=limite,
-        desplazamiento=desplazamiento,
-    )
+    return paginar(db, consulta, request, usuario, limite, desplazamiento)
 
 
 @router.get("/{id}", response_model=PiezaRespuesta)
-def ver_pieza(id: int, request: Request, db: Sesion):
-    return a_respuesta(pieza_o_404(db, id), request)
+def ver_pieza(id: int, request: Request, db: Sesion, usuario: UsuarioOpcional):
+    return a_respuestas(db, [pieza_o_404(db, id)], request, usuario)[0]
 
 
 @router.get("/{id}/imagen", response_class=Response)
@@ -121,8 +160,8 @@ def crear_pieza(datos: DatosPieza, usuario: UsuarioActual, request: Request, db:
     asignar_imagen(pieza, datos.imagen_url)
     db.add(pieza)
     db.commit()
-    db.refresh(pieza) 
-    return a_respuesta(pieza, request)
+    db.refresh(pieza)
+    return a_respuestas(db, [pieza], request, usuario)[0]
 
 
 @router.put("/{id}", response_model=PiezaRespuesta)
@@ -133,8 +172,8 @@ def editar_pieza(id: int, datos: DatosPieza, usuario: UsuarioActual, request: Re
     pieza.categoria = categoria_por_slug(db, datos.categoria)
     asignar_imagen(pieza, datos.imagen_url)
     db.commit()
-    db.refresh(pieza)  
-    return a_respuesta(pieza, request)
+    db.refresh(pieza)
+    return a_respuestas(db, [pieza], request, usuario)[0]
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)

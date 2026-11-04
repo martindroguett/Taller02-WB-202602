@@ -1,9 +1,12 @@
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, String, func, ForeignKey, LargeBinary
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import CheckConstraint, DateTime, String, func, ForeignKey, LargeBinary, select
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from database import Base
+
+from .guardado import Guardado
+from .megusta import MeGusta
 
 
 class Pieza(Base):
@@ -31,3 +34,17 @@ class Pieza(Base):
     usuario: Mapped["Usuario"] = relationship('Usuario', back_populates="piezas")
     categoria_id: Mapped[int] = mapped_column(ForeignKey('categorias.id', ondelete="RESTRICT"), index=True)
     categoria: Mapped["Categoria"] = relationship('Categoria', back_populates="piezas")
+
+    # Totales calculados con COUNT al leer la pieza: no se guardan, así nunca quedan desfasados.
+    megusta: Mapped[int] = column_property(
+        select(func.count())
+        .where(MeGusta.pieza_id == id)
+        .correlate_except(MeGusta)
+        .scalar_subquery()
+    )
+    guardados: Mapped[int] = column_property(
+        select(func.count())
+        .where(Guardado.pieza_id == id)
+        .correlate_except(Guardado)
+        .scalar_subquery()
+    )

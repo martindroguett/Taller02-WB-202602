@@ -12,7 +12,7 @@ Los nombres de los campos siguen el modelo del frontend (`frontend/src/app/model
 | Usuarios: perfil, editar perfil, seguir y dejar de seguir | Pendiente (la tabla `seguimientos` ya existe) |
 | Categorías | Listo |
 | Piezas: CRUD, Explorar e imágenes | Listo |
-| Me gusta, guardados (favoritos) y feed | Pendiente |
+| Me gusta, guardados (favoritos) y feed | Listo |
 
 ## Convenciones
 
@@ -199,7 +199,7 @@ Router `routers/piezas.py`, prefijo `/api/piezas`.
 | --- | --- | --- |
 | `q` | Texto que se busca en el nombre y la descripción, sin distinguir mayúsculas | Sin filtro |
 | `categoria` | Un slug: `cartas`, `videojuegos`, `juguetes` o `vinilos`. Para «Todas», no se envía | Todas |
-| `orden` | `recientes` (por fecha) o `populares` (por me gusta) | `recientes` |
+| `orden` | `recientes` (por fecha) o `populares` (por cantidad de me gusta; si empatan, la más nueva primero) | `recientes` |
 | `limite`, `desplazamiento` | Ver paginación | `20`, `0` |
 
 - Los destacados de Explorar son `GET /piezas?orden=populares&limite=8`; no hay una ruta aparte.
@@ -209,14 +209,16 @@ Router `routers/piezas.py`, prefijo `/api/piezas`.
 
 ### Me gusta, guardados y feed
 
+Router `routers/interacciones.py`, prefijo `/api`.
+
 | Método y ruta | Acceso | Envía | Responde | Errores | Estado |
 | --- | --- | --- | --- | --- | --- |
-| `POST /piezas/{id}/megusta` | Token | — | `200` + `{gustada: true, megusta}` | `401`, `404` | Pendiente |
-| `DELETE /piezas/{id}/megusta` | Token | — | `200` + `{gustada: false, megusta}` | `401`, `404` | Pendiente |
-| `POST /piezas/{id}/guardar` | Token | — | `200` + `{guardada: true, guardados}` | `401`, `404` | Pendiente |
-| `DELETE /piezas/{id}/guardar` | Token | — | `200` + `{guardada: false, guardados}` | `401`, `404` | Pendiente |
-| `GET /favoritos` | Token | `?limite&desplazamiento` | `200` + página de `Pieza` | `401` | Pendiente |
-| `GET /feed` | Token | `?limite&desplazamiento` | `200` + página de `Pieza` | `401` | Pendiente |
+| `POST /piezas/{id}/megusta` | Token | — | `200` + `{gustada: true, megusta}` | `401`, `404` | Listo |
+| `DELETE /piezas/{id}/megusta` | Token | — | `200` + `{gustada: false, megusta}` | `401`, `404` | Listo |
+| `POST /piezas/{id}/guardar` | Token | — | `200` + `{guardada: true, guardados}` | `401`, `404` | Listo |
+| `DELETE /piezas/{id}/guardar` | Token | — | `200` + `{guardada: false, guardados}` | `401`, `404` | Listo |
+| `GET /favoritos` | Token | `?limite&desplazamiento` | `200` + página de `Pieza` | `401` | Listo |
+| `GET /feed` | Token | `?limite&desplazamiento` | `200` + página de `Pieza` | `401` | Listo |
 
 - Igual que seguir: repetir la acción no es error, y la respuesta trae el total actualizado para el contador.
 - Se puede dar me gusta y guardar las piezas propias.
@@ -248,10 +250,10 @@ Seis tablas en PostgreSQL, creadas con migraciones de Alembic (`backend/migratio
 | --- | --- | --- |
 | `usuarios` | `id`, `username` y `email` (únicos), `password_hash`, `nombre_visible`, `bio`, `avatar_url`, `creado_en` | Lista (migración `0001`) |
 | `seguimientos` | `seguidor_id` y `seguido_id` (juntos forman la clave primaria), `creado_en`. `CHECK` para no seguirse a uno mismo | Lista (migración `0002`) |
-| `categorias` | `id`, `slug` y `nombre` (únicos) | Listo (migracion 003) |
-| `piezas` | `id`, `usuario_id`, `categoria_id`, `nombre`, `descripcion`, `imagen_url` o la imagen guardada (`imagen_datos`, `imagen_tipo`), `creado_en`, `actualizado_en` | Listo (migracion 003) |
-| `megusta` | `usuario_id` y `pieza_id` (juntos forman la clave primaria), `creado_en` | Pendiente |
-| `guardados` | `usuario_id` y `pieza_id` (juntos forman la clave primaria), `creado_en` | Pendiente |
+| `categorias` | `id`, `slug` y `nombre` (únicos) | Listo (migración `0003`) |
+| `piezas` | `id`, `usuario_id`, `categoria_id`, `nombre`, `descripcion`, `imagen_url` o la imagen guardada (`imagen_datos`, `imagen_tipo`), `creado_en`, `actualizado_en` | Listo (migración `0003`) |
+| `megusta` | `usuario_id` y `pieza_id` (juntos forman la clave primaria), `creado_en` | Listo (migración `0004`) |
+| `guardados` | `usuario_id` y `pieza_id` (juntos forman la clave primaria), `creado_en` | Listo (migración `0004`) |
 
 - Los totales (`seguidores`, `siguiendo`, `megusta`, `guardados`) se calculan con `COUNT` al consultar; no se guardan en columnas, así nunca quedan desfasados.
 - Al borrar un usuario o una pieza, sus filas en las tablas de unión se borran solas (`ON DELETE CASCADE`).
