@@ -1,5 +1,15 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, computed, inject, input, signal } from '@angular/core';
+import {
+  AbstractControl,
+  FormGroup,
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
+import { finalize } from 'rxjs';
 import { Button } from '../components/button';
 import { IconButton } from '../components/icon-button';
 import { Icon } from '../components/icon';
@@ -7,11 +17,43 @@ import { Logo } from '../components/logo';
 import { PieceArt } from '../components/piece-art';
 import { Tabs } from '../components/tabs';
 import { TextField } from '../components/text-field';
+import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
+
+const PATRON_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+const MENSAJES: Record<string, Record<string, string>> = {
+  username: {
+    required: 'Elige un nombre de usuario.',
+    pattern: 'Usa de 3 a 30 letras o números, sin espacios (ej. tomas_retro).',
+  },
+  email: {
+    required: 'Escribe tu correo.',
+    pattern: 'Revisa el correo: le falta el dominio (ej. .cl).',
+  },
+  password: {
+    required: 'Escribe tu contraseña.',
+    minlength: 'Tu contraseña necesita al menos 8 caracteres.',
+    bytes: 'Tu contraseña es demasiado larga.',
+  },
+};
+
+function maximo72Bytes(control: AbstractControl): ValidationErrors | null {
+  return new TextEncoder().encode(control.value).length > 72 ? { bytes: true } : null;
+}
+
+function mensajeError(error: HttpErrorResponse): string {
+  if (error.status === 0 || error.status >= 500) {
+    return 'El servidor no responde. Intenta de nuevo en unos minutos.';
+  }
+  if (typeof error.error?.detail === 'string') return error.error.detail;
+  if (error.status === 422) return 'Revisa los datos ingresados.';
+  return 'No pudimos completar la solicitud.';
+}
 
 @Component({
   selector: 'vt-login-page',
-  imports: [Button, IconButton, Icon, Logo, PieceArt, Tabs, TextField],
+  imports: [Button, IconButton, Icon, Logo, PieceArt, ReactiveFormsModule, Tabs, TextField],
   template: `
     <main class="ingreso">
       <section class="hero vt-showcase">
@@ -30,15 +72,15 @@ import { ToastService } from '../services/toast.service';
         </p>
       </section>
 
-      <form class="form" (submit)="enviar($event)" novalidate>
+      <form class="form" [formGroup]="formulario()" (ngSubmit)="enviar()" novalidate>
         <vt-tabs [opciones]="opciones" etiqueta="Ingresar o registrarse" [(valor)]="modo" />
 
         @if (modo() === 'registro') {
           <vt-text-field
             label="Nombre de usuario"
-            [(valor)]="usuario"
+            formControlName="username"
             ayuda="Sin espacios, por ejemplo tomas_retro."
-            [error]="errores().usuario"
+            [error]="mensaje('username')"
             autocomplete="username"
             icono="person"
             [maxLength]="30"
@@ -48,9 +90,9 @@ import { ToastService } from '../services/toast.service';
           label="Correo"
           tipo="email"
           icono="mail"
-          [(valor)]="correo"
+          formControlName="email"
           placeholder="tu@correo.cl"
-          [error]="errores().correo"
+          [error]="mensaje('email')"
           autocomplete="email"
           [maxLength]="255"
         />
@@ -58,8 +100,8 @@ import { ToastService } from '../services/toast.service';
           label="Contraseña"
           icono="lock"
           [tipo]="verClave() ? 'text' : 'password'"
-          [(valor)]="clave"
-          [error]="errores().clave"
+          formControlName="password"
+          [error]="mensaje('password')"
           [autocomplete]="modo() === 'ingreso' ? 'current-password' : 'new-password'"
         >
           <button
@@ -73,7 +115,7 @@ import { ToastService } from '../services/toast.service';
           ></button>
         </vt-text-field>
 
-        <button type="submit" vt-button size="lg" [block]="true">
+        <button type="submit" vt-button size="lg" [block]="true" [disabled]="enviando()">
           {{ modo() === 'ingreso' ? 'Ingresar' : 'Crear cuenta' }}
           <vt-icon name="arrow_forward" [size]="22" />
         </button>
@@ -82,9 +124,6 @@ import { ToastService } from '../services/toast.service';
           <button type="button" (click)="modo.set(modo() === 'ingreso' ? 'registro' : 'ingreso')">
             {{ modo() === 'ingreso' ? 'Crea tu cuenta' : 'Ingresa aquí' }}
           </button>
-        </p>
-        <p class="demo caption vt-muted">
-          Estás en una demo. El ingreso y registro aún no crean una sesión.
         </p>
       </form>
     </main>
@@ -198,11 +237,6 @@ import { ToastService } from '../services/toast.service';
       font-weight: 700;
       cursor: pointer;
     }
-    .demo {
-      text-align: center;
-      max-width: 35ch;
-      align-self: center;
-    }
     @media (min-width: 1000px) {
       .ingreso {
         display: grid;
@@ -232,42 +266,65 @@ import { ToastService } from '../services/toast.service';
   `,
 })
 export class LoginPage {
+  private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly fb = inject(NonNullableFormBuilder);
+
+  readonly returnUrl = input<string>();
 
   protected readonly opciones = [
     { id: 'ingreso', texto: 'Ingresar' },
     { id: 'registro', texto: 'Crear cuenta' },
   ];
   protected readonly modo = signal('ingreso');
-  protected readonly usuario = signal('');
-  protected readonly correo = signal('');
-  protected readonly clave = signal('');
   protected readonly verClave = signal(false);
-  private readonly intento = signal(false);
+  protected readonly enviando = signal(false);
 
-  protected readonly errores = computed(() => {
-    if (!this.intento()) return { usuario: '', correo: '', clave: '' };
-    return {
-      usuario:
-        this.modo() === 'registro' && !/^[\w.]{3,30}$/.test(this.usuario())
-          ? 'Usa de 3 a 30 letras o números, sin espacios (ej. tomas_retro).'
-          : '',
-      correo: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(this.correo())
-        ? ''
-        : 'Revisa el correo: le falta el dominio (ej. .cl).',
-      clave: this.clave().length >= 8 ? '' : 'Tu contraseña necesita al menos 8 caracteres.',
-    };
+  private readonly ingreso = this.fb.group({
+    email: ['', [Validators.required, Validators.pattern(PATRON_CORREO)]],
+    password: ['', Validators.required],
   });
+  private readonly registro = this.fb.group({
+    username: ['', [Validators.required, Validators.pattern(/^[\w.]{3,30}$/)]],
+    email: ['', [Validators.required, Validators.pattern(PATRON_CORREO)]],
+    password: ['', [Validators.required, Validators.minLength(8), maximo72Bytes]],
+  });
+  protected readonly formulario = computed<FormGroup>(() =>
+    this.modo() === 'ingreso' ? this.ingreso : this.registro,
+  );
 
-  protected enviar(ev: Event): void {
-    ev.preventDefault();
-    this.intento.set(true);
-    if (Object.values(this.errores()).some(Boolean)) {
+  protected mensaje(campo: string): string {
+    const control = this.formulario().get(campo);
+    if (!control?.errors || !control.touched) return '';
+    return MENSAJES[campo][Object.keys(control.errors)[0]] ?? '';
+  }
+
+  protected enviar(): void {
+    const formulario = this.formulario();
+    if (formulario.invalid) {
+      formulario.markAllAsTouched();
       this.toast.show('Revisa los campos marcados para continuar.', 'danger');
       return;
     }
-    this.toast.show('Demostración completada. La sesión de muestra sigue activa.', 'success');
-    this.router.navigateByUrl('/');
+
+    const peticion =
+      this.modo() === 'ingreso'
+        ? this.auth.ingresar(this.ingreso.getRawValue())
+        : this.auth.registrar(this.registro.getRawValue());
+
+    this.enviando.set(true);
+    peticion.pipe(finalize(() => this.enviando.set(false))).subscribe({
+      next: ({ usuario }) => {
+        this.toast.show(`Hola, @${usuario.username}`, 'success');
+        this.router.navigateByUrl(this.destino());
+      },
+      error: (error: HttpErrorResponse) => this.toast.show(mensajeError(error), 'danger'),
+    });
+  }
+
+  private destino(): string {
+    const url = this.returnUrl();
+    return url?.startsWith('/') && !url.startsWith('//') ? url : '/';
   }
 }
