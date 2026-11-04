@@ -34,6 +34,13 @@ async function preparar(path = '') {
   }
 }
 await preparar();
+const environmentSource = await readFile(new URL('../src/environments/environment.ts', import.meta.url), 'utf8');
+const environmentDest = new URL('../.angular/environments/', import.meta.url);
+await mkdir(environmentDest, { recursive: true });
+await writeFile(new URL('environment.mjs', environmentDest), transpileModule(environmentSource, {
+  compilerOptions: { module: ModuleKind.ESNext, target: ScriptTarget.ES2022 },
+}).outputText);
+const { environment } = await import(new URL('environment.mjs', environmentDest));
 const { ExplorePage } = await import(new URL('pages/explore.mjs', dest));
 const { PiecePage } = await import(new URL('pages/piece.mjs', dest));
 const { PieceCard } = await import(new URL('components/piece-card.mjs', dest));
@@ -94,7 +101,7 @@ const page = (items, total, desplazamiento = 0) => ({ items, total, limite: 20, 
 const request = (offset, q = null, categoria = null) =>
   http.expectOne(
     (r) =>
-      r.url === '/api/piezas' &&
+      r.url === `${environment.apiUrl}/piezas` &&
       r.params.get('desplazamiento') === String(offset) &&
       r.params.get('q') === q &&
       r.params.get('categoria') === categoria &&
@@ -160,15 +167,15 @@ try {
   setInput(card.pieza, mock.pieza(1));
   assert.equal(card.detalleLink(), null, 'Una pieza de muestra no debe abrir el detalle público');
   const detail = injector.get(PiecePage);
-  http.expectOne('/api/piezas/7').flush('error', { status: 500, statusText: 'Error' });
+  http.expectOne(`${environment.apiUrl}/piezas/7`).flush('error', { status: 500, statusText: 'Error' });
   assert.equal(detail.estado(), 'error');
   detail.reintentar.next();
-  http.expectOne('/api/piezas/7').flush(fixture(7));
+  http.expectOne(`${environment.apiUrl}/piezas/7`).flush(fixture(7));
   assert.equal(detail.pieza().id, 7);
   detail.fallo.set(true);
   params.next(convertToParamMap({ id: '8' }));
   assert.equal(detail.fallo(), false);
-  http.expectOne('/api/piezas/8').flush('no', { status: 404, statusText: 'Not Found' });
+  http.expectOne(`${environment.apiUrl}/piezas/8`).flush('no', { status: 404, statusText: 'Not Found' });
   assert.equal(detail.estado(), 'no-encontrada');
   params.next(convertToParamMap({ id: 'abc' }));
   assert.equal(detail.estado(), 'no-encontrada');

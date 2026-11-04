@@ -14,7 +14,7 @@ npm test        # comprobaciones de catálogo público y de muestra, sin backend
 npm run build
 ```
 
-Para Explorar y el detalle, iniciar también la API en `http://localhost:8000` (ver el README raíz). El servidor de desarrollo redirige `/api` a esa dirección. Para desplegar el frontend, el servidor debe redirigir `/api` a la API.
+Para Explorar y el detalle, iniciar también la API en `http://localhost:8000` (ver el README raíz). El servidor de desarrollo redirige `/api` a esa dirección. La URL base está en `src/environments/`: en desarrollo se usa `/api` mediante el proxy; para producción se debe configurar `environment.ts` con la URL pública de la API antes de compilar. Su valor actual apunta a `localhost:8000` y solo sirve si la API corre en la misma máquina del navegador.
 
 La caché de disco está desactivada porque su módulo nativo LMDB aborta en el entorno local. Las fuentes se cargan en el navegador; el build no necesita descargarlas.
 
