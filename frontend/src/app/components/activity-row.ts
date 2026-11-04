@@ -1,5 +1,4 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { CatalogoService } from '../services/catalogo.service';
 import { relativo } from '../models/format';
 import { Pieza } from '../models/vitrina';
@@ -7,19 +6,19 @@ import { Avatar } from './avatar';
 
 @Component({
   selector: 'vt-activity-row',
-  imports: [Avatar, RouterLink],
+  imports: [Avatar],
   template: `
-    <a [routerLink]="['/pieza', pieza().id]">
+    <div class="actividad">
       <vt-avatar [nombre]="usuario().username" [tam]="44" />
       <span class="txt">
         <span class="body-strong">{{ usuario().username }}</span>
         <span class="body"> agregó {{ pieza().nombre }}</span>
         <span class="caption vt-muted">{{ cuando() }}</span>
       </span>
-    </a>
+    </div>
   `,
   styles: `
-    a {
+    .actividad {
       display: flex;
       align-items: center;
       gap: var(--space-3);

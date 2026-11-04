@@ -1,4 +1,5 @@
 import { Component, computed, inject, input } from '@angular/core';
+import { ToastService } from '../services/toast.service';
 import { CatalogoService } from '../services/catalogo.service';
 import { Button } from './button';
 
@@ -14,7 +15,9 @@ import { Button } from './button';
       [variant]="siguiendo() ? 'secondary' : 'primary'"
       [icon]="siguiendo() ? 'check' : 'person_add'"
       [attr.aria-pressed]="siguiendo()"
-      (click)="catalogo.toggleSeguir(usuarioId())"
+      [attr.aria-label]="pendiente() ? 'Seguir: pendiente de conectar' : null"
+      [title]="pendiente() ? 'Pendiente de conectar' : ''"
+      (click)="alternar()"
     >
       {{ siguiendo() ? 'Siguiendo' : 'Seguir' }}
     </button>
@@ -38,5 +41,13 @@ export class FollowButton {
   protected readonly catalogo = inject(CatalogoService);
   readonly usuarioId = input.required<number>();
   readonly size = input<'sm' | 'md'>('md');
-  protected readonly siguiendo = computed(() => this.catalogo.siguiendo().has(this.usuarioId()));
+  readonly pendiente = input(false);
+  private readonly toast = inject(ToastService);
+  protected readonly siguiendo = computed(
+    () => !this.pendiente() && this.catalogo.siguiendo().has(this.usuarioId()),
+  );
+  protected alternar(): void {
+    if (this.pendiente()) this.toast.show('Seguir está pendiente de conectar');
+    else this.catalogo.toggleSeguir(this.usuarioId());
+  }
 }
