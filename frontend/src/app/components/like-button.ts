@@ -1,4 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
+import { ToastService } from '../services/toast.service';
+import { PiezaPublica } from '../services/catalogo-publico.service';
 import { CatalogoService } from '../services/catalogo.service';
 import { compacto } from '../models/format';
 import { Pieza } from '../models/vitrina';
@@ -12,8 +14,12 @@ import { Icon } from './icon';
       type="button"
       [class.on]="activo()"
       [attr.aria-pressed]="activo()"
-      [attr.aria-label]="activo() ? 'Quitar me gusta' : 'Dar me gusta'"
-      (click)="catalogo.toggleMeGusta(pieza().id)"
+      [attr.aria-label]="
+        ('dueno' in pieza() ? 'Pendiente de conectar: ' : '') +
+        (activo() ? 'Quitar me gusta' : 'Dar me gusta')
+      "
+      [title]="'dueno' in pieza() ? 'Pendiente de conectar' : ''"
+      (click)="alternar()"
     >
       <span class="corazon"><vt-icon name="favorite" [filled]="activo()" [size]="24" /></span>
       <span class="num">{{ cuenta() }}</span>
@@ -53,7 +59,19 @@ import { Icon } from './icon';
 })
 export class LikeButton {
   protected readonly catalogo = inject(CatalogoService);
-  readonly pieza = input.required<Pieza>();
-  protected readonly activo = computed(() => this.catalogo.gustadas().has(this.pieza().id));
-  protected readonly cuenta = computed(() => compacto(this.catalogo.megusta(this.pieza())));
+  readonly pieza = input.required<Pieza | PiezaPublica>();
+  private readonly toast = inject(ToastService);
+  protected readonly activo = computed(() => {
+    const p = this.pieza();
+    return 'dueno' in p ? p.gustada : this.catalogo.gustadas().has(p.id);
+  });
+  protected readonly cuenta = computed(() => {
+    const p = this.pieza();
+    return compacto('dueno' in p ? p.megusta : this.catalogo.megusta(p));
+  });
+  protected alternar(): void {
+    const p = this.pieza();
+    if ('dueno' in p) this.toast.show('Me gusta está pendiente de conectar');
+    else this.catalogo.toggleMeGusta(p.id);
+  }
 }
