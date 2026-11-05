@@ -9,7 +9,8 @@ Los nombres de los campos siguen el modelo del frontend (`frontend/src/app/model
 | Parte | Estado |
 | --- | --- |
 | Autenticación: registro, login y usuario actual | Listo |
-| Usuarios: perfil, editar perfil, seguir y dejar de seguir | Pendiente (la tabla `seguimientos` ya existe) |
+| Usuarios: perfil público, colección, seguir y dejar de seguir | Listo |
+| Usuarios: editar perfil | Pendiente |
 | Categorías | Listo |
 | Piezas: CRUD, Explorar e imágenes | Listo |
 | Me gusta, guardados (favoritos) y feed | Listo |
@@ -160,13 +161,14 @@ Router `routers/usuarios.py`, prefijo `/api/usuarios`.
 
 | Método y ruta | Acceso | Envía | Responde | Errores | Estado |
 | --- | --- | --- | --- | --- | --- |
-| `GET /usuarios/{username}` | Opcional | — | `200` + `Usuario` | `404` | Pendiente |
+| `GET /usuarios/{username}` | Opcional | — | `200` + `Usuario` | `404` | Listo |
 | `PATCH /usuarios/yo` | Token | `{bio?, nombre_visible?, avatar_url?}` | `200` + `UsuarioPrivado` | `401`, `422` | Pendiente |
-| `GET /usuarios/{username}/piezas` | Opcional | `?limite&desplazamiento` | `200` + página de `Pieza` | `404` | Pendiente |
-| `POST /usuarios/{username}/seguir` | Token | — | `200` + `{lo_sigo: true, seguidores}` | `400` si es uno mismo, `401`, `404` | Pendiente |
-| `DELETE /usuarios/{username}/seguir` | Token | — | `200` + `{lo_sigo: false, seguidores}` | `401`, `404` | Pendiente |
+| `GET /usuarios/{username}/piezas` | Opcional | `?limite&desplazamiento` | `200` + página de `Pieza` | `404`, `422` | Listo |
+| `POST /usuarios/{username}/seguir` | Token | — | `200` + `{lo_sigo: true, seguidores}` | `400` si es uno mismo, `401`, `404` | Listo |
+| `DELETE /usuarios/{username}/seguir` | Token | — | `200` + `{lo_sigo: false, seguidores}` | `401`, `404` | Listo |
 
-- `GET /usuarios/{username}/piezas` sirve para el perfil propio (Mi colección) y para el de otros. En el propio, Angular muestra los botones de editar y eliminar.
+- `GET /usuarios/{username}/piezas` lista las piezas del usuario, de más reciente a más antigua (por fecha e ID), con páginas de 20 por defecto. Angular lo consume en `/coleccionistas/:usuario`; el perfil propio y su CRUD se integran por separado.
+- El perfil público no incluye email, contraseña ni otros datos privados. Sin sesión, `lo_sigo` es `false`.
 - Seguir dos veces, o dejar de seguir a quien no sigues, no es error: responde el estado actual.
 - Seguir responde el total actualizado de seguidores, para que el botón y el contador cambien sin otra consulta.
 
@@ -203,7 +205,7 @@ Router `routers/piezas.py`, prefijo `/api/piezas`.
 | `limite`, `desplazamiento` | Ver paginación | `20`, `0` |
 
 - Los destacados de Explorar son `GET /piezas?orden=populares&limite=8`; no hay una ruta aparte.
-- En Angular, el `httpResource` de Explorar arma la URL con los signals de búsqueda, categoría y orden, y se recarga solo cuando cambia uno.
+- En Angular, Explorar usa `HttpClient` y Signals. Los perfiles públicos usan `httpResource` para recargar el perfil y la colección cuando cambia el usuario de la ruta o la sesión.
 - Editar usa `PUT` con el formulario completo. El backend vuelve a comprobar que el usuario sea el dueño, aunque Angular ya oculte el botón.
 - Al eliminar una pieza se borran también sus me gusta y guardados.
 

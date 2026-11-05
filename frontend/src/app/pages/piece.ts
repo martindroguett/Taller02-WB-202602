@@ -9,7 +9,6 @@ import { Button } from '../components/button';
 import { CatalogTag } from '../components/catalog-tag';
 import { EmptyState } from '../components/empty-state';
 import { LikeButton } from '../components/like-button';
-import { FollowButton } from '../components/follow-button';
 import { IconButton } from '../components/icon-button';
 import { Icon } from '../components/icon';
 import { PieceArt } from '../components/piece-art';
@@ -25,7 +24,6 @@ import { ToastService } from '../services/toast.service';
     Button,
     CatalogTag,
     EmptyState,
-    FollowButton,
     Icon,
     IconButton,
     LikeButton,
@@ -87,14 +85,16 @@ import { ToastService } from '../services/toast.service';
             </div>
           </dl>
           <div class="dueno">
-            <span class="persona" title="Perfil pendiente de conectar">
+            <a class="persona" [routerLink]="['/coleccionistas', p.dueno.username]">
               <vt-avatar [nombre]="p.dueno.username" [tam]="52" />
               <span class="body-strong">&#64;{{ p.dueno.username }}</span>
-            </span>
-            <vt-follow-button [usuarioId]="p.dueno.id" [pendiente]="true" />
+            </a>
+            <a vt-button variant="secondary" [routerLink]="['/coleccionistas', p.dueno.username]"
+              >Ver perfil</a
+            >
           </div>
           <p class="caption vt-muted">
-            El perfil y las acciones sociales están pendientes de conexión.
+            Las acciones sociales de la pieza están pendientes de conexión.
           </p>
           <div>
             <p class="caption vt-muted">Gestión de pieza: vista previa, pendiente de sesión</p>

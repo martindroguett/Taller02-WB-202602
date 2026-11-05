@@ -66,3 +66,17 @@ class TokenRespuesta(BaseModel):
     access_token: str
     token_type: str = "bearer"
     usuario: UsuarioPrivado
+
+
+class PerfilPublico(BaseModel):
+    id: int
+    username: str
+    bio: str
+    seguidores: int
+    siguiendo: int
+    lo_sigo: bool
+
+
+class EstadoSeguimiento(BaseModel):
+    lo_sigo: bool
+    seguidores: int

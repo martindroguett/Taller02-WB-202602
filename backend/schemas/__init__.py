@@ -1,5 +1,5 @@
 from .categoria import CategoriaRespuesta
-from .usuario import TokenRespuesta, UsuarioLogin, UsuarioPrivado, UsuarioRegistro
+from .usuario import EstadoSeguimiento, PerfilPublico, TokenRespuesta, UsuarioLogin, UsuarioPrivado, UsuarioRegistro
 from .pieza import DatosPieza, Dueno, EstadoGuardado, EstadoMeGusta, Pagina, PiezaRespuesta
 
 __all__ = [
@@ -8,8 +8,10 @@ __all__ = [
     "Dueno",
     "EstadoGuardado",
     "EstadoMeGusta",
+    "EstadoSeguimiento",
     "Pagina",
     "PiezaRespuesta",
+    "PerfilPublico",
     "TokenRespuesta",
     "UsuarioLogin",
     "UsuarioPrivado",
