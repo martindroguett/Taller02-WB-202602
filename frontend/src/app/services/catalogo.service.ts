@@ -236,17 +236,6 @@ export class CatalogoService {
     this.gustadas.update((s) => new Set([...s].filter((piezaId) => piezaId !== id)));
   }
 
-  async compartir(id: number): Promise<void> {
-    try {
-      await navigator.clipboard.writeText(`${location.origin}/pieza/${id}`);
-      this.toast.show('Enlace copiado', 'success');
-    } catch {
-      this.toast.show(
-        'No pudimos copiar el enlace: cópialo desde la barra del navegador.',
-        'danger',
-      );
-    }
-  }
 }
 
 function alternar(set: ReadonlySet<number>, id: number): ReadonlySet<number> {

@@ -39,28 +39,28 @@ npm start
 
 Abrir **http://localhost:4200/** en el navegador. Para detener el servidor, usar `Ctrl+C` en la terminal.
 
-El mockup funciona sin backend, base de datos ni Docker.
+Explorar, el detalle de piezas, el ingreso y el registro consultan la API; requieren el backend y la base de datos en ejecución. El servidor de desarrollo redirige `/api` a `http://localhost:8000`. Los paneles de comunidad y las otras pantallas usan datos de demostración. Los controles sociales del detalle público están pendientes de conexión y la gestión de piezas reales todavía no está conectada.
 
 ## Funciones
 
-- Explorar piezas, buscar y filtrar por categoría.
+- Explorar piezas reales, buscar, filtrar por categoría y cargar más resultados. El detalle consulta la API por ID.
 - Ver el Feed, perfiles y colecciones.
 - Dar likes, seguir coleccionistas y guardar favoritos.
 - Agregar, editar y eliminar piezas propias.
-- Revisar los formularios de ingreso y registro.
+- Crear una cuenta, ingresar y cerrar sesión. La sesión se mantiene al recargar la página.
 
-Los datos son de muestra y los cambios se pierden al recargar la página. Se utiliza un usuario de demostración fijo: `tomas_retro`. El ingreso y registro solo muestran el flujo y validan campos; todavía no crean cuentas ni autentican. El cierre de sesión también está pendiente.
+Feed, perfiles, favoritos, formularios de piezas e interacciones sociales usan datos de muestra y sus cambios se pierden al recargar la página. Las piezas de muestra no se enlazan al detalle real. Los nombres de propietarios reales se muestran sin enlace hasta conectar los perfiles. Esas pantallas usan un usuario de demostración fijo, `tomas_retro`, aunque se ingrese con otra cuenta.
 
 ## Tecnologías
 
-El frontend usa **Angular**, con Angular Material para los iconos. El backend usa **FastAPI** con una API REST en JSON, **PostgreSQL** como base de datos, **SQLAlchemy** como ORM, **Alembic** para las migraciones y autenticación con **JWT**. Las contraseñas se guardan como hash con bcrypt. La conexión entre el frontend y el backend queda para las siguientes etapas.
+El frontend usa **Angular**, con Angular Material para los iconos. El backend usa **FastAPI** con una API REST en JSON, **PostgreSQL** como base de datos, **SQLAlchemy** como ORM, **Alembic** para las migraciones y autenticación con **JWT**. Las contraseñas se guardan como hash con bcrypt. El catálogo público, el detalle y la autenticación ya consultan la API; el resto de los flujos del frontend aún no está conectado.
 
 ## Comprobaciones
 
 Desde la carpeta `frontend`:
 
 ```bash
-npm test        # Comprueba la lógica del catálogo de demostración
+npm test        # Comprueba el catálogo de demostración y el catálogo público
 npm run build  # Genera la versión de producción en dist/frontend/browser
 ```
 

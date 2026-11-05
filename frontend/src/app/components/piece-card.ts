@@ -1,8 +1,10 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ToastService } from '../services/toast.service';
 import { CatalogoService } from '../services/catalogo.service';
 import { compacto, relativo } from '../models/format';
 import { Pieza } from '../models/vitrina';
+import { PiezaPublica } from '../services/catalogo-publico.service';
 import { IconButton } from './icon-button';
 import { Icon } from './icon';
 import { PieceArt } from './piece-art';
@@ -17,12 +19,12 @@ import { CatalogTag } from './catalog-tag';
     '[attr.data-variante]': 'variante()',
   },
   template: `
-    <article class="tarjeta" [class.destacada]="pieza().destacada && variante() === 'grid'">
+    <article class="tarjeta" [class.destacada]="destacada() && variante() === 'grid'">
       <div class="imagen">
         <a
           class="enlace"
-          [routerLink]="['/pieza', pieza().id]"
-          [attr.aria-label]="'Ver ' + pieza().nombre"
+          [routerLink]="detalleLink()"
+          [attr.aria-label]="esPublica() ? 'Ver ' + pieza().nombre : null"
         >
           @if (pieza().imagen_url && !fallo()) {
             <img [src]="pieza().imagen_url" alt="" loading="lazy" (error)="fallo.set(true)" />
@@ -34,7 +36,7 @@ import { CatalogTag } from './catalog-tag';
           <vt-catalog-tag
             class="catalogo"
             [categoria]="pieza().categoria"
-            [numero]="pieza().numero"
+            [numero]="numero()"
             [compacta]="true"
           />
           <button
@@ -44,33 +46,48 @@ import { CatalogTag } from './catalog-tag';
             tone="glass"
             size="sm"
             icon="bookmark"
-            [label]="guardada() ? 'Quitar de favoritos' : 'Guardar en favoritos'"
+            [label]="
+              (esPublica() ? 'Pendiente de conectar: ' : '') +
+              (guardada() ? 'Quitar de favoritos' : 'Guardar en favoritos')
+            "
+            [title]="esPublica() ? 'Pendiente de conectar' : ''"
             [active]="guardada()"
             [pressed]="guardada()"
-            (click)="catalogo.toggleGuardar(pieza().id)"
+            (click)="alternarGuardar()"
           ></button>
         }
       </div>
       <div class="info">
-        @if (pieza().destacada && variante() === 'grid') {
+        @if (destacada() && variante() === 'grid') {
           <span class="insignia"><vt-icon name="star" [filled]="true" [size]="14" />Destacada</span>
         }
-        <a class="nombre" [routerLink]="['/pieza', pieza().id]">{{ pieza().nombre }}</a>
+        <a class="nombre" [routerLink]="detalleLink()">{{ pieza().nombre }}</a>
         <p class="meta caption">
-          <a class="dueno" [routerLink]="['/perfil', dueno().username]">
-            @if (variante() === 'grid') {
+          @if (esPublica()) {
+            <span class="dueno publico" title="Perfil pendiente de conectar">
               <vt-avatar [nombre]="dueno().username" [tam]="24" />
-            }
-            <span>&#64;{{ dueno().username }}</span></a
-          >
-          <span class="dato" [class.gustado]="catalogo.gustadas().has(pieza().id)"
-            ><vt-icon
-              name="favorite"
-              [size]="16"
-              [filled]="catalogo.gustadas().has(pieza().id)"
-            />{{ megusta() }}</span
-          >
-          @if (variante() === 'row') {
+              <span>&#64;{{ dueno().username }}</span>
+            </span>
+            <span class="dato" [class.gustado]="gustada()"
+              ><vt-icon name="favorite" [size]="16" [filled]="gustada()" />{{ megusta() }}</span
+            >
+            <span>{{ cuando() }}</span>
+          } @else {
+            <a class="dueno" [routerLink]="['/perfil', dueno().username]">
+              @if (variante() === 'grid') {
+                <vt-avatar [nombre]="dueno().username" [tam]="24" />
+              }
+              <span>&#64;{{ dueno().username }}</span>
+            </a>
+            <span class="dato" [class.gustado]="catalogo.gustadas().has(pieza().id)"
+              ><vt-icon
+                name="favorite"
+                [size]="16"
+                [filled]="catalogo.gustadas().has(pieza().id)"
+              />{{ megusta() }}</span
+            >
+          }
+          @if (variante() === 'row' && !esPublica()) {
             <span>{{ cuando() }}</span>
           }
         </p>
@@ -182,6 +199,9 @@ import { CatalogTag } from './catalog-tag';
       .meta {
         flex-wrap: wrap;
       }
+      .meta > .dueno.publico {
+        flex-basis: 100%;
+      }
     }
     .insignia {
       width: fit-content;
@@ -231,11 +251,52 @@ import { CatalogTag } from './catalog-tag';
 })
 export class PieceCard {
   protected readonly catalogo = inject(CatalogoService);
-  readonly pieza = input.required<Pieza>();
+  readonly pieza = input.required<Pieza | PiezaPublica>();
   readonly variante = input<'grid' | 'row'>('grid');
-  protected readonly fallo = signal(false);
-  protected readonly guardada = computed(() => this.catalogo.guardadas().has(this.pieza().id));
-  protected readonly dueno = computed(() => this.catalogo.usuario(this.pieza().duenoId));
-  protected readonly megusta = computed(() => compacto(this.catalogo.megusta(this.pieza())));
-  protected readonly cuando = computed(() => relativo(this.pieza().hace));
+  protected readonly fallo = linkedSignal(() => {
+    this.pieza().imagen_url;
+    return false;
+  });
+  private readonly toast = inject(ToastService);
+  protected readonly guardada = computed(() => {
+    const p = this.pieza();
+    return 'dueno' in p ? p.guardada : this.catalogo.guardadas().has(p.id);
+  });
+  protected readonly gustada = computed(() => {
+    const p = this.pieza();
+    return 'dueno' in p ? p.gustada : this.catalogo.gustadas().has(p.id);
+  });
+  protected alternarGuardar(): void {
+    const p = this.pieza();
+    if ('dueno' in p) this.toast.show('Favoritos está pendiente de conectar');
+    else this.catalogo.toggleGuardar(p.id);
+  }
+  protected readonly esPublica = computed(() => 'dueno' in this.pieza());
+  protected readonly detalleLink = computed(() =>
+    this.esPublica() ? ['/pieza', this.pieza().id] : null,
+  );
+  protected readonly dueno = computed(() => {
+    const p = this.pieza();
+    return 'dueno' in p ? p.dueno : this.catalogo.usuario(p.duenoId);
+  });
+  protected readonly destacada = computed(() => {
+    const p = this.pieza();
+    return 'dueno' in p ? false : !!p.destacada;
+  });
+  protected readonly numero = computed(() => {
+    const p = this.pieza();
+    return 'dueno' in p ? p.id : p.numero;
+  });
+  protected readonly megusta = computed(() => {
+    const p = this.pieza();
+    return compacto('dueno' in p ? p.megusta : this.catalogo.megusta(p));
+  });
+  protected readonly cuando = computed(() => {
+    const p = this.pieza();
+    return relativo(
+      'dueno' in p
+        ? Math.max(0, Math.floor((Date.now() - Date.parse(p.creado_en)) / 60_000))
+        : p.hace,
+    );
+  });
 }

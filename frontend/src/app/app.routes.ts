@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard, invitadoGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -15,11 +16,13 @@ export const routes: Routes = [
     path: 'favoritos',
     title: 'Favoritos · Vitrina',
     loadComponent: () => import('./pages/favorites').then((m) => m.FavoritesPage),
+    canActivate: [authGuard],
   },
   {
     path: 'perfil',
     title: 'Perfil · Vitrina',
     loadComponent: () => import('./pages/profile').then((m) => m.ProfilePage),
+    canActivate: [authGuard],
   },
   {
     path: 'perfil/:usuario',
@@ -35,16 +38,19 @@ export const routes: Routes = [
     path: 'coleccion/nueva',
     title: 'Agregar pieza · Vitrina',
     loadComponent: () => import('./pages/piece-form').then((m) => m.PieceFormPage),
+    canActivate: [authGuard],
   },
   {
     path: 'coleccion/:id/editar',
     title: 'Editar pieza · Vitrina',
     loadComponent: () => import('./pages/piece-form').then((m) => m.PieceFormPage),
+    canActivate: [authGuard],
   },
   {
     path: 'ingresar',
     title: 'Ingresar · Vitrina',
     loadComponent: () => import('./pages/login').then((m) => m.LoginPage),
+    canActivate: [invitadoGuard],
   },
   { path: '**', redirectTo: '' },
 ];

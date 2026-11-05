@@ -3,14 +3,13 @@ import { RouterLink } from '@angular/router';
 import { CatalogoService } from '../services/catalogo.service';
 import { Pieza } from '../models/vitrina';
 import { Avatar } from './avatar';
-import { Button } from './button';
 import { CatalogTag } from './catalog-tag';
 import { LikeButton } from './like-button';
 import { PieceArt } from './piece-art';
 
 @Component({
   selector: 'vt-piece-float',
-  imports: [RouterLink, Avatar, Button, CatalogTag, LikeButton, PieceArt],
+  imports: [RouterLink, Avatar, CatalogTag, LikeButton, PieceArt],
   host: { '[class]': '"vt-c-" + pieza().categoria' },
   template: `
     <article>
@@ -29,7 +28,6 @@ import { PieceArt } from './piece-art';
       </a>
       <div class="fila">
         <vt-like-button [pieza]="pieza()" />
-        <a vt-button variant="primary" size="sm" [routerLink]="['/pieza', pieza().id]">Ver pieza</a>
       </div>
     </article>
   `,

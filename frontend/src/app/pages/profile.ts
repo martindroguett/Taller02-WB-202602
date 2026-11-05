@@ -1,5 +1,5 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Button } from '../components/button';
 import { ConfirmSheet } from '../components/confirm-sheet';
 import { EmptyState } from '../components/empty-state';
@@ -7,6 +7,7 @@ import { IconButton } from '../components/icon-button';
 import { PieceCard } from '../components/piece-card';
 import { ProfileHeader } from '../components/profile-header';
 import { Tabs } from '../components/tabs';
+import { AuthService } from '../services/auth.service';
 import { CatalogoService } from '../services/catalogo.service';
 import { ToastService } from '../services/toast.service';
 import { Pieza } from '../models/vitrina';
@@ -28,9 +29,9 @@ import { Pieza } from '../models/vitrina';
       <div class="vt-screen perfil">
         <vt-profile-header [usuario]="u" [esMio]="esMio()" />
         @if (esMio()) {
-          <a class="caption vt-muted" routerLink="/ingresar"
-            >Ver ingreso y registro de demostración</a
-          >
+          <button type="button" class="salir caption vt-muted" (click)="cerrarSesion()">
+            Cerrar sesión
+          </button>
         }
 
         @if (esMio()) {
@@ -117,10 +118,22 @@ import { Pieza } from '../models/vitrina';
       flex-direction: column;
       gap: var(--space-3);
     }
+    .salir {
+      align-self: flex-start;
+      min-height: var(--tap-target);
+      padding: 0;
+      border: 0;
+      background: transparent;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      cursor: pointer;
+    }
   `,
 })
 export class ProfilePage {
+  private readonly auth = inject(AuthService);
   private readonly catalogo = inject(CatalogoService);
+  private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
   /** Parámetro de ruta :usuario; sin él, es tu perfil. */
@@ -150,5 +163,11 @@ export class ProfilePage {
     this.catalogo.eliminar(p.id);
     this.porEliminar.set(null);
     this.toast.show('Pieza eliminada', 'success');
+  }
+
+  protected cerrarSesion(): void {
+    this.auth.cerrarSesion();
+    this.toast.show('Cerraste sesión.');
+    this.router.navigateByUrl('/');
   }
 }

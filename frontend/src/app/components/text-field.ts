@@ -1,4 +1,5 @@
-import { Component, input, model } from '@angular/core';
+import { Component, forwardRef, input, model, signal } from '@angular/core';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Icon } from './icon';
 
 let siguienteId = 0;
@@ -6,6 +7,9 @@ let siguienteId = 0;
 @Component({
   selector: 'vt-text-field',
   imports: [Icon],
+  providers: [
+    { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => TextField), multi: true },
+  ],
   template: `
     <label class="label" [for]="id">{{ label() }}</label>
     <div class="caja" [class.error]="!!error()">
@@ -19,9 +23,11 @@ let siguienteId = 0;
           [attr.maxlength]="maxLength()"
           [placeholder]="placeholder()"
           [value]="valor()"
+          [disabled]="deshabilitado()"
           [attr.aria-invalid]="!!error()"
           [attr.aria-describedby]="error() || ayuda() ? id + '-nota' : null"
-          (input)="valor.set($any($event.target).value)"
+          (input)="escribir($any($event.target).value)"
+          (blur)="alTocar()"
         ></textarea>
       } @else {
         <input
@@ -31,9 +37,11 @@ let siguienteId = 0;
           [attr.autocomplete]="autocomplete()"
           [placeholder]="placeholder()"
           [value]="valor()"
+          [disabled]="deshabilitado()"
           [attr.aria-invalid]="!!error()"
           [attr.aria-describedby]="error() || ayuda() ? id + '-nota' : null"
-          (input)="valor.set($any($event.target).value)"
+          (input)="escribir($any($event.target).value)"
+          (blur)="alTocar()"
         />
       }
       <span class="sufijo"><ng-content select="[sufijo]" /></span>
@@ -129,7 +137,7 @@ let siguienteId = 0;
     }
   `,
 })
-export class TextField {
+export class TextField implements ControlValueAccessor {
   protected readonly id = `vt-campo-${++siguienteId}`;
   readonly label = input.required<string>();
   readonly icono = input('');
@@ -141,4 +149,29 @@ export class TextField {
   readonly error = input('');
   readonly multilinea = input(false);
   readonly autocomplete = input<string>();
+  protected readonly deshabilitado = signal(false);
+
+  private alCambiar: (valor: string) => void = () => {};
+  protected alTocar: () => void = () => {};
+
+  protected escribir(valor: string): void {
+    this.valor.set(valor);
+    this.alCambiar(valor);
+  }
+
+  writeValue(valor: string | null): void {
+    this.valor.set(valor ?? '');
+  }
+
+  registerOnChange(fn: (valor: string) => void): void {
+    this.alCambiar = fn;
+  }
+
+  registerOnTouched(fn: () => void): void {
+    this.alTocar = fn;
+  }
+
+  setDisabledState(deshabilitado: boolean): void {
+    this.deshabilitado.set(deshabilitado);
+  }
 }
