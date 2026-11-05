@@ -30,6 +30,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/profile').then((m) => m.ProfilePage),
   },
   {
+    path: 'coleccionistas/:usuario',
+    title: 'Coleccionista · Vitrina',
+    loadComponent: () => import('./pages/public-profile').then((m) => m.PublicProfilePage),
+  },
+  {
     path: 'pieza/:id',
     title: 'Pieza · Vitrina',
     loadComponent: () => import('./pages/piece').then((m) => m.PiecePage),

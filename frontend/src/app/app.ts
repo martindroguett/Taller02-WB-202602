@@ -41,5 +41,8 @@ export class App {
     ),
     { initialValue: this.router.url },
   );
-  protected readonly conNav = computed(() => !SIN_NAV.some((r) => this.url().startsWith(r)));
+  protected readonly conNav = computed(() => {
+    const path = this.url().split(/[?#]/, 1)[0];
+    return !SIN_NAV.some((r) => path === r || path.startsWith(`${r}/`));
+  });
 }
