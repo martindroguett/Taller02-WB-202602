@@ -1,5 +1,14 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  input,
+  signal,
+  untracked,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormControl,
@@ -8,8 +17,7 @@ import {
   ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { catchError, map, of, startWith, Subject, switchMap, tap } from 'rxjs';
+import { Router, RouterLink } from '@angular/router';
 import { Button } from '../components/button';
 import { CategoryChip } from '../components/category-chip';
 import { ConfirmSheet } from '../components/confirm-sheet';
@@ -27,8 +35,6 @@ const texto: (max: number) => ValidatorFn = (max) => (control) => {
   const valor = (control.value as string).trim();
   return !valor ? { required: true } : Array.from(valor).length > max ? { maxlength: true } : null;
 };
-const categoria: ValidatorFn = (control) =>
-  CATEGORIAS.some((c) => c.slug === control.value) ? null : { required: true };
 
 @Component({
   selector: 'vt-piece-form-page',
@@ -44,7 +50,7 @@ const categoria: ValidatorFn = (control) =>
     RouterLink,
   ],
   template: `
-    @if (estado() === 'lista' && (!id() || duenoId() === auth.usuario()?.id)) {
+    @if (estado() === 'lista') {
       <form class="vt-screen formulario" [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
         <vt-top-bar
           [titulo]="id() ? 'Editar pieza' : 'Agregar pieza'"
@@ -140,7 +146,7 @@ const categoria: ValidatorFn = (control) =>
       <main class="vt-screen">
         <vt-empty-state
           [titulo]="
-            estado() === 'ajena' || estado() === 'lista'
+            estado() === 'ajena'
               ? 'Esta pieza pertenece a otra persona'
               : estado() === 'no-encontrada'
                 ? 'Esta pieza no está disponible'
@@ -153,7 +159,7 @@ const categoria: ValidatorFn = (control) =>
           "
         >
           @if (estado() === 'error') {
-            <button vt-button type="button" (click)="reintentar.next()">Reintentar</button>
+            <button vt-button type="button" (click)="pieza.reload()">Reintentar</button>
           }
           <a vt-button variant="secondary" [routerLink]="coleccion()">Ir a mi colección</a>
         </vt-empty-state>
@@ -192,87 +198,39 @@ const categoria: ValidatorFn = (control) =>
 })
 export class PieceFormPage {
   private readonly api = inject(CatalogoPublicoService);
-  protected readonly auth = inject(AuthService);
-  private readonly route = inject(ActivatedRoute);
+  private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   private readonly destroy = inject(DestroyRef);
+  readonly id = input<string>();
+  protected readonly pieza = this.api.detalle(this.id);
   protected readonly categorias = CATEGORIAS;
   protected readonly formulario = new FormGroup({
     nombre: new FormControl('', { nonNullable: true, validators: texto(100) }),
     descripcion: new FormControl('', { nonNullable: true, validators: texto(2000) }),
-    categoria: new FormControl<CategoriaSlug | null>(null, { validators: categoria }),
+    categoria: new FormControl<CategoriaSlug | null>(null, { validators: Validators.required }),
     imagen_url: new FormControl('', { nonNullable: true, validators: Validators.required }),
   });
-  protected readonly id = signal<number | null>(null);
-  protected readonly duenoId = signal<number | null>(null);
-  protected readonly estado = signal<'lista' | 'cargando' | 'ajena' | 'no-encontrada' | 'error'>(
-    'cargando',
-  );
+  protected readonly estado = computed(() => {
+    if (this.id() === undefined) return 'lista';
+    if (this.pieza.isLoading()) return 'cargando';
+    if (this.pieza.error())
+      return (this.pieza.error() as HttpErrorResponse).status === 404 ? 'no-encontrada' : 'error';
+    if (!this.pieza.hasValue()) return 'no-encontrada';
+    return this.pieza.value().dueno.id === this.auth.usuario()?.id ? 'lista' : 'ajena';
+  });
   protected readonly intento = signal(false);
   protected readonly confirmando = signal(false);
   protected readonly ocupado = signal(false);
   protected readonly leyendo = signal(false);
   protected readonly errorAccion = signal('');
-  protected readonly reintentar = new Subject<void>();
-  private versionRuta = 0;
 
   constructor() {
-    this.route.paramMap
-      .pipe(
-        tap(() => {
-          this.versionRuta++;
-          this.ocupado.set(false);
-          this.leyendo.set(false);
-        }),
-        switchMap((params) =>
-          this.reintentar.pipe(
-            startWith(undefined),
-            switchMap(() => {
-              this.estado.set('cargando');
-              this.id.set(null);
-              this.duenoId.set(null);
-              this.confirmando.set(false);
-              this.formulario.enable();
-              this.intento.set(false);
-              this.errorAccion.set('');
-              const valor = params.get('id');
-              if (valor === null) return of({ tipo: 'nueva' as const });
-              if (!/^[1-9]\d*$/.test(valor) || !Number.isSafeInteger(Number(valor)))
-                return of({ tipo: 'no-encontrada' as const });
-              return this.api.obtener(Number(valor)).pipe(
-                map((pieza) => ({ tipo: 'pieza' as const, pieza })),
-                catchError((e: HttpErrorResponse) =>
-                  of({ tipo: e.status === 404 ? ('no-encontrada' as const) : ('error' as const) }),
-                ),
-              );
-            }),
-          ),
-        ),
-        takeUntilDestroyed(this.destroy),
-      )
-      .subscribe((resultado) => {
-        if (resultado.tipo === 'nueva') {
-          this.id.set(null);
-          this.duenoId.set(null);
-          this.formulario.reset({ nombre: '', descripcion: '', categoria: null, imagen_url: '' });
-          this.estado.set('lista');
-        } else if (resultado.tipo === 'pieza') {
-          if (resultado.pieza.dueno.id !== this.auth.usuario()?.id) {
-            this.estado.set('ajena');
-            return;
-          }
-          this.id.set(resultado.pieza.id);
-          this.duenoId.set(resultado.pieza.dueno.id);
-          this.formulario.reset({
-            nombre: resultado.pieza.nombre,
-            descripcion: resultado.pieza.descripcion,
-            categoria: resultado.pieza.categoria,
-            imagen_url: resultado.pieza.imagen_url,
-          });
-          this.estado.set('lista');
-        } else this.estado.set(resultado.tipo);
-      });
+    effect(() => {
+      if (!this.pieza.hasValue()) return;
+      const { nombre, descripcion, categoria, imagen_url } = this.pieza.value();
+      untracked(() => this.formulario.reset({ nombre, descripcion, categoria, imagen_url }));
+    });
   }
   protected coleccion(): string[] {
     return ['/coleccionistas', this.auth.usuario()?.username ?? ''];
@@ -287,13 +245,7 @@ export class PieceFormPage {
         : '';
   }
   protected guardar(): void {
-    if (
-      this.estado() !== 'lista' ||
-      this.ocupado() ||
-      this.leyendo() ||
-      (this.id() && this.duenoId() !== this.auth.usuario()?.id)
-    )
-      return;
+    if (this.estado() !== 'lista' || this.ocupado() || this.leyendo()) return;
     this.intento.set(true);
     if (this.formulario.invalid) return;
     const valor = this.formulario.getRawValue();
@@ -305,21 +257,18 @@ export class PieceFormPage {
       categoria: valor.categoria,
     };
     const id = this.id();
-    const version = this.versionRuta;
     this.ocupado.set(true);
     this.errorAccion.set('');
     this.formulario.disable();
-    (id ? this.api.actualizar(id, datos) : this.api.crear(datos))
+    (id ? this.api.actualizar(Number(id), datos) : this.api.crear(datos))
       .pipe(takeUntilDestroyed(this.destroy))
       .subscribe({
         next: (pieza) => {
-          if (version !== this.versionRuta) return;
           this.ocupado.set(false);
           this.toast.show(id ? 'Cambios guardados' : 'Pieza agregada', 'success');
           void this.router.navigate(['/pieza', pieza.id]);
         },
         error: (e: HttpErrorResponse) => {
-          if (version !== this.versionRuta) return;
           this.ocupado.set(false);
           this.formulario.enable();
           this.errorAccion.set(mensajeError(e));
@@ -328,29 +277,20 @@ export class PieceFormPage {
   }
   protected eliminar(): void {
     const id = this.id();
-    if (
-      this.estado() !== 'lista' ||
-      !id ||
-      this.ocupado() ||
-      this.duenoId() !== this.auth.usuario()?.id
-    )
-      return;
-    const version = this.versionRuta;
+    if (this.estado() !== 'lista' || !id || this.ocupado()) return;
     this.ocupado.set(true);
     this.errorAccion.set('');
     this.api
-      .eliminar(id)
+      .eliminar(Number(id))
       .pipe(takeUntilDestroyed(this.destroy))
       .subscribe({
         next: () => {
-          if (version !== this.versionRuta) return;
           this.ocupado.set(false);
           this.confirmando.set(false);
           this.toast.show('Pieza eliminada', 'success');
           void this.router.navigate(this.coleccion());
         },
         error: (e: HttpErrorResponse) => {
-          if (version !== this.versionRuta) return;
           this.ocupado.set(false);
           this.errorAccion.set(mensajeError(e));
         },
@@ -358,7 +298,7 @@ export class PieceFormPage {
   }
 }
 
-export function mensajeError(e: HttpErrorResponse): string {
+function mensajeError(e: HttpErrorResponse): string {
   if (e.status === 403) return 'Solo el dueño puede modificar esta pieza.';
   if (e.status === 404) return 'Esta pieza ya no está disponible.';
   if (e.status === 400 && typeof e.error?.detail === 'string') return e.error.detail;

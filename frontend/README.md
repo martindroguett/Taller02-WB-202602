@@ -24,7 +24,7 @@ La caché de disco está desactivada porque su módulo nativo LMDB aborta en el 
 - `src/app/components/`: controles y bloques visuales compartidos. La tarjeta tiene dos presentaciones: grilla y fila. El campo de texto acepta `[(valor)]` o `formControlName`.
 - `src/app/services/auth.service.ts`: la sesión. Guarda el JWT en `localStorage` y, al abrir la app, lo valida con `/auth/yo`.
 - `src/app/interceptors/` y `src/app/guards/`: el interceptor agrega el token a las peticiones a la API y cierra la sesión ante un 401. Los guards piden sesión para Favoritos, el perfil propio y el formulario, y sacan de `/ingresar` a quien ya ingresó.
-- `src/app/services/catalogo-publico.service.ts`: lecturas públicas y operaciones HTTP de creación, edición y eliminación de piezas.
+- `src/app/services/catalogo-publico.service.ts`: lecturas públicas, el detalle de una pieza como recurso `httpResource` (se recarga solo al cambiar el `id` de la ruta) y operaciones HTTP de creación, edición y eliminación de piezas.
 - `src/app/services/usuarios-publicos.service.ts`: recursos `httpResource` del perfil público y su colección, y solicitudes HTTP para seguir y dejar de seguir. Las lecturas reaccionan a cambios de ruta y sesión.
 - `src/app/services/catalogo.service.ts`: piezas, usuarios e interacciones de muestra. Feed y Favoritos se calculan a partir de las mismas piezas; no mantienen copias.
 - `src/app/services/toast.service.ts`: avisos breves y la acción de deshacer un favorito.

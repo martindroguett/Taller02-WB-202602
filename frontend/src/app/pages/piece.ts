@@ -1,9 +1,16 @@
 import { Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  input,
+  linkedSignal,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { switchMap, of, catchError, map, startWith, Subject, tap } from 'rxjs';
+import { Router, RouterLink } from '@angular/router';
 import { Avatar } from '../components/avatar';
 import { Button } from '../components/button';
 import { ConfirmSheet } from '../components/confirm-sheet';
@@ -16,7 +23,7 @@ import { Icon } from '../components/icon';
 import { PieceArt } from '../components/piece-art';
 import { compacto, relativo } from '../models/format';
 import { categoriaDe } from '../models/vitrina';
-import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publico.service';
+import { CatalogoPublicoService } from '../services/catalogo-publico.service';
 import { ToastService } from '../services/toast.service';
 
 @Component({
@@ -34,7 +41,8 @@ import { ToastService } from '../services/toast.service';
     RouterLink,
   ],
   template: `
-    @if (pieza(); as p) {
+    @if (pieza.hasValue()) {
+      @let p = pieza.value();
       <div class="detalle vt-c-{{ p.categoria }}">
         <div class="foto">
           @if (p.imagen_url && !fallo()) {
@@ -148,14 +156,14 @@ import { ToastService } from '../services/toast.service';
           </button>
         </div>
       </div>
-    } @else if (estado() === 'cargando') {
+    } @else if (pieza.isLoading()) {
       <div class="vt-screen"><p role="status">Cargando pieza…</p></div>
-    } @else if (estado() === 'error') {
+    } @else if (falloCarga()) {
       <div class="vt-screen">
         <vt-empty-state
           titulo="No pudimos cargar la pieza"
           texto="Comprueba tu conexión e inténtalo de nuevo."
-          ><button type="button" vt-button (click)="reintentar.next()">
+          ><button type="button" vt-button (click)="pieza.reload()">
             Reintentar
           </button></vt-empty-state
         >
@@ -306,64 +314,31 @@ import { ToastService } from '../services/toast.service';
 export class PiecePage {
   private readonly api = inject(CatalogoPublicoService);
   protected readonly auth = inject(AuthService);
-  protected readonly confirmando = signal(false);
-  protected readonly eliminando = signal(false);
-  protected readonly errorEliminar = signal('');
-  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly toast = inject(ToastService);
   private readonly destroy = inject(DestroyRef);
-  protected readonly pieza = signal<PiezaPublica | null>(null);
-  protected readonly estado = signal<'cargando' | 'error' | 'no-encontrada'>('cargando');
-  protected readonly fallo = signal(false);
-  protected readonly reintentar = new Subject<void>();
-  private versionRuta = 0;
+  readonly id = input<string>();
+  protected readonly pieza = this.api.detalle(this.id);
+  protected readonly falloCarga = computed(
+    () => !!this.pieza.error() && (this.pieza.error() as HttpErrorResponse).status !== 404,
+  );
+  protected readonly fallo = linkedSignal(() => {
+    this.id();
+    return false;
+  });
+  protected readonly confirmando = signal(false);
+  protected readonly eliminando = signal(false);
+  protected readonly errorEliminar = signal('');
   protected readonly categoriaDe = categoriaDe;
   protected readonly compacto = compacto;
   protected pendiente(accion: string): void {
     this.toast.show(`${accion} está pendiente de conectar`);
   }
 
-  constructor() {
-    this.route.paramMap
-      .pipe(
-        tap(() => {
-          this.versionRuta++;
-          this.confirmando.set(false);
-          this.errorEliminar.set('');
-          this.eliminando.set(false);
-        }),
-        switchMap((params) =>
-          this.reintentar.pipe(
-            startWith(undefined),
-            switchMap(() => {
-              this.pieza.set(null);
-              this.fallo.set(false);
-              this.estado.set('cargando');
-              const valor = params.get('id') ?? '';
-              if (!/^[1-9]\d*$/.test(valor) || !Number.isSafeInteger(Number(valor)))
-                return of({ tipo: 'no-encontrada' as const });
-              return this.api.obtener(Number(valor)).pipe(
-                map((pieza) => ({ tipo: 'pieza' as const, pieza })),
-                catchError((e: HttpErrorResponse) =>
-                  of({ tipo: e.status === 404 ? ('no-encontrada' as const) : ('error' as const) }),
-                ),
-              );
-            }),
-          ),
-        ),
-        takeUntilDestroyed(this.destroy),
-      )
-      .subscribe((resultado) => {
-        if (resultado.tipo === 'pieza') this.pieza.set(resultado.pieza);
-        else this.estado.set(resultado.tipo);
-      });
-  }
   protected eliminar(): void {
-    const p = this.pieza();
-    if (!p || this.eliminando() || this.auth.usuario()?.id !== p.dueno.id) return;
-    const version = this.versionRuta;
+    if (!this.pieza.hasValue() || this.eliminando()) return;
+    const p = this.pieza.value();
     this.eliminando.set(true);
     this.errorEliminar.set('');
     this.api
@@ -371,14 +346,12 @@ export class PiecePage {
       .pipe(takeUntilDestroyed(this.destroy))
       .subscribe({
         next: () => {
-          if (version !== this.versionRuta) return;
           this.eliminando.set(false);
           this.confirmando.set(false);
           this.toast.show('Pieza eliminada', 'success');
           void this.router.navigate(['/coleccionistas', p.dueno.username]);
         },
         error: (e: HttpErrorResponse) => {
-          if (version !== this.versionRuta) return;
           this.eliminando.set(false);
           this.errorEliminar.set(
             e.status === 403

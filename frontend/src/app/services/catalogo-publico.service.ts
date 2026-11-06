@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, httpResource, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { CategoriaSlug, DatosPieza } from '../models/vitrina';
 import { environment } from '../../environments/environment';
@@ -51,7 +51,12 @@ export class CatalogoPublicoService {
     return this.http.delete<void>(`${environment.apiUrl}/piezas/${id}`);
   }
 
-  obtener(id: number) {
-    return this.http.get<PiezaPublica>(`${environment.apiUrl}/piezas/${id}`);
+  detalle(id: () => string | undefined) {
+    return httpResource<PiezaPublica>(() => {
+      const valor = id();
+      return valor && /^[1-9]\d*$/.test(valor) && Number.isSafeInteger(Number(valor))
+        ? `${environment.apiUrl}/piezas/${valor}`
+        : undefined;
+    });
   }
 }
