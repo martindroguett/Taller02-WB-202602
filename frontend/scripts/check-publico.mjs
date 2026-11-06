@@ -73,6 +73,28 @@ const { UsuariosPublicosService } = await import(
   new URL('services/usuarios-publicos.service.mjs', dest)
 );
 const { Location } = await import('@angular/common');
+// Ejecuta los recursos y la página reales con el backend HTTP de pruebas.
+const effects = {
+  queue: new Set(),
+  add(e) {
+    this.queue.add(e);
+  },
+  schedule(e) {
+    this.queue.add(e);
+  },
+  remove(e) {
+    this.queue.delete(e);
+  },
+  flush() {
+    while ([...this.queue].some((e) => e.dirty)) for (const e of this.queue) if (e.dirty) e.run();
+  },
+};
+const settle = async () => {
+  effects.flush();
+  await Promise.resolve();
+  await Promise.resolve();
+  effects.flush();
+};
 const query = new BehaviorSubject(convertToParamMap({}));
 const route = { queryParamMap: query, snapshot: { queryParamMap: query.value } };
 const navegaciones = [];
@@ -104,6 +126,8 @@ const injector = createEnvironmentInjector([
   ImageDrop,
   { provide: AuthService, useValue: { usuario: currentUser } },
   { provide: PendingTasks, useValue: { add: () => () => {} } },
+  { provide: ɵEffectScheduler, useValue: effects },
+  { provide: ɵChangeDetectionScheduler, useValue: { notify() {} } },
   { provide: ActivatedRoute, useValue: route },
   { provide: Router, useValue: router },
   { provide: Location, useValue: { back() {} } },
@@ -143,6 +167,17 @@ const request = (offset, q = null, categoria = null) =>
   );
 try {
   const explore = injector.get(ExplorePage);
+  await settle();
+  const populares = http.expectOne(
+    (r) => r.url === `${environment.apiUrl}/piezas` && r.params.get('orden') === 'populares',
+  );
+  assert.equal(populares.request.params.get('limite'), '6');
+  populares.flush(page([fixture(40), fixture(41)], 2));
+  await settle();
+  assert.deepEqual(
+    explore.piezasDestacadas().map((p) => p.id),
+    [40, 41],
+  );
   const first = request(0);
   first.flush(
     page(
@@ -245,22 +280,6 @@ try {
   injector.destroy();
 }
 
-// Ejecuta los recursos y la página reales con el backend HTTP de pruebas.
-const effects = {
-  queue: new Set(),
-  add(e) {
-    this.queue.add(e);
-  },
-  schedule(e) {
-    this.queue.add(e);
-  },
-  remove(e) {
-    this.queue.delete(e);
-  },
-  flush() {
-    while ([...this.queue].some((e) => e.dirty)) for (const e of this.queue) if (e.dirty) e.run();
-  },
-};
 const profileParams = new BehaviorSubject(convertToParamMap({ usuario: 'ana' }));
 const token = signal(null);
 const user = signal(null);
@@ -314,12 +333,6 @@ const getPieces = (name, offset = 0) =>
       r.params.get('limite') === '20' &&
       r.params.get('desplazamiento') === String(offset),
   );
-const settle = async () => {
-  effects.flush();
-  await Promise.resolve();
-  await Promise.resolve();
-  effects.flush();
-};
 try {
   const profile = profileInjector.get(PublicProfilePage);
   await settle();

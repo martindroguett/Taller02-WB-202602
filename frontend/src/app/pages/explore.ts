@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -58,6 +58,16 @@ import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publi
             ></button>
           }
         </div>
+        @if (!busqueda().trim() && filtro() === 'todas' && piezasDestacadas().length) {
+          <section class="vt-section" aria-labelledby="destacadas-titulo">
+            <h2 class="title" id="destacadas-titulo">Destacadas</h2>
+            <div class="vt-rail destacadas">
+              @for (p of piezasDestacadas(); track p.id) {
+                <vt-piece-card [pieza]="p" />
+              }
+            </div>
+          </section>
+        }
         <section class="vt-section" aria-labelledby="resultados-titulo">
           <div class="seccion-titulo">
             <h2 class="title" id="resultados-titulo">
@@ -69,18 +79,8 @@ import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publi
           </div>
           @if (resultados().length) {
             <div class="vt-grid">
-              @for (p of resultados(); track p.id; let i = $index; let ultima = $last) {
+              @for (p of resultados(); track p.id) {
                 <vt-piece-card [pieza]="p" />
-                @if (!busqueda().trim() && filtro() === 'todas' && (i === 3 || (ultima && i < 3))) {
-                  <section class="vt-section seleccion" aria-labelledby="seleccion-titulo">
-                    <h3 class="title" id="seleccion-titulo">Para tu vitrina</h3>
-                    <div class="vt-rail destacadas">
-                      @for (destacada of resultados().slice(0, 3); track destacada.id) {
-                        <vt-piece-card [pieza]="destacada" />
-                      }
-                    </div>
-                  </section>
-                }
               }
             </div>
           }
@@ -193,11 +193,6 @@ import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publi
       font-size: clamp(17px, 4.6vw, 21px);
       line-height: 1.4;
     }
-    .seleccion {
-      grid-column: 1 / -1;
-      min-width: 0;
-      padding-block: 12px;
-    }
     .destacadas {
       gap: 16px;
       padding-block: 6px 12px;
@@ -289,9 +284,6 @@ import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publi
       .portada {
         display: block;
       }
-      .seleccion {
-        display: none;
-      }
     }
     @media (min-width: 1280px) {
       .pantalla {
@@ -329,6 +321,10 @@ export class ExplorePage {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroy = inject(DestroyRef);
+  protected readonly destacadas = this.api.destacadas();
+  protected readonly piezasDestacadas = computed(() =>
+    this.destacadas.hasValue() ? this.destacadas.value().items : [],
+  );
   private solicitud?: Subscription;
   private espera?: ReturnType<typeof setTimeout>;
   protected readonly filtros: Filtro[] = ['todas', ...CATEGORIAS.map((c) => c.slug)];
