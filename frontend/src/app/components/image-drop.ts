@@ -1,14 +1,17 @@
-import { Component, inject, model } from '@angular/core';
+import { Component, inject, input, model, output, signal, OnDestroy } from '@angular/core';
 import { ToastService } from '../services/toast.service';
 import { Icon } from './icon';
 import { IconButton } from './icon-button';
 
-const MAX_MB = 5;
+const MAX_MB = 2;
 
 @Component({
   selector: 'vt-image-drop',
   imports: [Icon, IconButton],
   template: `
+    @if (leyendo()) {
+      <p role="status">Leyendo foto…</p>
+    }
     @if (imagen(); as src) {
       <div class="vista">
         <img [src]="src" alt="Foto de tu pieza" />
@@ -19,6 +22,7 @@ const MAX_MB = 5;
           tone="glass"
           icon="close"
           label="Quitar foto"
+          [disabled]="deshabilitado()"
           (click)="imagen.set(null)"
         ></button>
       </div>
@@ -29,6 +33,7 @@ const MAX_MB = 5;
         <span class="caption vt-muted">JPG, PNG o WebP, hasta {{ max }} MB</span>
         <input
           class="vt-sr-only"
+          [disabled]="leyendo() || deshabilitado()"
           type="file"
           accept="image/jpeg,image/png,image/webp"
           (change)="elegir($event)"
@@ -89,10 +94,18 @@ const MAX_MB = 5;
     }
   `,
 })
-export class ImageDrop {
+export class ImageDrop implements OnDestroy {
   private readonly toast = inject(ToastService);
   protected readonly max = MAX_MB;
   readonly imagen = model<string | null>(null);
+  readonly deshabilitado = input(false);
+  readonly lectura = output<boolean>();
+  protected readonly leyendo = signal(false);
+  private lector: FileReader | null = null;
+
+  ngOnDestroy(): void {
+    this.lector?.abort();
+  }
 
   protected elegir(ev: Event): void {
     const archivo = (ev.target as HTMLInputElement).files?.[0];
@@ -105,9 +118,19 @@ export class ImageDrop {
       this.toast.show(`La foto pesa más de ${MAX_MB} MB: elige una más liviana.`, 'danger');
       return;
     }
+    this.lector?.abort();
     const lector = new FileReader();
+    this.lector = lector;
+    this.leyendo.set(true);
+    this.lectura.emit(true);
     lector.onload = () => this.imagen.set(lector.result as string);
     lector.onerror = () => this.toast.show('No pudimos leer la foto. Intenta con otra.', 'danger');
+    lector.onloadend = () => {
+      if (this.lector !== lector) return;
+      this.lector = null;
+      this.leyendo.set(false);
+      this.lectura.emit(false);
+    };
     lector.readAsDataURL(archivo);
   }
 }

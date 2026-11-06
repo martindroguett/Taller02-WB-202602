@@ -11,15 +11,25 @@ import { CategoriaSlug } from '../models/vitrina';
       #dialogo
       aria-labelledby="confirm-titulo"
       aria-describedby="confirm-texto"
-      (cancel)="$event.preventDefault(); cancelado.emit()"
-      (click)="$event.target === dialogo && cancelado.emit()"
+      (cancel)="$event.preventDefault(); !pendiente() && cancelado.emit()"
+      (click)="$event.target === dialogo && !pendiente() && cancelado.emit()"
     >
       <vt-piece-art class="pieza" [categoria]="categoria()" [bare]="true" />
       <section class="contenido">
         <h2 class="title" id="confirm-titulo">{{ titulo() }}</h2>
         <p class="vt-muted" id="confirm-texto">{{ texto() }}</p>
+        @if (error()) {
+          <p role="alert">{{ error() }}</p>
+        }
         <div class="botones">
-          <button type="button" vt-button variant="secondary" autofocus (click)="cancelado.emit()">
+          <button
+            type="button"
+            vt-button
+            variant="secondary"
+            autofocus
+            [disabled]="pendiente()"
+            (click)="cancelado.emit()"
+          >
             Cancelar
           </button>
           <button
@@ -27,9 +37,10 @@ import { CategoriaSlug } from '../models/vitrina';
             vt-button
             variant="destructive"
             icon="delete"
+            [disabled]="pendiente()"
             (click)="confirmado.emit()"
           >
-            Eliminar pieza
+            {{ pendiente() ? 'Eliminando…' : 'Eliminar pieza' }}
           </button>
         </div>
       </section>
@@ -85,6 +96,8 @@ import { CategoriaSlug } from '../models/vitrina';
 export class ConfirmSheet {
   readonly categoria = input<CategoriaSlug>('cartas');
   readonly abierto = input(false);
+  readonly pendiente = input(false);
+  readonly error = input('');
   readonly titulo = input.required<string>();
   readonly texto = input.required<string>();
   readonly confirmado = output<void>();

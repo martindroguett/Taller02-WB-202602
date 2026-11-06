@@ -3,9 +3,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { switchMap, of, catchError, map, startWith, Subject } from 'rxjs';
+import { switchMap, of, catchError, map, startWith, Subject, tap } from 'rxjs';
 import { Avatar } from '../components/avatar';
 import { Button } from '../components/button';
+import { ConfirmSheet } from '../components/confirm-sheet';
+import { AuthService } from '../services/auth.service';
 import { CatalogTag } from '../components/catalog-tag';
 import { EmptyState } from '../components/empty-state';
 import { LikeButton } from '../components/like-button';
@@ -23,6 +25,7 @@ import { ToastService } from '../services/toast.service';
     Avatar,
     Button,
     CatalogTag,
+    ConfirmSheet,
     EmptyState,
     Icon,
     IconButton,
@@ -96,31 +99,40 @@ import { ToastService } from '../services/toast.service';
           <p class="caption vt-muted">
             Las acciones sociales de la pieza están pendientes de conexión.
           </p>
-          <div>
-            <p class="caption vt-muted">Gestión de pieza: vista previa, pendiente de sesión</p>
+          @if (auth.usuario()?.id === p.dueno.id) {
             <div class="gestion">
-              <button
-                type="button"
+              <a
                 vt-button
                 variant="secondary"
                 icon="edit"
-                disabled
-                title="Pendiente de conectar la sesión"
+                [routerLink]="['/coleccion', p.id, 'editar']"
+                >Editar pieza</a
               >
-                Editar pieza
-              </button>
               <button
                 type="button"
                 vt-button
                 variant="danger"
                 icon="delete"
-                disabled
-                title="Pendiente de conectar la sesión"
+                [disabled]="eliminando()"
+                (click)="errorEliminar.set(''); confirmando.set(true)"
               >
                 Eliminar
               </button>
             </div>
-          </div>
+            @if (errorEliminar()) {
+              <p role="alert">{{ errorEliminar() }}</p>
+            }
+            <vt-confirm-sheet
+              [categoria]="p.categoria"
+              [abierto]="confirmando()"
+              [pendiente]="eliminando()"
+              [error]="errorEliminar()"
+              titulo="¿Eliminar esta pieza?"
+              [texto]="'Vas a quitar «' + p.nombre + '» de tu colección. No se puede deshacer.'"
+              (cancelado)="confirmando.set(false)"
+              (confirmado)="eliminar()"
+            />
+          }
         </article>
         <div class="accion-fija">
           <vt-like-button [pieza]="p" />
@@ -293,6 +305,10 @@ import { ToastService } from '../services/toast.service';
 })
 export class PiecePage {
   private readonly api = inject(CatalogoPublicoService);
+  protected readonly auth = inject(AuthService);
+  protected readonly confirmando = signal(false);
+  protected readonly eliminando = signal(false);
+  protected readonly errorEliminar = signal('');
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
@@ -302,6 +318,7 @@ export class PiecePage {
   protected readonly estado = signal<'cargando' | 'error' | 'no-encontrada'>('cargando');
   protected readonly fallo = signal(false);
   protected readonly reintentar = new Subject<void>();
+  private versionRuta = 0;
   protected readonly categoriaDe = categoriaDe;
   protected readonly compacto = compacto;
   protected pendiente(accion: string): void {
@@ -311,6 +328,12 @@ export class PiecePage {
   constructor() {
     this.route.paramMap
       .pipe(
+        tap(() => {
+          this.versionRuta++;
+          this.confirmando.set(false);
+          this.errorEliminar.set('');
+          this.eliminando.set(false);
+        }),
         switchMap((params) =>
           this.reintentar.pipe(
             startWith(undefined),
@@ -335,6 +358,36 @@ export class PiecePage {
       .subscribe((resultado) => {
         if (resultado.tipo === 'pieza') this.pieza.set(resultado.pieza);
         else this.estado.set(resultado.tipo);
+      });
+  }
+  protected eliminar(): void {
+    const p = this.pieza();
+    if (!p || this.eliminando() || this.auth.usuario()?.id !== p.dueno.id) return;
+    const version = this.versionRuta;
+    this.eliminando.set(true);
+    this.errorEliminar.set('');
+    this.api
+      .eliminar(p.id)
+      .pipe(takeUntilDestroyed(this.destroy))
+      .subscribe({
+        next: () => {
+          if (version !== this.versionRuta) return;
+          this.eliminando.set(false);
+          this.confirmando.set(false);
+          this.toast.show('Pieza eliminada', 'success');
+          void this.router.navigate(['/coleccionistas', p.dueno.username]);
+        },
+        error: (e: HttpErrorResponse) => {
+          if (version !== this.versionRuta) return;
+          this.eliminando.set(false);
+          this.errorEliminar.set(
+            e.status === 403
+              ? 'Solo el dueño puede eliminar esta pieza.'
+              : e.status === 404
+                ? 'Esta pieza ya no está disponible.'
+                : 'No pudimos eliminar la pieza. Inténtalo de nuevo.',
+          );
+        },
       });
   }
   protected cuando(fecha: string): string {

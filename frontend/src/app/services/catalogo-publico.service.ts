@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { CategoriaSlug } from '../models/vitrina';
+import { CategoriaSlug, DatosPieza } from '../models/vitrina';
 import { environment } from '../../environments/environment';
 
 export interface PiezaPublica {
@@ -37,6 +37,18 @@ export class CatalogoPublicoService {
     if (q.trim()) params = params.set('q', q.trim());
     if (categoria !== 'todas') params = params.set('categoria', categoria);
     return this.http.get<Pagina<PiezaPublica>>(`${environment.apiUrl}/piezas`, { params });
+  }
+
+  crear(datos: DatosPieza) {
+    return this.http.post<PiezaPublica>(`${environment.apiUrl}/piezas`, datos);
+  }
+
+  actualizar(id: number, datos: DatosPieza) {
+    return this.http.put<PiezaPublica>(`${environment.apiUrl}/piezas/${id}`, datos);
+  }
+
+  eliminar(id: number) {
+    return this.http.delete<void>(`${environment.apiUrl}/piezas/${id}`);
   }
 
   obtener(id: number) {

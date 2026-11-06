@@ -57,6 +57,8 @@ await writeFile(
 const { environment } = await import(new URL('environment.mjs', environmentDest));
 const { ExplorePage } = await import(new URL('pages/explore.mjs', dest));
 const { PiecePage } = await import(new URL('pages/piece.mjs', dest));
+const { PieceFormPage } = await import(new URL('pages/piece-form.mjs', dest));
+const { ImageDrop } = await import(new URL('components/image-drop.mjs', dest));
 const { PublicProfilePage } = await import(new URL('pages/public-profile.mjs', dest));
 const { AuthService } = await import(new URL('services/auth.service.mjs', dest));
 const { PieceCard } = await import(new URL('components/piece-card.mjs', dest));
@@ -74,8 +76,12 @@ const { Location } = await import('@angular/common');
 const query = new BehaviorSubject(convertToParamMap({}));
 const params = new BehaviorSubject(convertToParamMap({ id: '7' }));
 const route = { queryParamMap: query, paramMap: params, snapshot: { queryParamMap: query.value } };
+const navegaciones = [];
+const avisos = [];
 const router = {
-  navigate: async (_, options) => {
+  navigate: async (destino, options) => {
+    navegaciones.push(destino);
+    if (!options?.queryParams) return true;
     const values = Object.fromEntries(
       Object.entries(options.queryParams).filter(([, v]) => v != null),
     );
@@ -85,6 +91,7 @@ const router = {
   },
   navigateByUrl: async () => true,
 };
+const currentUser = signal({ id: 1, username: 'ana' });
 const injector = createEnvironmentInjector([
   provideHttpClient(withNoXsrfProtection()),
   provideHttpClientTesting(),
@@ -96,11 +103,21 @@ const injector = createEnvironmentInjector([
   FollowButton,
   ExplorePage,
   PiecePage,
+  PieceFormPage,
+  ImageDrop,
+  { provide: AuthService, useValue: { usuario: currentUser } },
   { provide: PendingTasks, useValue: { add: () => () => {} } },
   { provide: ActivatedRoute, useValue: route },
   { provide: Router, useValue: router },
   { provide: Location, useValue: { back() {} } },
-  { provide: ToastService, useValue: { show() {} } },
+  {
+    provide: ToastService,
+    useValue: {
+      show(...args) {
+        avisos.push(args);
+      },
+    },
+  },
 ]);
 const http = injector.get(HttpTestingController);
 const fixture = (id) => ({
@@ -194,6 +211,31 @@ try {
   detail.reintentar.next();
   http.expectOne(`${environment.apiUrl}/piezas/7`).flush(fixture(7));
   assert.equal(detail.pieza().id, 7);
+  currentUser.set({ id: 2, username: 'otra' });
+  detail.eliminar();
+  http.expectNone((r) => r.method === 'DELETE');
+  currentUser.set({ id: 1, username: 'ana' });
+  navegaciones.length = 0;
+  avisos.length = 0;
+  detail.confirmando.set(true);
+  detail.eliminar();
+  detail.eliminar();
+  http
+    .expectOne((r) => r.url === `${environment.apiUrl}/piezas/7` && r.method === 'DELETE')
+    .flush('error', { status: 500, statusText: 'Error' });
+  assert.equal(detail.confirmando(), true);
+  assert.match(detail.errorEliminar(), /eliminar/);
+  assert.equal(navegaciones.length, 0);
+  assert.equal(avisos.length, 0);
+  detail.eliminar();
+  assert.equal(navegaciones.length, 0);
+  assert.equal(avisos.length, 0);
+  http
+    .expectOne((r) => r.url === `${environment.apiUrl}/piezas/7` && r.method === 'DELETE')
+    .flush(null, { status: 204, statusText: 'No Content' });
+  assert.equal(detail.confirmando(), false);
+  assert.deepEqual(navegaciones.pop(), ['/coleccionistas', 'ana']);
+  assert.equal(avisos.pop()[1], 'success');
   detail.fallo.set(true);
   params.next(convertToParamMap({ id: '8' }));
   assert.equal(detail.fallo(), false);
@@ -203,6 +245,184 @@ try {
   assert.equal(detail.estado(), 'no-encontrada');
   params.next(convertToParamMap({ id: 'abc' }));
   assert.equal(detail.estado(), 'no-encontrada');
+  const form = injector.get(PieceFormPage);
+  params.next(convertToParamMap({}));
+  assert.equal(form.estado(), 'lista');
+  form.guardar();
+  assert.equal(form.formulario.invalid, true);
+  form.formulario.setValue({
+    nombre: '  ' + '😀'.repeat(100) + '  ',
+    descripcion: ' descripción ',
+    categoria: 'cartas',
+    imagen_url: '/foto.jpg',
+  });
+  assert.equal(form.formulario.valid, true, 'Los límites cuentan puntos Unicode recortados');
+  form.formulario.controls.nombre.setValue('😀'.repeat(101));
+  assert.equal(form.formulario.invalid, true);
+  form.formulario.controls.nombre.setValue(' Pieza ');
+  form.formulario.controls.descripcion.setValue(' ' + 'a'.repeat(2000) + ' ');
+  assert.equal(form.formulario.valid, true);
+  form.formulario.controls.descripcion.setValue('a'.repeat(2001));
+  assert.equal(form.formulario.invalid, true);
+  form.formulario.controls.descripcion.setValue(' descripción ');
+  form.formulario.controls.categoria.setValue('desconocida');
+  assert.equal(form.formulario.invalid, true);
+  form.formulario.controls.categoria.setValue('cartas');
+  navegaciones.length = 0;
+  avisos.length = 0;
+  form.guardar();
+  form.guardar();
+  const crear = http.expectOne(
+    (r) => r.url === `${environment.apiUrl}/piezas` && r.method === 'POST',
+  );
+  assert.deepEqual(crear.request.body, {
+    nombre: 'Pieza',
+    descripcion: 'descripción',
+    categoria: 'cartas',
+    imagen_url: '/foto.jpg',
+  });
+  assert.equal(navegaciones.length, 0);
+  assert.equal(avisos.length, 0);
+  crear.flush({ detail: 'error imagen' }, { status: 400, statusText: 'Bad Request' });
+  assert.equal(form.errorAccion(), 'error imagen');
+  assert.equal(navegaciones.length, 0);
+  assert.equal(avisos.length, 0);
+  assert.equal(form.formulario.controls.nombre.value, ' Pieza ');
+  form.guardar();
+  http
+    .expectOne((r) => r.url === `${environment.apiUrl}/piezas` && r.method === 'POST')
+    .flush(fixture(9));
+  assert.deepEqual(navegaciones.pop(), ['/pieza', 9]);
+  assert.equal(avisos.pop()[1], 'success');
+  params.next(convertToParamMap({ id: '10' }));
+  const anteriores = http.match(`${environment.apiUrl}/piezas/10`);
+  assert.equal(anteriores.length, 2);
+  params.next(convertToParamMap({ id: '11' }));
+  assert.ok(anteriores.every((r) => r.cancelled));
+  for (const r of http.match(`${environment.apiUrl}/piezas/11`))
+    r.flush({ ...fixture(11), imagen_url: '/api/piezas/11/imagen?v=12' });
+  assert.equal(form.estado(), 'lista');
+  form.formulario.controls.nombre.setValue(' Editada ');
+  form.guardar();
+  const editar = http.expectOne(
+    (r) => r.url === `${environment.apiUrl}/piezas/11` && r.method === 'PUT',
+  );
+  assert.equal(editar.request.body.imagen_url, '/api/piezas/11/imagen?v=12');
+  assert.equal(navegaciones.length, 0);
+  assert.equal(avisos.length, 0);
+  editar.flush('error', { status: 500, statusText: 'Error' });
+  assert.equal(form.formulario.controls.nombre.value, ' Editada ');
+  assert.equal(navegaciones.length, 0);
+  assert.equal(avisos.length, 0);
+  form.guardar();
+  http
+    .expectOne((r) => r.url === `${environment.apiUrl}/piezas/11` && r.method === 'PUT')
+    .flush(fixture(11));
+  assert.deepEqual(navegaciones.pop(), ['/pieza', 11]);
+  assert.equal(avisos.pop()[1], 'success');
+  form.confirmando.set(true);
+  form.eliminar();
+  form.eliminar();
+  const borrar = http.expectOne(
+    (r) => r.url === `${environment.apiUrl}/piezas/11` && r.method === 'DELETE',
+  );
+  assert.equal(navegaciones.length, 0);
+  assert.equal(avisos.length, 0);
+  borrar.flush('error', { status: 403, statusText: 'Forbidden' });
+  assert.equal(form.confirmando(), true);
+  assert.match(form.errorAccion(), /dueño/);
+  assert.equal(navegaciones.length, 0);
+  assert.equal(avisos.length, 0);
+  form.eliminar();
+  http
+    .expectOne((r) => r.url === `${environment.apiUrl}/piezas/11` && r.method === 'DELETE')
+    .flush(null, { status: 204, statusText: 'No Content' });
+  assert.equal(form.confirmando(), false);
+  assert.deepEqual(navegaciones.pop(), ['/coleccionistas', 'ana']);
+  assert.equal(avisos.pop()[1], 'success');
+  // Las respuestas de mutaciones de otra ruta no pueden navegar ni alterar el estado actual.
+  form.formulario.enable();
+  form.guardar();
+  const putTardio = http.expectOne(
+    (r) => r.url === `${environment.apiUrl}/piezas/11` && r.method === 'PUT',
+  );
+  params.next(convertToParamMap({ id: '14' }));
+  for (const r of http.match(`${environment.apiUrl}/piezas/14`)) r.flush(fixture(14));
+  assert.equal(form.ocupado(), false);
+  putTardio.flush(fixture(11));
+  assert.equal(navegaciones.length, 0);
+  assert.equal(avisos.length, 0);
+  assert.equal(form.id(), 14);
+  form.confirmando.set(true);
+  form.eliminar();
+  const borrarTardio = http.expectOne(
+    (r) => r.url === `${environment.apiUrl}/piezas/14` && r.method === 'DELETE',
+  );
+  params.next(convertToParamMap({ id: '16' }));
+  for (const r of http.match(`${environment.apiUrl}/piezas/16`)) r.flush(fixture(16));
+  borrarTardio.flush('error', { status: 403, statusText: 'Forbidden' });
+  assert.equal(form.errorAccion(), '');
+  assert.equal(form.confirmando(), false);
+  assert.equal(navegaciones.length, 0);
+  assert.equal(avisos.length, 0);
+  detail.confirmando.set(true);
+  detail.errorEliminar.set('error anterior');
+  detail.eliminar();
+  const deleteTardio = http.expectOne(
+    (r) => r.url === `${environment.apiUrl}/piezas/16` && r.method === 'DELETE',
+  );
+  params.next(convertToParamMap({ id: '15' }));
+  for (const r of http.match(`${environment.apiUrl}/piezas/15`)) r.flush(fixture(15));
+  assert.equal(detail.confirmando(), false);
+  assert.equal(detail.errorEliminar(), '');
+  assert.equal(detail.eliminando(), false);
+  deleteTardio.flush(null, { status: 204, statusText: 'No Content' });
+  assert.equal(navegaciones.length, 0);
+  assert.equal(avisos.length, 0);
+  assert.equal(detail.pieza().id, 15);
+  params.next(convertToParamMap({ id: '12' }));
+  for (const r of http.match(`${environment.apiUrl}/piezas/12`))
+    r.flush({ ...fixture(12), dueno: { id: 2, username: 'otra' } });
+  assert.equal(form.estado(), 'ajena');
+  form.guardar();
+  http.expectNone((r) => r.method === 'PUT' || r.method === 'DELETE' || r.method === 'POST');
+  params.next(convertToParamMap({ id: '13' }));
+  for (const r of http.match(`${environment.apiUrl}/piezas/13`))
+    r.flush('error', { status: 500, statusText: 'Error' });
+  assert.equal(form.estado(), 'error');
+  form.reintentar.next();
+  http
+    .expectOne(`${environment.apiUrl}/piezas/13`)
+    .flush('no', { status: 404, statusText: 'Not Found' });
+  assert.equal(form.estado(), 'no-encontrada');
+  const imagen = injector.get(ImageDrop);
+  let lectura = null;
+  imagen.lectura.subscribe((value) => (lectura = value));
+  const originalReader = globalThis.FileReader;
+  let lector;
+  globalThis.FileReader = class {
+    constructor() {
+      lector = this;
+    }
+    readAsDataURL() {}
+    abort() {}
+  };
+  imagen.elegir({ target: { files: [{ type: 'image/gif', size: 20 }] } });
+  assert.equal(lector, undefined, 'Un GIF no se lee');
+  imagen.elegir({ target: { files: [{ type: 'image/png', size: 2 * 1024 * 1024 + 1 }] } });
+  assert.equal(lector, undefined, 'Una imagen mayor de 2 MiB no se lee');
+  imagen.elegir({ target: { files: [{ type: 'image/png', size: 20 }] } });
+  assert.equal(lectura, true);
+  lector.result = 'data:image/png;base64,AA==';
+  lector.onload();
+  lector.onloadend();
+  assert.equal(lectura, false);
+  assert.equal(imagen.imagen(), 'data:image/png;base64,AA==');
+  imagen.elegir({ target: { files: [{ type: 'image/png', size: 20 }] } });
+  lector.onerror();
+  lector.onloadend();
+  assert.equal(lectura, false);
+  globalThis.FileReader = originalReader;
   const usuarios = injector.get(UsuariosPublicosService);
   let resultado;
   usuarios.seguir('ana', false).subscribe((value) => (resultado = value));
