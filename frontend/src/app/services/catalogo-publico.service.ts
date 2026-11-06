@@ -39,6 +39,13 @@ export class CatalogoPublicoService {
     return this.http.get<Pagina<PiezaPublica>>(`${environment.apiUrl}/piezas`, { params });
   }
 
+  destacadas() {
+    return httpResource<Pagina<PiezaPublica>>(() => ({
+      url: `${environment.apiUrl}/piezas`,
+      params: { orden: 'populares', limite: 6 },
+    }));
+  }
+
   crear(datos: DatosPieza) {
     return this.http.post<PiezaPublica>(`${environment.apiUrl}/piezas`, datos);
   }
