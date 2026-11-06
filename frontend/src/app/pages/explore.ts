@@ -1,4 +1,13 @@
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  ElementRef,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -10,6 +19,7 @@ import { CatalogoService } from '../services/catalogo.service';
 import { Button } from '../components/button';
 import { CategoryChip } from '../components/category-chip';
 import { EmptyState } from '../components/empty-state';
+import { IconButton } from '../components/icon-button';
 import { PromoBanner } from '../components/promo-banner';
 import { PieceCard } from '../components/piece-card';
 import { SearchField } from '../components/search-field';
@@ -19,12 +29,14 @@ import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publi
 
 @Component({
   selector: 'vt-explore-page',
+  host: { '(window:resize)': 'medirRiel()' },
   imports: [
     Avatar,
     Button,
     CategoryChip,
     EmptyState,
     FollowButton,
+    IconButton,
     PieceCard,
     PromoBanner,
     RouterLink,
@@ -61,9 +73,33 @@ import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publi
         @if (!busqueda().trim() && filtro() === 'todas' && piezasDestacadas().length) {
           <section class="vt-section" aria-labelledby="destacadas-titulo">
             <h2 class="title" id="destacadas-titulo">Destacadas</h2>
-            <div class="vt-rail destacadas">
-              @for (p of piezasDestacadas(); track p.id) {
-                <vt-piece-card [pieza]="p" />
+            <div class="carrusel">
+              <div #riel class="vt-rail destacadas" (scroll)="medirRiel()">
+                @for (p of piezasDestacadas(); track p.id) {
+                  <vt-piece-card [pieza]="p" />
+                }
+              </div>
+              @if (hayAtras()) {
+                <button
+                  type="button"
+                  vt-icon-button
+                  tone="glass"
+                  class="flecha atras"
+                  icon="chevron_left"
+                  label="Ver piezas anteriores"
+                  (click)="mover(-1)"
+                ></button>
+              }
+              @if (hayAdelante()) {
+                <button
+                  type="button"
+                  vt-icon-button
+                  tone="glass"
+                  class="flecha adelante"
+                  icon="chevron_right"
+                  label="Ver más piezas destacadas"
+                  (click)="mover(1)"
+                ></button>
               }
             </div>
           </section>
@@ -193,6 +229,31 @@ import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publi
       font-size: clamp(17px, 4.6vw, 21px);
       line-height: 1.4;
     }
+    .carrusel {
+      position: relative;
+    }
+    .flecha {
+      position: absolute;
+      top: 50%;
+      translate: 0 -50%;
+      z-index: 1;
+    }
+    .atras {
+      left: 8px;
+    }
+    .adelante {
+      right: 8px;
+    }
+    @media (hover: none) {
+      .flecha {
+        display: none;
+      }
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .destacadas {
+        scroll-behavior: smooth;
+      }
+    }
     .destacadas {
       gap: 16px;
       padding-block: 6px 12px;
@@ -302,6 +363,9 @@ import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publi
       .mi-avatar {
         display: none;
       }
+      .destacadas {
+        margin-right: 0;
+      }
       .vt-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
@@ -325,6 +389,9 @@ export class ExplorePage {
   protected readonly piezasDestacadas = computed(() =>
     this.destacadas.hasValue() ? this.destacadas.value().items : [],
   );
+  private readonly riel = viewChild<ElementRef<HTMLElement>>('riel');
+  protected readonly hayAtras = signal(false);
+  protected readonly hayAdelante = signal(false);
   private solicitud?: Subscription;
   private espera?: ReturnType<typeof setTimeout>;
   protected readonly filtros: Filtro[] = ['todas', ...CATEGORIAS.map((c) => c.slug)];
@@ -337,6 +404,10 @@ export class ExplorePage {
   protected desplazamiento = 0;
 
   constructor() {
+    effect(() => {
+      this.piezasDestacadas();
+      this.medirRiel();
+    });
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroy)).subscribe((params) => {
       clearTimeout(this.espera);
       this.busqueda.set(params.get('q') ?? '');
@@ -347,6 +418,21 @@ export class ExplorePage {
       clearTimeout(this.espera);
       this.solicitud?.unsubscribe();
     });
+  }
+
+  protected medirRiel(): void {
+    const riel = this.riel()?.nativeElement;
+    if (!riel) return;
+    this.hayAtras.set(riel.scrollLeft > 4);
+    this.hayAdelante.set(riel.scrollLeft + riel.clientWidth < riel.scrollWidth - 4);
+  }
+
+  protected mover(direccion: 1 | -1): void {
+    const riel = this.riel()?.nativeElement;
+    if (!riel) return;
+    const [primera, segunda] = Array.from(riel.children) as HTMLElement[];
+    const paso = segunda ? segunda.offsetLeft - primera.offsetLeft : riel.clientWidth;
+    riel.scrollBy({ left: direccion * paso });
   }
 
   protected buscar(q: string): void {
