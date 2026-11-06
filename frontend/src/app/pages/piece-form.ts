@@ -1,99 +1,170 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   Component,
-  OnChanges,
   computed,
+  DestroyRef,
+  effect,
   inject,
   input,
-  numberAttribute,
   signal,
+  untracked,
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidatorFn,
+  Validators,
+} from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { Button } from '../components/button';
 import { CategoryChip } from '../components/category-chip';
 import { ConfirmSheet } from '../components/confirm-sheet';
+import { EmptyState } from '../components/empty-state';
 import { ImageDrop } from '../components/image-drop';
 import { TextField } from '../components/text-field';
 import { TopBar } from '../components/top-bar';
-import { CatalogoService } from '../services/catalogo.service';
-import { ToastService } from '../services/toast.service';
 import { CATEGORIAS, CategoriaSlug } from '../models/vitrina';
+import { AuthService } from '../services/auth.service';
+import { CatalogoPublicoService } from '../services/catalogo-publico.service';
+import { ToastService } from '../services/toast.service';
+
+// Pydantic cuenta puntos Unicode después de quitar espacios, no unidades UTF-16.
+const texto: (max: number) => ValidatorFn = (max) => (control) => {
+  const valor = (control.value as string).trim();
+  return !valor ? { required: true } : Array.from(valor).length > max ? { maxlength: true } : null;
+};
 
 @Component({
   selector: 'vt-piece-form-page',
-  imports: [Button, CategoryChip, ConfirmSheet, ImageDrop, TextField, TopBar],
+  imports: [
+    ReactiveFormsModule,
+    Button,
+    CategoryChip,
+    ConfirmSheet,
+    EmptyState,
+    ImageDrop,
+    TextField,
+    TopBar,
+    RouterLink,
+  ],
   template: `
-    <form class="vt-screen formulario" (submit)="guardar($event)" novalidate>
-      <vt-top-bar
-        [titulo]="editando() ? 'Editar pieza' : 'Agregar pieza'"
-        [small]="true"
-        icono="close"
-      />
-
-      <vt-image-drop [(imagen)]="imagen" />
-      @if (intento() && errores().imagen) {
-        <p class="error-txt" role="alert">{{ errores().imagen }}</p>
-      }
-
-      <vt-text-field
-        label="Nombre de la pieza"
-        [(valor)]="nombre"
-        placeholder="Ej. Carta holo 1ª edición"
-        [error]="intento() ? errores().nombre : ''"
-        [maxLength]="100"
-      />
-      <vt-text-field
-        label="Descripción"
-        [(valor)]="descripcion"
-        [multilinea]="true"
-        placeholder="Estado, edición, de dónde viene"
-        ayuda="Cuéntale a otros coleccionistas qué la hace especial."
-        [error]="intento() ? errores().descripcion : ''"
-      />
-
-      <fieldset>
-        <legend class="label">Categoría</legend>
-        <div class="vt-rail" role="group" aria-label="Categoría de la pieza">
-          @for (c of categorias; track c.slug) {
+    @if (estado() === 'lista') {
+      <form class="vt-screen formulario" [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+        <vt-top-bar
+          [titulo]="id() ? 'Editar pieza' : 'Agregar pieza'"
+          [small]="true"
+          icono="close"
+        />
+        <vt-image-drop
+          [deshabilitado]="ocupado()"
+          [imagen]="formulario.controls.imagen_url.value || null"
+          (imagenChange)="formulario.controls.imagen_url.setValue($event || '')"
+          (lectura)="leyendo.set($event)"
+        />
+        @if (intento() && formulario.controls.imagen_url.invalid) {
+          <p class="error-txt" role="alert">Agrega una foto de tu pieza.</p>
+        }
+        <vt-text-field
+          label="Nombre de la pieza"
+          formControlName="nombre"
+          placeholder="Ej. Carta holo 1ª edición"
+          [error]="errorTexto('nombre', 100)"
+        />
+        <vt-text-field
+          label="Descripción"
+          formControlName="descripcion"
+          [multilinea]="true"
+          placeholder="Estado, edición, de dónde viene"
+          ayuda="Cuéntale a otros coleccionistas qué la hace especial."
+          [error]="errorTexto('descripcion', 2000)"
+        />
+        <fieldset>
+          <legend class="label">Categoría</legend>
+          <div class="vt-rail" role="group" aria-label="Categoría de la pieza">
+            @for (c of categorias; track c.slug) {
+              <button
+                type="button"
+                vt-category-chip
+                [slug]="c.slug"
+                [active]="formulario.controls.categoria.value === c.slug"
+                [disabled]="ocupado()"
+                (click)="formulario.controls.categoria.setValue(c.slug)"
+              ></button>
+            }
+          </div>
+          @if (intento() && formulario.controls.categoria.invalid) {
+            <p class="error-txt" role="alert">Elige la categoría de tu pieza.</p>
+          }
+        </fieldset>
+        @if (errorAccion()) {
+          <p class="error-txt" role="alert">{{ errorAccion() }}</p>
+        }
+        <div class="acciones">
+          @if (id()) {
             <button
               type="button"
-              vt-category-chip
-              [slug]="c.slug"
-              [active]="categoria() === c.slug"
-              (click)="categoria.set(c.slug)"
-            ></button>
+              vt-button
+              variant="danger"
+              icon="delete"
+              [disabled]="ocupado() || leyendo()"
+              (click)="errorAccion.set(''); confirmando.set(true)"
+            >
+              Eliminar pieza
+            </button>
           }
-        </div>
-        @if (intento() && errores().categoria) {
-          <p class="error-txt">{{ errores().categoria }}</p>
-        }
-      </fieldset>
-
-      <div class="acciones">
-        @if (editando()) {
           <button
-            type="button"
+            type="submit"
             vt-button
-            variant="danger"
-            icon="delete"
-            (click)="confirmando.set(true)"
+            variant="primary"
+            size="lg"
+            [block]="true"
+            [disabled]="ocupado() || leyendo()"
           >
-            Eliminar pieza
+            {{ ocupado() ? 'Guardando…' : id() ? 'Guardar cambios' : 'Agregar pieza' }}
           </button>
-        }
-        <button type="submit" vt-button variant="primary" size="lg" [block]="true">
-          {{ editando() ? 'Guardar cambios' : 'Agregar pieza' }}
-        </button>
-      </div>
-    </form>
-
-    <vt-confirm-sheet
-      [categoria]="categoria() ?? 'cartas'"
-      [abierto]="confirmando()"
-      titulo="¿Eliminar esta pieza?"
-      [texto]="'Vas a quitar «' + nombre() + '» de tu colección. No se puede deshacer.'"
-      (cancelado)="confirmando.set(false)"
-      (confirmado)="eliminar()"
-    />
+        </div>
+      </form>
+      <vt-confirm-sheet
+        [categoria]="formulario.controls.categoria.value || 'cartas'"
+        [abierto]="confirmando()"
+        [pendiente]="ocupado()"
+        [error]="errorAccion()"
+        titulo="¿Eliminar esta pieza?"
+        [texto]="
+          'Vas a quitar «' +
+          formulario.controls.nombre.value +
+          '» de tu colección. No se puede deshacer.'
+        "
+        (cancelado)="confirmando.set(false)"
+        (confirmado)="eliminar()"
+      />
+    } @else if (estado() === 'cargando') {
+      <main class="vt-screen"><p role="status">Cargando pieza…</p></main>
+    } @else {
+      <main class="vt-screen">
+        <vt-empty-state
+          [titulo]="
+            estado() === 'ajena'
+              ? 'Esta pieza pertenece a otra persona'
+              : estado() === 'no-encontrada'
+                ? 'Esta pieza no está disponible'
+                : 'No pudimos cargar la pieza'
+          "
+          [texto]="
+            estado() === 'error'
+              ? 'Comprueba tu conexión e inténtalo de nuevo.'
+              : 'Revisa el enlace o vuelve a tu colección.'
+          "
+        >
+          @if (estado() === 'error') {
+            <button vt-button type="button" (click)="pieza.reload()">Reintentar</button>
+          }
+          <a vt-button variant="secondary" [routerLink]="coleccion()">Ir a mi colección</a>
+        </vt-empty-state>
+      </main>
+    }
   `,
   styles: `
     .formulario {
@@ -125,84 +196,112 @@ import { CATEGORIAS, CategoriaSlug } from '../models/vitrina';
     }
   `,
 })
-export class PieceFormPage implements OnChanges {
-  private readonly catalogo = inject(CatalogoService);
-  private readonly toast = inject(ToastService);
+export class PieceFormPage {
+  private readonly api = inject(CatalogoPublicoService);
+  private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-
-  /** Parámetro de ruta :id (solo al editar) */
-  readonly id = input<number | undefined, string | undefined>(undefined, {
-    transform: (v) => (v ? numberAttribute(v) : undefined),
-  });
-
+  private readonly toast = inject(ToastService);
+  private readonly destroy = inject(DestroyRef);
+  readonly id = input<string>();
+  protected readonly pieza = this.api.detalle(this.id);
   protected readonly categorias = CATEGORIAS;
-  protected readonly nombre = signal('');
-  protected readonly descripcion = signal('');
-  protected readonly categoria = signal<CategoriaSlug | null>(null);
-  protected readonly imagen = signal<string | null>(null);
-  protected readonly confirmando = signal(false);
+  protected readonly formulario = new FormGroup({
+    nombre: new FormControl('', { nonNullable: true, validators: texto(100) }),
+    descripcion: new FormControl('', { nonNullable: true, validators: texto(2000) }),
+    categoria: new FormControl<CategoriaSlug | null>(null, { validators: Validators.required }),
+    imagen_url: new FormControl('', { nonNullable: true, validators: Validators.required }),
+  });
+  protected readonly estado = computed(() => {
+    if (this.id() === undefined) return 'lista';
+    if (this.pieza.isLoading()) return 'cargando';
+    if (this.pieza.error())
+      return (this.pieza.error() as HttpErrorResponse).status === 404 ? 'no-encontrada' : 'error';
+    if (!this.pieza.hasValue()) return 'no-encontrada';
+    return this.pieza.value().dueno.id === this.auth.usuario()?.id ? 'lista' : 'ajena';
+  });
   protected readonly intento = signal(false);
+  protected readonly confirmando = signal(false);
+  protected readonly ocupado = signal(false);
+  protected readonly leyendo = signal(false);
+  protected readonly errorAccion = signal('');
 
-  protected readonly editando = computed(() => this.id() !== undefined);
-  protected readonly errores = computed(() => ({
-    nombre: !this.nombre().trim()
-      ? 'Escribe un nombre para tu pieza.'
-      : this.nombre().trim().length > 100
-        ? 'Usa como máximo 100 caracteres.'
-        : '',
-    descripcion: this.descripcion().trim() ? '' : 'Describe tu pieza.',
-    categoria: this.categoria() ? '' : 'Elige la categoría de tu pieza.',
-    imagen: this.imagen() ? '' : 'Agrega una foto de tu pieza.',
-  }));
-
-  ngOnChanges(): void {
-    const id = this.id();
-    if (id === undefined) return;
-    const p = this.catalogo.pieza(id);
-    if (!p || p.duenoId !== this.catalogo.yo.id) {
-      this.router.navigateByUrl('/perfil');
-      return;
-    }
-    this.nombre.set(p.nombre);
-    this.descripcion.set(p.descripcion);
-    this.categoria.set(p.categoria);
-    this.imagen.set(p.imagen_url);
-    this.intento.set(false);
+  constructor() {
+    effect(() => {
+      if (!this.pieza.hasValue()) return;
+      const { nombre, descripcion, categoria, imagen_url } = this.pieza.value();
+      untracked(() => this.formulario.reset({ nombre, descripcion, categoria, imagen_url }));
+    });
   }
-
-  protected guardar(ev: Event): void {
-    ev.preventDefault();
+  protected coleccion(): string[] {
+    return ['/coleccionistas', this.auth.usuario()?.username ?? ''];
+  }
+  protected errorTexto(campo: 'nombre' | 'descripcion', max: number): string {
+    const control = this.formulario.controls[campo];
+    if (!this.intento() && !control.touched) return '';
+    return control.hasError('required')
+      ? 'Este campo es obligatorio.'
+      : control.hasError('maxlength')
+        ? `Usa como máximo ${max} caracteres.`
+        : '';
+  }
+  protected guardar(): void {
+    if (this.estado() !== 'lista' || this.ocupado() || this.leyendo()) return;
     this.intento.set(true);
-    const categoria = this.categoria();
-    const imagen = this.imagen();
-    if (Object.values(this.errores()).some(Boolean) || !imagen) {
-      this.toast.show('Revisa el formulario: faltan datos de tu pieza.', 'danger');
-      return;
-    }
+    if (this.formulario.invalid) return;
+    const valor = this.formulario.getRawValue();
+    if (!valor.categoria) return;
     const datos = {
-      nombre: this.nombre().trim(),
-      descripcion: this.descripcion().trim(),
-      categoria: categoria!,
-      imagen_url: imagen,
+      ...valor,
+      nombre: valor.nombre.trim(),
+      descripcion: valor.descripcion.trim(),
+      categoria: valor.categoria,
     };
     const id = this.id();
-    if (id !== undefined) {
-      this.catalogo.actualizar(id, datos);
-      this.toast.show('Cambios guardados', 'success');
-      this.router.navigate(['/perfil']);
-    } else {
-      this.catalogo.agregar(datos);
-      this.toast.show('Pieza agregada a tu colección', 'success');
-      this.router.navigate(['/perfil']);
-    }
+    this.ocupado.set(true);
+    this.errorAccion.set('');
+    this.formulario.disable();
+    (id ? this.api.actualizar(Number(id), datos) : this.api.crear(datos))
+      .pipe(takeUntilDestroyed(this.destroy))
+      .subscribe({
+        next: (pieza) => {
+          this.ocupado.set(false);
+          this.toast.show(id ? 'Cambios guardados' : 'Pieza agregada', 'success');
+          void this.router.navigate(['/pieza', pieza.id]);
+        },
+        error: (e: HttpErrorResponse) => {
+          this.ocupado.set(false);
+          this.formulario.enable();
+          this.errorAccion.set(mensajeError(e));
+        },
+      });
   }
-
   protected eliminar(): void {
     const id = this.id();
-    if (id === undefined) return;
-    this.catalogo.eliminar(id);
-    this.confirmando.set(false);
-    this.toast.show('Pieza eliminada', 'success');
-    this.router.navigateByUrl('/perfil');
+    if (this.estado() !== 'lista' || !id || this.ocupado()) return;
+    this.ocupado.set(true);
+    this.errorAccion.set('');
+    this.api
+      .eliminar(Number(id))
+      .pipe(takeUntilDestroyed(this.destroy))
+      .subscribe({
+        next: () => {
+          this.ocupado.set(false);
+          this.confirmando.set(false);
+          this.toast.show('Pieza eliminada', 'success');
+          void this.router.navigate(this.coleccion());
+        },
+        error: (e: HttpErrorResponse) => {
+          this.ocupado.set(false);
+          this.errorAccion.set(mensajeError(e));
+        },
+      });
   }
+}
+
+function mensajeError(e: HttpErrorResponse): string {
+  if (e.status === 403) return 'Solo el dueño puede modificar esta pieza.';
+  if (e.status === 404) return 'Esta pieza ya no está disponible.';
+  if (e.status === 400 && typeof e.error?.detail === 'string') return e.error.detail;
+  if (e.status === 422) return 'Revisa los datos de la pieza e inténtalo de nuevo.';
+  return 'No pudimos guardar los cambios. Comprueba tu conexión e inténtalo de nuevo.';
 }

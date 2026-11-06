@@ -81,6 +81,9 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
         </header>
         <section class="vt-section" aria-labelledby="piezas-titulo">
           <h2 class="title" id="piezas-titulo">Piezas</h2>
+          @if (auth.usuario()?.id === usuario.id) {
+            <a vt-button variant="accent" icon="add" routerLink="/coleccion/nueva">Agregar pieza</a>
+          }
           @if (piezas.isLoading()) {
             <div class="cargando" role="status"><mat-spinner diameter="28" /> Cargando piezas…</div>
           } @else if (piezas.error()) {
