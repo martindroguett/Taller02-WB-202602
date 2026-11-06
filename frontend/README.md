@@ -36,7 +36,7 @@ No se incluyen chat, sets ni cargas simuladas.
 
 ## Qué funciona y qué queda pendiente
 
-Explorar consulta piezas reales, permite buscar y filtrar por categoría, y carga páginas de 20 resultados. La URL conserva los filtros al volver desde el detalle. La pantalla informa carga, ausencia de resultados y errores con reintento; el detalle permite copiar su enlace y abrir el perfil real del propietario en `/coleccionistas/:usuario`.
+Explorar consulta piezas reales, permite buscar y filtrar por categoría, y carga páginas de 20 resultados. Sin búsqueda ni filtro, muestra arriba las 6 piezas más populares (`orden=populares`, por me gusta; con empate, la más nueva) como «Destacadas». La URL conserva los filtros al volver desde el detalle. La pantalla informa carga, ausencia de resultados y errores con reintento; el detalle permite copiar su enlace y abrir el perfil real del propietario en `/coleccionistas/:usuario`.
 
 El perfil público muestra la colección con páginas de 20 piezas y permite seguir y dejar de seguir de forma persistente. Sin sesión, el botón lleva a ingresar y vuelve al perfil; hay que pulsarlo otra vez para confirmar el seguimiento. No se muestra para la propia cuenta. Las pantallas informan carga, errores, usuario inexistente y colección vacía. La cuenta propietaria puede agregar piezas desde su colección y editarlas o eliminarlas desde su detalle. Las acciones sociales de las piezas reales todavía están pendientes.
 
