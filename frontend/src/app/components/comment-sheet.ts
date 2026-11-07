@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bottom-sheet';
@@ -21,7 +22,7 @@ export interface DatosHoja {
 
 @Component({
   selector: 'vt-comment-sheet',
-  imports: [Avatar, Button, EmptyState, Icon, IconButton, ReactiveFormsModule],
+  imports: [Avatar, Button, EmptyState, Icon, IconButton, NgTemplateOutlet, ReactiveFormsModule],
   template: `
     <header>
       <h2 class="title" id="comentarios-titulo">
@@ -38,44 +39,13 @@ export interface DatosHoja {
     </header>
 
     <div #lista class="lista" role="log" aria-live="polite" aria-labelledby="comentarios-titulo">
-      @for (c of comentarios.items(); track c.id) {
-        <article [class.pendiente]="c.estado === 'enviando'">
-          <vt-avatar [nombre]="c.autor.username" [tam]="36" />
-          <div class="cuerpo">
-            <p class="quien">
-              <strong>&#64;{{ c.autor.username }}</strong>
-              @if (c.autor.id === datos.duenoId) {
-                <span class="dueno">Dueño</span>
-              }
-              <span class="caption vt-muted">· {{ cuando(c) }}</span>
-              @if (c.estado === 'error') {
-                <span class="fallo">· No se pudo enviar</span>
-              }
-            </p>
-            <p class="texto">{{ c.texto }}</p>
-            @if (c.estado === 'error') {
-              <div class="acciones">
-                <button type="button" class="enlace fallo" (click)="comentarios.reintentar(c)">
-                  Reintentar
-                </button>
-                <button type="button" class="enlace" (click)="comentarios.eliminar(c)">
-                  Eliminar
-                </button>
-              </div>
-            } @else if (puedeEliminar(c)) {
-              <div class="acciones">
-                <button
-                  type="button"
-                  class="enlace"
-                  [attr.aria-label]="'Eliminar comentario de @' + c.autor.username"
-                  (click)="comentarios.eliminar(c)"
-                >
-                  Eliminar
-                </button>
-              </div>
-            }
+      @for (h of comentarios.hilos(); track h.raiz.id) {
+        <ng-container [ngTemplateOutlet]="fila" [ngTemplateOutletContext]="{ $implicit: h.raiz }" />
+        @for (r of h.respuestas; track r.id) {
+          <div class="respuesta">
+            <ng-container [ngTemplateOutlet]="fila" [ngTemplateOutletContext]="{ $implicit: r }" />
           </div>
-        </article>
+        }
       } @empty {
         @if (comentarios.cargando()) {
           @for (i of esqueleto; track i) {
@@ -104,15 +74,83 @@ export interface DatosHoja {
       }
     </div>
 
+    <ng-template #fila let-c>
+      <article [class.pendiente]="c.estado === 'enviando'">
+        <vt-avatar [nombre]="c.autor.username" [tam]="36" />
+        <div class="cuerpo">
+          <p class="quien">
+            <strong>&#64;{{ c.autor.username }}</strong>
+            @if (c.autor.id === datos.duenoId) {
+              <span class="dueno">Dueño</span>
+            }
+            <span class="caption vt-muted">· {{ cuando(c) }}</span>
+            @if (c.estado === 'error') {
+              <span class="fallo">· No se pudo enviar</span>
+            }
+          </p>
+          <p class="texto">{{ c.texto }}</p>
+          <div class="acciones">
+            @if (c.estado === 'error') {
+              <button type="button" class="enlace fallo" (click)="comentarios.reintentar(c)">
+                Reintentar
+              </button>
+              <button type="button" class="enlace" (click)="comentarios.eliminar(c)">
+                Eliminar
+              </button>
+            } @else if (!c.estado) {
+              <button type="button" class="enlace" (click)="responder(c)">Responder</button>
+              @if (puedeEliminar(c)) {
+                <button
+                  type="button"
+                  class="enlace"
+                  [attr.aria-label]="'Eliminar comentario de @' + c.autor.username"
+                  (click)="comentarios.eliminar(c)"
+                >
+                  Eliminar
+                </button>
+              }
+              <button
+                type="button"
+                class="enlace corazon"
+                [class.on]="c.gustado"
+                [attr.aria-pressed]="c.gustado"
+                [attr.aria-label]="'Me gusta: ' + c.megusta"
+                (click)="meGusta(c)"
+              >
+                <vt-icon name="favorite" [filled]="c.gustado" [size]="18" />
+                @if (c.megusta > 0) {
+                  {{ c.megusta }}
+                }
+              </button>
+            }
+          </div>
+        </div>
+      </article>
+    </ng-template>
+
     <footer>
       @if (auth.usuario(); as yo) {
+        @if (respondiendo(); as r) {
+          <p class="respondiendo">
+            Respondiendo a <strong>&#64;{{ r.autor.username }}</strong>
+            <button
+              type="button"
+              class="enlace"
+              aria-label="Cancelar respuesta"
+              (click)="respondiendo.set(null)"
+            >
+              <vt-icon name="close" [size]="18" />
+            </button>
+          </p>
+        }
         <form (submit)="enviar($event, yo.id, yo.username)">
           <vt-avatar [nombre]="yo.username" [tam]="36" />
           <div class="campo" [class.largo]="restantes() < 50">
             <textarea
+              #campo
               rows="1"
               aria-label="Escribe un comentario"
-              placeholder="Escribe un comentario…"
+              [placeholder]="respondiendo() ? 'Escribe tu respuesta…' : 'Escribe un comentario…'"
               [maxLength]="max"
               [formControl]="texto"
               (keydown.control.enter)="enviar($event, yo.id, yo.username)"
@@ -221,6 +259,31 @@ export interface DatosHoja {
     .enlace.fallo {
       color: var(--danger);
     }
+    .respuesta {
+      margin-left: 48px;
+      margin-top: calc(var(--space-2) * -1);
+    }
+    .corazon {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+      min-width: 44px;
+      justify-content: center;
+    }
+    .corazon.on {
+      color: var(--like);
+    }
+    .respondiendo {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-2);
+      padding-left: var(--space-2);
+      font: var(--text-caption);
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
     .esqueleto {
       height: 56px;
       border-radius: var(--radius-md);
@@ -316,6 +379,8 @@ export class CommentSheet {
   protected readonly ref = inject<MatBottomSheetRef<CommentSheet>>(MatBottomSheetRef);
   private readonly router = inject(Router);
   private readonly lista = viewChild<ElementRef<HTMLElement>>('lista');
+  private readonly campo = viewChild<ElementRef<HTMLTextAreaElement>>('campo');
+  protected readonly respondiendo = signal<ComentarioLocal | null>(null);
 
   protected readonly max = MAX_COMENTARIO;
   protected readonly esqueleto = [1, 2, 3];
@@ -343,13 +408,25 @@ export class CommentSheet {
     evento.preventDefault();
     const valor = this.texto.value.trim();
     if (!valor) return;
-    this.comentarios.enviar(valor, { id, username });
+    this.comentarios.enviar(valor, { id, username }, this.respondiendo()?.id);
     this.texto.reset('');
+    this.respondiendo.set(null);
     // El comentario nuevo queda al final: se baja la lista para que se vea.
     setTimeout(() => {
       const lista = this.lista()?.nativeElement;
       if (lista) lista.scrollTop = lista.scrollHeight;
     });
+  }
+
+  protected responder(c: ComentarioLocal): void {
+    if (!this.auth.usuario()) return this.ingresar();
+    this.respondiendo.set(c);
+    setTimeout(() => this.campo()?.nativeElement.focus());
+  }
+
+  protected meGusta(c: ComentarioLocal): void {
+    if (!this.auth.usuario()) return this.ingresar();
+    this.comentarios.alternarMeGusta(c);
   }
 
   protected reintentarCarga(): void {
