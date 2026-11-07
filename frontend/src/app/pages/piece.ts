@@ -409,6 +409,15 @@ export class PiecePage {
     else void this.router.navigateByUrl('/');
   }
   protected async compartir(): Promise<void> {
+    // En el teléfono se abre el menú de compartir del sistema; si no existe o se falla, se copia el enlace.
+    if (typeof navigator.share === 'function' && this.pieza.hasValue()) {
+      try {
+        await navigator.share({ title: this.pieza.value().nombre, url: window.location.href });
+        return;
+      } catch (error) {
+        if ((error as DOMException).name === 'AbortError') return;
+      }
+    }
     try {
       await navigator.clipboard.writeText(window.location.href);
       this.toast.show('Enlace copiado', 'success');
