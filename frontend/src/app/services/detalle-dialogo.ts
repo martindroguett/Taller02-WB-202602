@@ -17,12 +17,36 @@ export class DetalleDialogo {
 
   /** Piezas de la lista visible; la página que la muestra la registra. */
   readonly lista = signal<number[]>([]);
+  /** Pieza desde la que se salió a otra pantalla; al volver a la lista se muestra esa tarjeta. */
+  private ultima: number | null = null;
+  private origen = '';
+
+  /** Lleva la vista hasta la tarjeta de la última pieza abierta, si ya está en pantalla. */
+  restaurar(): void {
+    const id = this.ultima;
+    // Solo en la pantalla desde la que se abrió la pieza.
+    if (id === null || this.location.path() !== this.origen) return;
+    // La lista se dibuja un poco después de que llegan los datos: se reintenta unos instantes.
+    let intentos = 0;
+    const buscar = () => {
+      const tarjeta = document.querySelector(`[data-pieza="${id}"]`);
+      if (tarjeta) {
+        if (this.ultima === id) this.ultima = null;
+        tarjeta.scrollIntoView({ block: 'center' });
+      } else if (++intentos < 10 && this.ultima === id) {
+        setTimeout(buscar, 100);
+      }
+    };
+    setTimeout(buscar, 50);
+  }
 
   /** Devuelve true si abrió la ventana; si no, el enlace debe seguir su curso. */
   abrir(id: number): boolean {
     if (!this.pantalla.escritorio()) return false;
     if (this.dialogo.openDialogs.length) return true;
     const anterior = this.location.path();
+    this.ultima = id;
+    this.origen = anterior;
     // Solo se cambia la dirección que se ve: no se suma una entrada al historial, así «Volver» desde
     // otra pantalla (por ejemplo, tras editar) lleva a la lista y no a la página de la pieza.
     this.location.replaceState(`/pieza/${id}`);
@@ -37,6 +61,8 @@ export class DetalleDialogo {
       ariaLabel: 'Detalle de la pieza',
     });
     ref.afterClosed().subscribe((resultado) => {
+      // Si se cerró sin salir de la lista, no hay nada que restaurar.
+      if (resultado !== 'navegar') this.ultima = null;
       // Si se fue a otra página, la dirección ya se restauró antes de navegar.
       if (resultado !== 'navegar' && this.location.path().startsWith('/pieza/'))
         this.location.replaceState(anterior);

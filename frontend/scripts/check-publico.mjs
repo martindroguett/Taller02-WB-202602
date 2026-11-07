@@ -127,7 +127,10 @@ const injector = createEnvironmentInjector([
   FollowButton,
   ExplorePage,
   ImageDrop,
-  { provide: DetalleDialogo, useValue: { lista: signal([]), abrir: () => false } },
+  {
+    provide: DetalleDialogo,
+    useValue: { lista: signal([]), abrir: () => false, restaurar: () => {} },
+  },
   { provide: Pantalla, useValue: { escritorio: signal(false) } },
   { provide: AuthService, useValue: { usuario: currentUser } },
   { provide: PendingTasks, useValue: { add: () => () => {} } },
@@ -296,7 +299,10 @@ const profileInjector = createEnvironmentInjector([
   provideHttpClientTesting(),
   UsuariosPublicosService,
   PublicProfilePage,
-  { provide: DetalleDialogo, useValue: { lista: signal([]), abrir: () => false } },
+  {
+    provide: DetalleDialogo,
+    useValue: { lista: signal([]), abrir: () => false, restaurar: () => {} },
+  },
   { provide: Pantalla, useValue: { escritorio: signal(false) } },
   { provide: PendingTasks, useValue: { add: () => () => {} } },
   { provide: ɵEffectScheduler, useValue: effects },

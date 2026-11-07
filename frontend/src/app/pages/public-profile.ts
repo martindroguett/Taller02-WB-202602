@@ -342,11 +342,12 @@ export class PublicProfilePage {
   private version = 0;
 
   constructor() {
-    effect(() =>
+    effect(() => {
       this.detalle.lista.set(
         this.piezas.hasValue() ? this.piezas.value().items.map((p) => p.id) : [],
-      ),
-    );
+      );
+      this.detalle.restaurar();
+    });
     this.route.paramMap
       .pipe(
         map((params) => params.get('usuario')),

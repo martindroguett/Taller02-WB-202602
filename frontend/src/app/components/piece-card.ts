@@ -18,6 +18,7 @@ import { CatalogTag } from './catalog-tag';
   host: {
     '[class]': '"vt-c-" + pieza().categoria',
     '[attr.data-variante]': 'variante()',
+    '[attr.data-pieza]': 'pieza().id',
   },
   template: `
     <article class="tarjeta" [class.destacada]="destacada() && variante() === 'grid'">

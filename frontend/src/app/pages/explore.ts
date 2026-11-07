@@ -316,7 +316,10 @@ export class ExplorePage {
   protected desplazamiento = 0;
 
   constructor() {
-    effect(() => this.detalle.lista.set(this.resultados().map((p) => p.id)));
+    effect(() => {
+      this.detalle.lista.set(this.resultados().map((p) => p.id));
+      this.detalle.restaurar();
+    });
     effect(() => {
       this.piezasDestacadas();
       this.medirRiel();
