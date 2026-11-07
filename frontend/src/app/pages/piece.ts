@@ -1,11 +1,20 @@
 import { Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  input,
+  linkedSignal,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { switchMap, of, catchError, map, startWith, Subject } from 'rxjs';
+import { Router, RouterLink } from '@angular/router';
 import { Avatar } from '../components/avatar';
 import { Button } from '../components/button';
+import { ConfirmSheet } from '../components/confirm-sheet';
+import { AuthService } from '../services/auth.service';
 import { CatalogTag } from '../components/catalog-tag';
 import { EmptyState } from '../components/empty-state';
 import { LikeButton } from '../components/like-button';
@@ -14,7 +23,7 @@ import { Icon } from '../components/icon';
 import { PieceArt } from '../components/piece-art';
 import { compacto, relativo } from '../models/format';
 import { categoriaDe } from '../models/vitrina';
-import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publico.service';
+import { CatalogoPublicoService } from '../services/catalogo-publico.service';
 import { ToastService } from '../services/toast.service';
 
 @Component({
@@ -23,6 +32,7 @@ import { ToastService } from '../services/toast.service';
     Avatar,
     Button,
     CatalogTag,
+    ConfirmSheet,
     EmptyState,
     Icon,
     IconButton,
@@ -31,7 +41,8 @@ import { ToastService } from '../services/toast.service';
     RouterLink,
   ],
   template: `
-    @if (pieza(); as p) {
+    @if (pieza.hasValue()) {
+      @let p = pieza.value();
       <div class="detalle vt-c-{{ p.categoria }}">
         <div class="foto">
           @if (p.imagen_url && !fallo()) {
@@ -96,31 +107,40 @@ import { ToastService } from '../services/toast.service';
           <p class="caption vt-muted">
             Las acciones sociales de la pieza están pendientes de conexión.
           </p>
-          <div>
-            <p class="caption vt-muted">Gestión de pieza: vista previa, pendiente de sesión</p>
+          @if (auth.usuario()?.id === p.dueno.id) {
             <div class="gestion">
-              <button
-                type="button"
+              <a
                 vt-button
                 variant="secondary"
                 icon="edit"
-                disabled
-                title="Pendiente de conectar la sesión"
+                [routerLink]="['/coleccion', p.id, 'editar']"
+                >Editar pieza</a
               >
-                Editar pieza
-              </button>
               <button
                 type="button"
                 vt-button
                 variant="danger"
                 icon="delete"
-                disabled
-                title="Pendiente de conectar la sesión"
+                [disabled]="eliminando()"
+                (click)="errorEliminar.set(''); confirmando.set(true)"
               >
                 Eliminar
               </button>
             </div>
-          </div>
+            @if (errorEliminar()) {
+              <p role="alert">{{ errorEliminar() }}</p>
+            }
+            <vt-confirm-sheet
+              [categoria]="p.categoria"
+              [abierto]="confirmando()"
+              [pendiente]="eliminando()"
+              [error]="errorEliminar()"
+              titulo="¿Eliminar esta pieza?"
+              [texto]="'Vas a quitar «' + p.nombre + '» de tu colección. No se puede deshacer.'"
+              (cancelado)="confirmando.set(false)"
+              (confirmado)="eliminar()"
+            />
+          }
         </article>
         <div class="accion-fija">
           <vt-like-button [pieza]="p" />
@@ -136,14 +156,14 @@ import { ToastService } from '../services/toast.service';
           </button>
         </div>
       </div>
-    } @else if (estado() === 'cargando') {
+    } @else if (pieza.isLoading()) {
       <div class="vt-screen"><p role="status">Cargando pieza…</p></div>
-    } @else if (estado() === 'error') {
+    } @else if (falloCarga()) {
       <div class="vt-screen">
         <vt-empty-state
           titulo="No pudimos cargar la pieza"
           texto="Comprueba tu conexión e inténtalo de nuevo."
-          ><button type="button" vt-button (click)="reintentar.next()">
+          ><button type="button" vt-button (click)="pieza.reload()">
             Reintentar
           </button></vt-empty-state
         >
@@ -293,48 +313,54 @@ import { ToastService } from '../services/toast.service';
 })
 export class PiecePage {
   private readonly api = inject(CatalogoPublicoService);
-  private readonly route = inject(ActivatedRoute);
+  protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly toast = inject(ToastService);
   private readonly destroy = inject(DestroyRef);
-  protected readonly pieza = signal<PiezaPublica | null>(null);
-  protected readonly estado = signal<'cargando' | 'error' | 'no-encontrada'>('cargando');
-  protected readonly fallo = signal(false);
-  protected readonly reintentar = new Subject<void>();
+  readonly id = input<string>();
+  protected readonly pieza = this.api.detalle(this.id);
+  protected readonly falloCarga = computed(
+    () => !!this.pieza.error() && (this.pieza.error() as HttpErrorResponse).status !== 404,
+  );
+  protected readonly fallo = linkedSignal(() => {
+    this.id();
+    return false;
+  });
+  protected readonly confirmando = signal(false);
+  protected readonly eliminando = signal(false);
+  protected readonly errorEliminar = signal('');
   protected readonly categoriaDe = categoriaDe;
   protected readonly compacto = compacto;
   protected pendiente(accion: string): void {
     this.toast.show(`${accion} está pendiente de conectar`);
   }
 
-  constructor() {
-    this.route.paramMap
-      .pipe(
-        switchMap((params) =>
-          this.reintentar.pipe(
-            startWith(undefined),
-            switchMap(() => {
-              this.pieza.set(null);
-              this.fallo.set(false);
-              this.estado.set('cargando');
-              const valor = params.get('id') ?? '';
-              if (!/^[1-9]\d*$/.test(valor) || !Number.isSafeInteger(Number(valor)))
-                return of({ tipo: 'no-encontrada' as const });
-              return this.api.obtener(Number(valor)).pipe(
-                map((pieza) => ({ tipo: 'pieza' as const, pieza })),
-                catchError((e: HttpErrorResponse) =>
-                  of({ tipo: e.status === 404 ? ('no-encontrada' as const) : ('error' as const) }),
-                ),
-              );
-            }),
-          ),
-        ),
-        takeUntilDestroyed(this.destroy),
-      )
-      .subscribe((resultado) => {
-        if (resultado.tipo === 'pieza') this.pieza.set(resultado.pieza);
-        else this.estado.set(resultado.tipo);
+  protected eliminar(): void {
+    if (!this.pieza.hasValue() || this.eliminando()) return;
+    const p = this.pieza.value();
+    this.eliminando.set(true);
+    this.errorEliminar.set('');
+    this.api
+      .eliminar(p.id)
+      .pipe(takeUntilDestroyed(this.destroy))
+      .subscribe({
+        next: () => {
+          this.eliminando.set(false);
+          this.confirmando.set(false);
+          this.toast.show('Pieza eliminada', 'success');
+          void this.router.navigate(['/coleccionistas', p.dueno.username]);
+        },
+        error: (e: HttpErrorResponse) => {
+          this.eliminando.set(false);
+          this.errorEliminar.set(
+            e.status === 403
+              ? 'Solo el dueño puede eliminar esta pieza.'
+              : e.status === 404
+                ? 'Esta pieza ya no está disponible.'
+                : 'No pudimos eliminar la pieza. Inténtalo de nuevo.',
+          );
+        },
       });
   }
   protected cuando(fecha: string): string {

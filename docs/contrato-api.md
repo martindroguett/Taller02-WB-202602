@@ -168,7 +168,7 @@ Router `routers/usuarios.py`, prefijo `/api/usuarios`.
 | `DELETE /usuarios/{username}/seguir` | Token | — | `200` + `{lo_sigo: false, seguidores}` | `401`, `404` | Listo |
 | `GET /usuarios/{username}/seguidos` | Pública | `?limite&desplazamiento` | `200` + página de `{id, username}` | `404` | Listo |
 
-- `GET /usuarios/{username}/piezas` lista las piezas del usuario, de más reciente a más antigua (por fecha e ID), con páginas de 20 por defecto. Angular lo consume en `/coleccionistas/:usuario`; el perfil propio y su CRUD se integran por separado.
+- `GET /usuarios/{username}/piezas` lista las piezas del usuario, de más reciente a más antigua (por fecha e ID), con páginas de 20 por defecto. Angular lo consume en `/coleccionistas/:usuario`; el CRUD usa esta colección real y el detalle de cada pieza.
 - El perfil público no incluye email, contraseña ni otros datos privados. Sin sesión, `lo_sigo` es `false`.
 - Seguir dos veces, o dejar de seguir a quien no sigues, no es error: responde el estado actual.
 - Seguir responde el total actualizado de seguidores, para que el botón y el contador cambien sin otra consulta.
@@ -238,7 +238,7 @@ La regla del backend es la que manda; la del formulario de Angular evita enviar 
 | `email` | Formato de email. Se guarda en minúsculas. |
 | `password` | 8 a 72 caracteres y **como máximo 72 bytes**: bcrypt no acepta más, y una letra con tilde ocupa 2 bytes. En Angular: `new TextEncoder().encode(clave).length <= 72`. |
 | `nombre` (pieza) | 1 a 100 caracteres, sin contar los espacios de los extremos (igual que el formulario). |
-| `descripcion` | 1 a 2.000 caracteres, sin contar los espacios de los extremos. Al formulario le falta el máximo de 2.000. |
+| `descripcion` | 1 a 2.000 caracteres, sin contar los espacios de los extremos. El formulario valida el máximo de 2.000. |
 | `categoria` | Uno de los cuatro slugs. Obligatoria. |
 | `imagen_url` | Obligatoria. Imagen `data:` JPEG, PNG o WebP de hasta 2 MB, o una dirección `http(s)://` o que empiece con `/`. |
 | `bio` | Hasta 300 caracteres. |

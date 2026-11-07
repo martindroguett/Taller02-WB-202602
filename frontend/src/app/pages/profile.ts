@@ -1,34 +1,29 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { Button } from '../components/button';
-import { ConfirmSheet } from '../components/confirm-sheet';
 import { EmptyState } from '../components/empty-state';
-import { IconButton } from '../components/icon-button';
 import { PieceCard } from '../components/piece-card';
 import { ProfileHeader } from '../components/profile-header';
 import { Tabs } from '../components/tabs';
 import { AuthService } from '../services/auth.service';
 import { CatalogoService } from '../services/catalogo.service';
 import { ToastService } from '../services/toast.service';
-import { Pieza } from '../models/vitrina';
 
 @Component({
   selector: 'vt-profile-page',
-  imports: [
-    Button,
-    ConfirmSheet,
-    EmptyState,
-    IconButton,
-    PieceCard,
-    ProfileHeader,
-    RouterLink,
-    Tabs,
-  ],
+  imports: [Button, EmptyState, PieceCard, ProfileHeader, RouterLink, Tabs],
   template: `
     @if (usuario(); as u) {
       <div class="vt-screen perfil">
         <vt-profile-header [usuario]="u" [esMio]="esMio()" />
         @if (esMio()) {
+          <p>Este perfil muestra datos de demostración.</p>
+          <a
+            vt-button
+            variant="secondary"
+            [routerLink]="['/coleccionistas', auth.usuario()?.username]"
+            >Ver mi colección real</a
+          >
           <button type="button" class="salir caption vt-muted" (click)="cerrarSesion()">
             Cerrar sesión
           </button>
@@ -43,25 +38,7 @@ import { Pieza } from '../models/vitrina';
         @if (lista().length) {
           <div class="filas">
             @for (p of lista(); track p.id) {
-              <vt-piece-card variante="row" [pieza]="p">
-                @if (esMio() && pestana() === 'coleccion') {
-                  <a
-                    vt-icon-button
-                    icon="edit"
-                    label="Editar pieza"
-                    tone="sunken"
-                    [routerLink]="['/coleccion', p.id, 'editar']"
-                  ></a>
-                  <button
-                    type="button"
-                    vt-icon-button
-                    icon="delete"
-                    label="Eliminar pieza"
-                    tone="danger"
-                    (click)="porEliminar.set(p)"
-                  ></button>
-                }
-              </vt-piece-card>
+              <vt-piece-card variante="row" [pieza]="p"> </vt-piece-card>
             }
           </div>
         } @else if (pestana() === 'favoritos') {
@@ -78,11 +55,6 @@ import { Pieza } from '../models/vitrina';
             texto="Las piezas publicadas aparecerán aquí."
             categoria="cartas"
           >
-            @if (esMio()) {
-              <a vt-button variant="accent" icon="add" routerLink="/coleccion/nueva"
-                >Agregar pieza</a
-              >
-            }
           </vt-empty-state>
         }
       </div>
@@ -96,18 +68,6 @@ import { Pieza } from '../models/vitrina';
         </vt-empty-state>
       </main>
     }
-    <vt-confirm-sheet
-      [categoria]="porEliminar()?.categoria ?? 'cartas'"
-      [abierto]="!!porEliminar()"
-      titulo="¿Eliminar esta pieza?"
-      [texto]="
-        'Vas a quitar «' +
-        (porEliminar()?.nombre ?? '') +
-        '» de tu colección. No se puede deshacer.'
-      "
-      (cancelado)="porEliminar.set(null)"
-      (confirmado)="eliminar()"
-    />
   `,
   styles: `
     .perfil {
@@ -131,7 +91,7 @@ import { Pieza } from '../models/vitrina';
   `,
 })
 export class ProfilePage {
-  private readonly auth = inject(AuthService);
+  protected readonly auth = inject(AuthService);
   private readonly catalogo = inject(CatalogoService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
@@ -144,7 +104,6 @@ export class ProfilePage {
     { id: 'favoritos', texto: 'Favoritos' },
   ];
   protected readonly pestana = signal('coleccion');
-  protected readonly porEliminar = signal<Pieza | null>(null);
 
   protected readonly usuario = computed(() =>
     this.usuarioHandle() ? this.catalogo.usuarioPorHandle(this.usuarioHandle()!) : this.catalogo.yo,
@@ -156,14 +115,6 @@ export class ProfilePage {
       ? this.catalogo.favoritas()
       : this.catalogo.recientes().filter((p) => p.duenoId === this.usuario()?.id),
   );
-
-  protected eliminar(): void {
-    const p = this.porEliminar();
-    if (!p) return;
-    this.catalogo.eliminar(p.id);
-    this.porEliminar.set(null);
-    this.toast.show('Pieza eliminada', 'success');
-  }
 
   protected cerrarSesion(): void {
     this.auth.cerrarSesion();
