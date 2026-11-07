@@ -166,6 +166,7 @@ Router `routers/usuarios.py`, prefijo `/api/usuarios`.
 | `GET /usuarios/{username}/piezas` | Opcional | `?limite&desplazamiento` | `200` + página de `Pieza` | `404`, `422` | Listo |
 | `POST /usuarios/{username}/seguir` | Token | — | `200` + `{lo_sigo: true, seguidores}` | `400` si es uno mismo, `401`, `404` | Listo |
 | `DELETE /usuarios/{username}/seguir` | Token | — | `200` + `{lo_sigo: false, seguidores}` | `401`, `404` | Listo |
+| `GET /usuarios/{username}/seguidos` | Pública | `?limite&desplazamiento` | `200` + página de `{id, username}` | `404` | Listo |
 
 - `GET /usuarios/{username}/piezas` lista las piezas del usuario, de más reciente a más antigua (por fecha e ID), con páginas de 20 por defecto. Angular lo consume en `/coleccionistas/:usuario`; el perfil propio y su CRUD se integran por separado.
 - El perfil público no incluye email, contraseña ni otros datos privados. Sin sesión, `lo_sigo` es `false`.
