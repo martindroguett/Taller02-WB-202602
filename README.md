@@ -67,9 +67,10 @@ npm run build  # Genera la versión de producción en dist/frontend/browser
 
 Los detalles técnicos del frontend están en [frontend/README.md](frontend/README.md).
 
-Para comprobar perfiles, seguimientos y CRUD de piezas contra PostgreSQL, ejecutar lo siguiente desde la raíz, con una API migrada conectada a una **base desechable de pruebas**. La comprobación crea cuentas y piezas; no usar la base personal ni una de producción.
+Para comprobar perfiles, seguimientos, CRUD de piezas, me gusta, favoritos y feed contra PostgreSQL, ejecutar lo siguiente desde la raíz, con una API migrada conectada a una **base desechable de pruebas**. La comprobación crea cuentas y piezas; no usar la base personal ni una de producción.
 
 ```bash
 TEST_API_URL=http://127.0.0.1:8000/api python3 backend/tests/test_perfiles_http.py
 TEST_API_URL=http://127.0.0.1:8000/api python3 backend/tests/test_piezas_http.py
+TEST_API_URL=http://127.0.0.1:8000/api python3 backend/tests/test_interacciones_http.py
 ```
