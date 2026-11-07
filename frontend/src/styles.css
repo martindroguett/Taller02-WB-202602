@@ -75,6 +75,49 @@ img {
   --mat-snack-bar-button-color: #fff;
 }
 
+.vt-esqueleto {
+  background: var(--line);
+  border-radius: var(--radius-md);
+}
+.vt-esqueleto.tarjeta {
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-lg);
+}
+.vt-esqueleto.cuadrado {
+  aspect-ratio: 1;
+  border-radius: 0;
+}
+.vt-esqueleto.linea {
+  height: 20px;
+  border-radius: var(--radius-pill);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .vt-esqueleto {
+    animation: vt-pulso 1.4s ease-in-out infinite;
+  }
+  @keyframes vt-pulso {
+    50% {
+      opacity: 0.5;
+    }
+  }
+}
+
+.vt-dialogo {
+  --mat-dialog-container-shape: var(--radius-xl) var(--radius-xl) 0 0;
+  --mat-dialog-container-color: var(--surface);
+  --mat-dialog-container-max-width: 480px;
+  --mat-dialog-container-min-width: 0;
+}
+.vt-dialogo .mat-mdc-dialog-surface {
+  overflow: visible !important;
+}
+/* En pantallas anchas la navegación va al costado, no abajo. */
+@media (min-width: 600px) {
+  .vt-aviso {
+    margin-bottom: 24px !important;
+  }
+}
+
 .vt-hoja {
   --mat-bottom-sheet-container-background-color: var(--surface);
   --mat-bottom-sheet-container-text-color: var(--ink);
@@ -83,6 +126,7 @@ img {
   padding: 0 !important;
   max-height: none !important;
   height: min(82dvh, 680px);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
   overflow: hidden !important;
 }
 

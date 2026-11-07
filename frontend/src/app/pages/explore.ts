@@ -121,7 +121,14 @@ import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publi
             </div>
           }
           @if (cargando()) {
-            <p role="status">Cargando piezas…</p>
+            @if (!resultados().length) {
+              <div class="vt-grid" aria-hidden="true">
+                @for (i of esqueleto; track i) {
+                  <div class="vt-esqueleto tarjeta"></div>
+                }
+              </div>
+            }
+            <p class="vt-sr-only" role="status">Cargando piezas…</p>
           }
           @if (error()) {
             <div role="alert">
@@ -394,6 +401,7 @@ export class ExplorePage {
   protected readonly hayAdelante = signal(false);
   private solicitud?: Subscription;
   private espera?: ReturnType<typeof setTimeout>;
+  protected readonly esqueleto = [1, 2, 3, 4];
   protected readonly filtros: Filtro[] = ['todas', ...CATEGORIAS.map((c) => c.slug)];
   protected readonly busqueda = signal('');
   protected readonly filtro = signal<Filtro>('todas');

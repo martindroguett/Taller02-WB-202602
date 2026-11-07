@@ -68,9 +68,11 @@ import { CatalogTag } from './catalog-tag';
               <vt-avatar [nombre]="dueno().username" [tam]="24" />
               <span>&#64;{{ dueno().username }}</span>
             </span>
-            <span class="dato" [class.gustado]="gustada()"
-              ><vt-icon name="favorite" [size]="16" [filled]="gustada()" />{{ megusta() }}</span
-            >
+            @if (megusta() !== '0') {
+              <span class="dato" [class.gustado]="gustada()"
+                ><vt-icon name="favorite" [size]="16" [filled]="gustada()" />{{ megusta() }}</span
+              >
+            }
             <span>{{ cuando() }}</span>
           } @else {
             <a class="dueno" [routerLink]="['/perfil', dueno().username]">
@@ -79,13 +81,15 @@ import { CatalogTag } from './catalog-tag';
               }
               <span>&#64;{{ dueno().username }}</span>
             </a>
-            <span class="dato" [class.gustado]="catalogo.gustadas().has(pieza().id)"
-              ><vt-icon
-                name="favorite"
-                [size]="16"
-                [filled]="catalogo.gustadas().has(pieza().id)"
-              />{{ megusta() }}</span
-            >
+            @if (megusta() !== '0') {
+              <span class="dato" [class.gustado]="catalogo.gustadas().has(pieza().id)"
+                ><vt-icon
+                  name="favorite"
+                  [size]="16"
+                  [filled]="catalogo.gustadas().has(pieza().id)"
+                />{{ megusta() }}</span
+              >
+            }
           }
           @if (variante() === 'row' && !esPublica()) {
             <span>{{ cuando() }}</span>

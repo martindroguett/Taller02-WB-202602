@@ -55,7 +55,7 @@ Feed, perfil propio y perfiles en `/perfil`, favoritos y sus interacciones socia
 
 ## Tecnologías
 
-El frontend usa **Angular**, con Angular Material para iconos, campos de formulario, selector de secciones, barra superior, avisos, la hoja de comentarios y el botón y la carga del perfil público (con la paleta de Vitrina en `styles.css`). Sus lecturas usan `httpResource`, con Signals y el interceptor de autenticación. El backend usa **FastAPI** con una API REST en JSON, **PostgreSQL** como base de datos, **SQLAlchemy** como ORM, **Alembic** para las migraciones y autenticación con **JWT**. Las contraseñas se guardan como hash con bcrypt.
+El frontend usa **Angular**, con Angular Material para iconos, campos de formulario, selector de secciones, barra superior, avisos, la confirmación de eliminar, la hoja de comentarios y el botón y la carga del perfil público (con la paleta de Vitrina en `styles.css`). Sus lecturas usan `httpResource`, con Signals y el interceptor de autenticación. El backend usa **FastAPI** con una API REST en JSON, **PostgreSQL** como base de datos, **SQLAlchemy** como ORM, **Alembic** para las migraciones y autenticación con **JWT**. Las contraseñas se guardan como hash con bcrypt.
 
 ## Comprobaciones
 

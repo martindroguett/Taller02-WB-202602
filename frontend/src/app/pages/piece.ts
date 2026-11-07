@@ -88,16 +88,18 @@ import { ToastService } from '../services/toast.service';
             · {{ cuando(p.creado_en) }}
           </p>
           <p class="body">{{ p.descripcion }}</p>
-          <dl class="cifras">
-            <div>
-              <dd class="stat">{{ compacto(p.megusta) }}</dd>
-              <dt class="caption vt-muted">Me gusta</dt>
-            </div>
-            <div>
-              <dd class="stat">{{ compacto(p.guardados) }}</dd>
-              <dt class="caption vt-muted">Favoritos</dt>
-            </div>
-          </dl>
+          @if (p.megusta || p.guardados) {
+            <dl class="cifras">
+              <div>
+                <dd class="stat">{{ compacto(p.megusta) }}</dd>
+                <dt class="caption vt-muted">Me gusta</dt>
+              </div>
+              <div>
+                <dd class="stat">{{ compacto(p.guardados) }}</dd>
+                <dt class="caption vt-muted">Favoritos</dt>
+              </div>
+            </dl>
+          }
           <div class="dueno">
             <a class="persona" [routerLink]="['/coleccionistas', p.dueno.username]">
               <vt-avatar [nombre]="p.dueno.username" [tam]="52" />
@@ -171,7 +173,15 @@ import { ToastService } from '../services/toast.service';
         </div>
       </div>
     } @else if (pieza.isLoading()) {
-      <div class="vt-screen"><p role="status">Cargando pieza…</p></div>
+      <div class="detalle" aria-hidden="true">
+        <div class="vt-esqueleto cuadrado"></div>
+        <div class="cargando-texto">
+          <div class="vt-esqueleto linea titulo"></div>
+          <div class="vt-esqueleto linea"></div>
+          <div class="vt-esqueleto linea corta"></div>
+        </div>
+      </div>
+      <p class="vt-sr-only" role="status">Cargando pieza…</p>
     } @else if (falloCarga()) {
       <div class="vt-screen">
         <vt-empty-state
@@ -197,6 +207,19 @@ import { ToastService } from '../services/toast.service';
       max-width: 720px;
       margin-inline: auto;
       padding-bottom: 110px;
+    }
+    .cargando-texto {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      padding: var(--space-6) var(--space-5);
+    }
+    .cargando-texto .titulo {
+      height: 32px;
+      width: 70%;
+    }
+    .cargando-texto .corta {
+      width: 45%;
     }
     .foto {
       position: relative;
