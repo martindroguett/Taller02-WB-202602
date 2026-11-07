@@ -12,9 +12,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { Avatar } from '../components/avatar';
-import { FollowButton } from '../components/follow-button';
+import { ComunidadLateral } from '../components/comunidad-lateral';
 import { RouterLink } from '@angular/router';
-import { compacto } from '../models/format';
 import { CatalogoService } from '../services/catalogo.service';
 import { Button } from '../components/button';
 import { CategoryChip } from '../components/category-chip';
@@ -30,13 +29,13 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
 
 @Component({
   selector: 'vt-explore-page',
-  host: { '(window:resize)': 'medirRiel()' },
+  host: { '(window:resize)': 'medirRiel()', '(document:keydown)': 'atajo($event)' },
   imports: [
     Avatar,
     Button,
     CategoryChip,
     EmptyState,
-    FollowButton,
+    ComunidadLateral,
     IconButton,
     PieceCard,
     PromoBanner,
@@ -111,7 +110,11 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
               {{ busqueda().trim() || filtro() !== 'todas' ? 'Resultados' : 'Recién llegadas' }}
             </h2>
             @if (!cargando() || resultados().length) {
-              <span class="caption vt-muted" role="status">{{ total() }} piezas</span>
+              <span class="caption vt-muted" role="status">{{
+                resultados().length < total()
+                  ? 'Mostrando ' + resultados().length + ' de ' + total()
+                  : total() + ' piezas'
+              }}</span>
             }
           </div>
           @if (resultados().length) {
@@ -164,48 +167,7 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
         </section>
       </main>
       <aside class="lateral" aria-label="Tu comunidad">
-        <a class="resumen panel" routerLink="/perfil" aria-label="Ver tu perfil y colección">
-          <vt-avatar [nombre]="catalogo.yo.username" anillo="brand" [tam]="64" />
-          <div>
-            <h2 class="title">Tu vitrina</h2>
-            <span class="caption vt-muted">Demostración</span>
-            <p class="caption vt-muted">&#64;{{ catalogo.yo.username }}</p>
-          </div>
-          <dl class="cifras">
-            <div>
-              <dd class="stat">{{ catalogo.piezasDe(catalogo.yo.id).length }}</dd>
-              <dt>Piezas</dt>
-            </div>
-            <div>
-              <dd class="stat">{{ compacto(catalogo.seguidores(catalogo.yo)) }}</dd>
-              <dt>Seguidores</dt>
-            </div>
-            <div>
-              <dd class="stat">{{ catalogo.seguidos().length }}</dd>
-              <dt>Siguiendo</dt>
-            </div>
-          </dl>
-        </a>
-        <section class="panel comunidad">
-          <h2 class="title">Coleccionistas</h2>
-          <span class="caption vt-muted">Demostración</span>
-          <p class="caption vt-muted">Encuentra tu próxima conexión.</p>
-          @for (u of comunidad; track u.id) {
-            <div class="recomendacion">
-              <a class="persona" [routerLink]="['/perfil', u.username]">
-                <vt-avatar [nombre]="u.username" [tam]="40" />
-                <span class="persona-info"
-                  ><strong>&#64;{{ u.username }}</strong
-                  ><span class="caption vt-muted"
-                    >{{ catalogo.piezasDe(u.id).length }}
-                    {{ catalogo.piezasDe(u.id).length === 1 ? 'pieza' : 'piezas' }}</span
-                  ></span
-                >
-              </a>
-              <vt-follow-button [usuarioId]="u.id" size="sm" />
-            </div>
-          }
-        </section>
+        <vt-comunidad-lateral modo="novedades" />
       </aside>
     </div>
   `,
@@ -274,75 +236,6 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
     #recientes {
       scroll-margin-top: 24px;
     }
-    .panel {
-      background: var(--surface);
-      border-radius: 28px;
-      padding: 24px;
-      box-shadow: var(--shadow-card);
-    }
-    .resumen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      text-align: center;
-    }
-    .resumen vt-avatar {
-      margin-top: 4px;
-    }
-    .cifras {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      width: 100%;
-      margin: 0;
-      padding: 16px 4px;
-      background: var(--surface-sunken);
-      border-radius: 20px;
-    }
-    .cifras div + div {
-      border-left: 1px solid var(--line);
-    }
-    dd {
-      margin: 0;
-      font-size: 18px;
-    }
-    dt {
-      font: var(--text-caption);
-      color: var(--ink-muted);
-      margin-top: 4px;
-    }
-    .comunidad {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .comunidad > p {
-      margin-top: -8px;
-    }
-    .recomendacion {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 8px;
-    }
-    .persona {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 0;
-      flex: 1;
-    }
-    .persona-info {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-    }
-    .persona-info strong {
-      font: var(--text-label);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
     @media (min-width: 1000px) {
       .cabecera {
         display: grid;
@@ -351,6 +244,28 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
       }
       .portada {
         display: block;
+        margin-top: 28px;
+      }
+      /* Los filtros quedan pegados arriba al bajar por la lista. */
+      .categorias {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        margin-block: -4px;
+        padding-block: 8px;
+        background: var(--bg);
+      }
+      /* La grilla suma columnas según el ancho disponible, sin saltos por breakpoint. */
+      .vt-grid {
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+        gap: 16px;
+      }
+      .destacadas {
+        padding-inline: 16px;
+      }
+      .destacadas vt-piece-card {
+        width: calc((100% - 3 * 16px) / 4);
+        min-width: 190px;
       }
     }
     @media (min-width: 1280px) {
@@ -361,9 +276,7 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
         align-items: start;
       }
       .lateral {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
+        display: block;
         position: sticky;
         top: 24px;
       }
@@ -373,21 +286,11 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
       .destacadas {
         margin-right: 0;
       }
-      .vt-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-    }
-    @media (min-width: 1400px) {
-      .vt-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
     }
   `,
 })
 export class ExplorePage {
   protected readonly catalogo = inject(CatalogoService);
-  protected readonly compacto = compacto;
-  protected readonly comunidad = this.catalogo.usuarios.filter((u) => u.id !== this.catalogo.yo.id);
   private readonly api = inject(CatalogoPublicoService);
   private readonly detalle = inject(DetalleDialogo);
   private readonly router = inject(Router);
@@ -428,6 +331,16 @@ export class ExplorePage {
       clearTimeout(this.espera);
       this.solicitud?.unsubscribe();
     });
+  }
+
+  /** Con «/» el cursor salta al buscador, como en otros sitios. */
+  protected atajo(evento: KeyboardEvent): void {
+    if (evento.key !== '/' || evento.ctrlKey || evento.metaKey || evento.altKey) return;
+    if ((evento.target as HTMLElement).closest('input, textarea, [contenteditable]')) return;
+    const campo = document.querySelector<HTMLInputElement>('vt-search-field input');
+    if (!campo) return;
+    evento.preventDefault();
+    campo.focus();
   }
 
   protected medirRiel(): void {

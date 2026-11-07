@@ -84,6 +84,35 @@ import { Icon } from './icon';
       max-width: 132px;
       transform: rotate(-12deg);
     }
+    /* En escritorio la franja es baja: una foto grande sale por arriba del marco y el dibujo del vinilo la acompaña. */
+    @media (min-width: 1000px) {
+      .banner {
+        grid-template-columns: minmax(0, 1fr) 280px;
+        min-height: 132px;
+        padding: 20px 32px;
+        overflow: visible;
+      }
+      .visual {
+        height: 96px;
+      }
+      img {
+        position: absolute;
+        top: -48px;
+        right: 12px;
+        width: 140px;
+        height: 172px;
+        margin: 0;
+        transform: rotate(7deg);
+      }
+      vt-piece-art {
+        left: auto;
+        right: 128px;
+        bottom: -22px;
+        width: 108px;
+        max-width: none;
+        transform: rotate(-12deg);
+      }
+    }
     /* En el teléfono es una franja baja: título y botón, con la foto saliéndose del marco. */
     @media (max-width: 999px) {
       .banner {
@@ -97,9 +126,15 @@ import { Icon } from './icon';
         font-size: 18px;
         line-height: 22px;
       }
-      p,
-      vt-piece-art {
+      p {
         display: none;
+      }
+      vt-piece-art {
+        left: auto;
+        right: -8px;
+        bottom: -22px;
+        width: 56px;
+        transform: rotate(-12deg);
       }
       .visual {
         height: 88px;
