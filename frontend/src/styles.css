@@ -57,6 +57,15 @@ img {
   --mat-sys-body-medium-font: var(--font-sans);
 }
 
+:root {
+  --mat-tooltip-container-color: var(--night);
+  --mat-tooltip-supporting-text-color: var(--on-night);
+  --mat-tooltip-container-shape: 8px;
+  --mat-tooltip-supporting-text-font: var(--font-sans);
+  --mat-tooltip-supporting-text-size: 13px;
+  --mat-tooltip-supporting-text-weight: 700;
+}
+
 .vt-aviso {
   --mat-snack-bar-container-color: var(--night);
   --mat-snack-bar-supporting-text-color: var(--on-night);
