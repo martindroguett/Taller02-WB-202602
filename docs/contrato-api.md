@@ -234,11 +234,15 @@ Router `routers/interacciones.py`, prefijo `/api`.
 | `GET /piezas/{id}/comentarios` | Público | `?limite&desplazamiento` | `200` + página de `Comentario` | `404` | Listo |
 | `POST /piezas/{id}/comentarios` | Token | `{ texto }` | `201` + `Comentario` | `401`, `404`, `422` | Listo |
 | `DELETE /comentarios/{id}` | Token | — | `204` | `401`, `403`, `404` | Listo |
+| `POST /comentarios/{id}/megusta` | Token | — | `200` + `{ gustado, megusta }` | `401`, `404` | Listo |
+| `DELETE /comentarios/{id}/megusta` | Token | — | `200` + `{ gustado, megusta }` | `401`, `404` | Listo |
 
-- `Comentario`: `{ id, texto, autor: { id, username }, creado_en }`.
+- `Comentario`: `{ id, texto, autor: { id, username }, padre_id, megusta, gustado, creado_en }`. `gustado` es verdadero si quien consulta (con token) le dio me gusta.
+- `POST` acepta `padre_id` para responder. Las respuestas son de un solo nivel: responder a una respuesta cuelga del comentario original. Debe ser de la misma pieza (`400` si no).
 - Van del más antiguo al más nuevo, como una conversación.
 - `texto`: 1 a 300 caracteres, sin contar los espacios de los extremos.
-- Elimina el comentario quien lo escribió o el dueño de la pieza.
+- Elimina el comentario quien lo escribió o el dueño de la pieza; sus respuestas se borran con él.
+- Igual que los me gusta de piezas: repetir la acción no es error y la respuesta trae el total actualizado.
 
 ## Reglas de validación
 
@@ -260,7 +264,7 @@ La regla del backend es la que manda; la del formulario de Angular evita enviar 
 
 ## Modelo de datos
 
-Siete tablas en PostgreSQL, creadas con migraciones de Alembic (`backend/migrations/versions/`).
+Ocho tablas en PostgreSQL, creadas con migraciones de Alembic (`backend/migrations/versions/`).
 
 | Tabla | Columnas principales | Estado |
 | --- | --- | --- |
@@ -270,7 +274,8 @@ Siete tablas en PostgreSQL, creadas con migraciones de Alembic (`backend/migrati
 | `piezas` | `id`, `usuario_id`, `categoria_id`, `nombre`, `descripcion`, `imagen_url` o la imagen guardada (`imagen_datos`, `imagen_tipo`), `creado_en`, `actualizado_en` | Listo (migración `0003`) |
 | `megusta` | `usuario_id` y `pieza_id` (juntos forman la clave primaria), `creado_en` | Listo (migración `0004`) |
 | `guardados` | `usuario_id` y `pieza_id` (juntos forman la clave primaria), `creado_en` | Listo (migración `0004`) |
-| `comentarios` | `id`, `pieza_id`, `usuario_id`, `texto` (hasta 300), `creado_en` | Listo (migración `0005`) |
+| `comentarios` | `id`, `pieza_id`, `usuario_id`, `texto` (hasta 300), `padre_id` (si es respuesta), `creado_en` | Listo (migraciones `0005` y `0006`) |
+| `comentario_megusta` | `usuario_id` y `comentario_id` (juntos forman la clave primaria), `creado_en` | Listo (migración `0006`) |
 
 - Los totales (`seguidores`, `siguiendo`, `megusta`, `guardados`) se calculan con `COUNT` al consultar; no se guardan en columnas, así nunca quedan desfasados.
 - Al borrar un usuario o una pieza, sus filas en las tablas de unión se borran solas (`ON DELETE CASCADE`).

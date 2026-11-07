@@ -7,7 +7,7 @@ from database import Base
 
 
 class Comentario(Base):
-    """Un comentario de un usuario en una pieza."""
+    """Un comentario de un usuario en una pieza. Puede responder a otro comentario (un solo nivel)."""
 
     __tablename__ = "comentarios"
 
@@ -19,3 +19,5 @@ class Comentario(Base):
     pieza_id: Mapped[int] = mapped_column(ForeignKey("piezas.id", ondelete="CASCADE"), index=True)
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id", ondelete="CASCADE"))
     usuario: Mapped["Usuario"] = relationship("Usuario")
+    # Si es una respuesta, el comentario al que responde. Al borrar el original se borran sus respuestas.
+    padre_id: Mapped[int | None] = mapped_column(ForeignKey("comentarios.id", ondelete="CASCADE"), index=True)
