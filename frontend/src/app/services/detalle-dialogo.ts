@@ -17,7 +17,7 @@ export class DetalleDialogo {
 
   /** Piezas de la lista visible; la página que la muestra la registra. */
   readonly lista = signal<number[]>([]);
-  /** Pieza desde la que se salió a otra pantalla; al volver a la lista se muestra esa tarjeta. */
+  /** Pieza desde la que se salió a otra pantalla (editar, perfil): al volver a la lista se reabre su ventana. */
   private ultima: number | null = null;
   private origen = '';
 
@@ -31,8 +31,11 @@ export class DetalleDialogo {
     const buscar = () => {
       const tarjeta = document.querySelector(`[data-pieza="${id}"]`);
       if (tarjeta) {
-        if (this.ultima === id) this.ultima = null;
+        if (this.ultima !== id) return;
+        this.ultima = null;
         tarjeta.scrollIntoView({ block: 'center' });
+        // Se vuelve a la pieza que se tenía abierta, como estaba antes de salir.
+        this.abrir(id);
       } else if (++intentos < 10 && this.ultima === id) {
         setTimeout(buscar, 100);
       }
