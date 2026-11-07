@@ -11,6 +11,7 @@ export const routes: Routes = [
     path: 'feed',
     title: 'Feed · Vitrina',
     loadComponent: () => import('./pages/feed').then((m) => m.FeedPage),
+    canActivate: [authGuard],
   },
   {
     path: 'favoritos',
