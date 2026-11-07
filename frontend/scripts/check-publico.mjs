@@ -69,6 +69,7 @@ const { CatalogoPublicoService } = await import(
   new URL('services/catalogo-publico.service.mjs', dest)
 );
 const { ToastService } = await import(new URL('services/toast.service.mjs', dest));
+const { ComentariosService } = await import(new URL('services/comentarios.service.mjs', dest));
 const { UsuariosPublicosService } = await import(
   new URL('services/usuarios-publicos.service.mjs', dest)
 );
@@ -442,6 +443,7 @@ const pieceInjector = createEnvironmentInjector([
   { provide: Location, useValue: { back() {} } },
   { provide: AuthService, useValue: { usuario: pieceUser } },
   { provide: ToastService, useValue: { show: (...args) => pieceToasts.push(args) } },
+  { provide: ComentariosService, useValue: { total: () => 0 } },
 ]);
 const pieceHttp = pieceInjector.get(HttpTestingController);
 const getPiece = (id) => pieceHttp.expectOne(`${environment.apiUrl}/piezas/${id}`);
