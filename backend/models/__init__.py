@@ -5,5 +5,6 @@ from .megusta import MeGusta
 from .guardado import Guardado
 from .pieza import Pieza
 from .categoria import Categoria
+from .comentario import Comentario
 
-__all__ = ["Seguimiento", "Usuario", "MeGusta", "Guardado", "Pieza", "Categoria"]
+__all__ = ["Seguimiento", "Usuario", "MeGusta", "Guardado", "Pieza", "Categoria", "Comentario"]

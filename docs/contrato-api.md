@@ -227,6 +227,19 @@ Router `routers/interacciones.py`, prefijo `/api`.
 - `GET /favoritos` ordena por la fecha en que se guardó cada pieza, la más reciente primero.
 - `GET /feed` trae las piezas de las personas que sigue el usuario, de la más nueva a la más antigua. Si no sigue a nadie, `items` viene vacío y Angular muestra el estado vacío.
 
+## Comentarios
+
+| Endpoint | Acceso | Entrada | Éxito | Errores | Estado |
+| --- | --- | --- | --- | --- | --- |
+| `GET /piezas/{id}/comentarios` | Público | `?limite&desplazamiento` | `200` + página de `Comentario` | `404` | Listo |
+| `POST /piezas/{id}/comentarios` | Token | `{ texto }` | `201` + `Comentario` | `401`, `404`, `422` | Listo |
+| `DELETE /comentarios/{id}` | Token | — | `204` | `401`, `403`, `404` | Listo |
+
+- `Comentario`: `{ id, texto, autor: { id, username }, creado_en }`.
+- Van del más antiguo al más nuevo, como una conversación.
+- `texto`: 1 a 300 caracteres, sin contar los espacios de los extremos.
+- Elimina el comentario quien lo escribió o el dueño de la pieza.
+
 ## Reglas de validación
 
 La regla del backend es la que manda; la del formulario de Angular evita enviar datos que la API va a rechazar.
@@ -240,13 +253,14 @@ La regla del backend es la que manda; la del formulario de Angular evita enviar 
 | `descripcion` | 1 a 2.000 caracteres, sin contar los espacios de los extremos. El formulario valida el máximo de 2.000. |
 | `categoria` | Uno de los cuatro slugs. Obligatoria. |
 | `imagen_url` | Obligatoria. Imagen `data:` JPEG, PNG o WebP de hasta 2 MB, o una dirección `http(s)://` o que empiece con `/`. |
+| `texto` (comentario) | 1 a 300 caracteres, sin contar los espacios de los extremos. |
 | `bio` | Hasta 300 caracteres. |
 | `nombre_visible` | Hasta 60 caracteres. |
 | `avatar_url` | Dirección `http(s)://`, hasta 500 caracteres. |
 
 ## Modelo de datos
 
-Seis tablas en PostgreSQL, creadas con migraciones de Alembic (`backend/migrations/versions/`).
+Siete tablas en PostgreSQL, creadas con migraciones de Alembic (`backend/migrations/versions/`).
 
 | Tabla | Columnas principales | Estado |
 | --- | --- | --- |
@@ -256,6 +270,7 @@ Seis tablas en PostgreSQL, creadas con migraciones de Alembic (`backend/migratio
 | `piezas` | `id`, `usuario_id`, `categoria_id`, `nombre`, `descripcion`, `imagen_url` o la imagen guardada (`imagen_datos`, `imagen_tipo`), `creado_en`, `actualizado_en` | Listo (migración `0003`) |
 | `megusta` | `usuario_id` y `pieza_id` (juntos forman la clave primaria), `creado_en` | Listo (migración `0004`) |
 | `guardados` | `usuario_id` y `pieza_id` (juntos forman la clave primaria), `creado_en` | Listo (migración `0004`) |
+| `comentarios` | `id`, `pieza_id`, `usuario_id`, `texto` (hasta 300), `creado_en` | Listo (migración `0005`) |
 
 - Los totales (`seguidores`, `siguiendo`, `megusta`, `guardados`) se calculan con `COUNT` al consultar; no se guardan en columnas, así nunca quedan desfasados.
 - Al borrar un usuario o una pieza, sus filas en las tablas de unión se borran solas (`ON DELETE CASCADE`).
