@@ -57,6 +57,17 @@ img {
   --mat-sys-body-medium-font: var(--font-sans);
 }
 
+.vt-hoja {
+  --mat-bottom-sheet-container-background-color: var(--surface);
+  --mat-bottom-sheet-container-text-color: var(--ink);
+  --mat-bottom-sheet-container-shape: var(--radius-xl) var(--radius-xl) 0 0;
+  --mat-bottom-sheet-container-max-width: 560px;
+  padding: 0 !important;
+  max-height: none !important;
+  height: min(82dvh, 680px);
+  overflow: hidden !important;
+}
+
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;

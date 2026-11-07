@@ -16,6 +16,7 @@ import { Button } from '../components/button';
 import { ConfirmSheet } from '../components/confirm-sheet';
 import { AuthService } from '../services/auth.service';
 import { CatalogTag } from '../components/catalog-tag';
+import { Comments } from '../components/comments';
 import { EmptyState } from '../components/empty-state';
 import { LikeButton } from '../components/like-button';
 import { IconButton } from '../components/icon-button';
@@ -24,6 +25,7 @@ import { PieceArt } from '../components/piece-art';
 import { compacto, relativo } from '../models/format';
 import { categoriaDe } from '../models/vitrina';
 import { CatalogoPublicoService } from '../services/catalogo-publico.service';
+import { ComentariosService } from '../services/comentarios.service';
 import { ToastService } from '../services/toast.service';
 
 @Component({
@@ -32,6 +34,7 @@ import { ToastService } from '../services/toast.service';
     Avatar,
     Button,
     CatalogTag,
+    Comments,
     ConfirmSheet,
     EmptyState,
     Icon,
@@ -104,6 +107,7 @@ import { ToastService } from '../services/toast.service';
               >Ver perfil</a
             >
           </div>
+          <vt-comments #comentarios [piezaId]="p.id" [duenoId]="p.dueno.id" />
           <p class="caption vt-muted">
             Las acciones sociales de la pieza están pendientes de conexión.
           </p>
@@ -147,12 +151,22 @@ import { ToastService } from '../services/toast.service';
           <button
             type="button"
             vt-button
+            variant="secondary"
+            icon="chat_bubble"
+            [attr.aria-label]="'Comentarios: ' + comentariosTotal()"
+            (click)="comentarios.abrir()"
+          >
+            {{ comentariosTotal() }}
+          </button>
+          <button
+            type="button"
+            vt-button
             class="compartir"
             variant="secondary"
             icon="link"
             (click)="compartir()"
           >
-            Compartir enlace
+            Compartir
           </button>
         </div>
       </div>
@@ -330,6 +344,7 @@ export class PiecePage {
   protected readonly confirmando = signal(false);
   protected readonly eliminando = signal(false);
   protected readonly errorEliminar = signal('');
+  protected readonly comentariosTotal = inject(ComentariosService).total;
   protected readonly categoriaDe = categoriaDe;
   protected readonly compacto = compacto;
   protected pendiente(accion: string): void {
