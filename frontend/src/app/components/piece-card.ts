@@ -73,7 +73,7 @@ import { CatalogTag } from './catalog-tag';
                 ><vt-icon name="favorite" [size]="16" [filled]="gustada()" />{{ megusta() }}</span
               >
             }
-            <span>{{ cuando() }}</span>
+            <span class="fecha">{{ cuando() }}</span>
           } @else {
             <a class="dueno" [routerLink]="['/perfil', dueno().username]">
               @if (variante() === 'grid') {
@@ -204,10 +204,14 @@ import { CatalogTag } from './catalog-tag';
         left: 8px;
         max-width: calc(100% - 16px);
       }
-      .meta {
+      /* En la grilla la meta queda en una sola fila: usuario y me gusta. La fecha se ve en el detalle. */
+      :host(:not([data-variante='row'])) .fecha {
+        display: none;
+      }
+      :host([data-variante='row']) .meta {
         flex-wrap: wrap;
       }
-      .meta > .dueno.publico {
+      :host([data-variante='row']) .meta > .dueno.publico {
         flex-basis: 100%;
       }
     }
