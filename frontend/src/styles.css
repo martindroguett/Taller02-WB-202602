@@ -39,6 +39,24 @@ img {
   max-width: 100%;
 }
 
+/* Angular Material usa estas variables: así sus componentes toman la paleta y la tipografía de Vitrina. */
+:root {
+  --mat-sys-primary: var(--brand);
+  --mat-sys-on-primary: var(--on-brand);
+  --mat-sys-primary-container: var(--brand-soft);
+  --mat-sys-on-primary-container: var(--brand);
+  --mat-sys-error: var(--danger);
+  --mat-sys-on-error: var(--on-danger);
+  --mat-sys-surface: var(--surface);
+  --mat-sys-on-surface: var(--ink);
+  --mat-sys-on-surface-variant: var(--ink-muted);
+  --mat-sys-outline: var(--line-strong);
+  --mat-sys-outline-variant: var(--line);
+  --mat-sys-label-large-font: var(--font-sans);
+  --mat-sys-body-large-font: var(--font-sans);
+  --mat-sys-body-medium-font: var(--font-sans);
+}
+
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;

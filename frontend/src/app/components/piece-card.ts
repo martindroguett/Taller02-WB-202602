@@ -193,8 +193,12 @@ import { CatalogTag } from './catalog-tag';
       color: var(--like);
     }
     @media (max-width: 420px) {
+      /* En la grilla de dos columnas la ficha pasa abajo, para no chocar con el marcador. */
       .catalogo {
-        display: none;
+        top: auto;
+        bottom: 8px;
+        left: 8px;
+        max-width: calc(100% - 16px);
       }
       .meta {
         flex-wrap: wrap;
