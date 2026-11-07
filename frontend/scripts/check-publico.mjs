@@ -57,6 +57,8 @@ await writeFile(
 const { environment } = await import(new URL('environment.mjs', environmentDest));
 const { ExplorePage } = await import(new URL('pages/explore.mjs', dest));
 const { PiecePage } = await import(new URL('pages/piece.mjs', dest));
+const { DetalleDialogo } = await import(new URL('services/detalle-dialogo.mjs', dest));
+const { Pantalla } = await import(new URL('services/pantalla.mjs', dest));
 const { PieceFormPage } = await import(new URL('pages/piece-form.mjs', dest));
 const { ImageDrop } = await import(new URL('components/image-drop.mjs', dest));
 const { PublicProfilePage } = await import(new URL('pages/public-profile.mjs', dest));
@@ -125,6 +127,8 @@ const injector = createEnvironmentInjector([
   FollowButton,
   ExplorePage,
   ImageDrop,
+  { provide: DetalleDialogo, useValue: { lista: signal([]), abrir: () => false } },
+  { provide: Pantalla, useValue: { escritorio: signal(false) } },
   { provide: AuthService, useValue: { usuario: currentUser } },
   { provide: PendingTasks, useValue: { add: () => () => {} } },
   { provide: ɵEffectScheduler, useValue: effects },
@@ -292,6 +296,8 @@ const profileInjector = createEnvironmentInjector([
   provideHttpClientTesting(),
   UsuariosPublicosService,
   PublicProfilePage,
+  { provide: DetalleDialogo, useValue: { lista: signal([]), abrir: () => false } },
+  { provide: Pantalla, useValue: { escritorio: signal(false) } },
   { provide: PendingTasks, useValue: { add: () => () => {} } },
   { provide: ɵEffectScheduler, useValue: effects },
   { provide: ɵChangeDetectionScheduler, useValue: { notify() {} } },
@@ -419,6 +425,7 @@ const pieceInjector = createEnvironmentInjector([
   CatalogoPublicoService,
   PiecePage,
   PieceFormPage,
+  { provide: Pantalla, useValue: { escritorio: signal(false) } },
   { provide: PendingTasks, useValue: { add: () => () => {} } },
   { provide: ɵEffectScheduler, useValue: effects },
   { provide: ɵChangeDetectionScheduler, useValue: { notify() {} } },

@@ -89,7 +89,7 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
               <dl class="cifras">
                 <div>
                   <dt>Piezas</dt>
-                  <dd class="stat">{{ compacto(piezas.value()?.total ?? 0) }}</dd>
+                  <dd class="stat">{{ compacto(piezas.hasValue() ? piezas.value().total : 0) }}</dd>
                 </div>
                 <div>
                   <dt>Seguidores</dt>
@@ -331,7 +331,9 @@ export class PublicProfilePage {
   protected readonly compacto = compacto;
   protected readonly giros = [-10, 4, 12];
   protected readonly abanico = computed(() =>
-    (this.piezas.value()?.items ?? []).filter((p) => p.imagen_url).slice(0, 3),
+    (this.piezas.hasValue() ? this.piezas.value().items : [])
+      .filter((p) => p.imagen_url)
+      .slice(0, 3),
   );
   protected readonly avatarTam = computed(() => (this.pantalla.escritorio() ? 120 : 72));
   protected readonly noEncontrado = computed(
@@ -340,7 +342,11 @@ export class PublicProfilePage {
   private version = 0;
 
   constructor() {
-    effect(() => this.detalle.lista.set(this.piezas.value()?.items.map((p) => p.id) ?? []));
+    effect(() =>
+      this.detalle.lista.set(
+        this.piezas.hasValue() ? this.piezas.value().items.map((p) => p.id) : [],
+      ),
+    );
     this.route.paramMap
       .pipe(
         map((params) => params.get('usuario')),

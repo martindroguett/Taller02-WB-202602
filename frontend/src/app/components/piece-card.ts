@@ -267,7 +267,7 @@ export class PieceCard {
   constructor() {
     // En escritorio la pieza se abre en una ventana sobre la lista. Se escucha en la fase de captura
     // para frenar el enlace antes de que el router navegue; con Ctrl o Cmd sigue el enlace normal.
-    inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.addEventListener(
+    inject<ElementRef<HTMLElement>>(ElementRef, { optional: true })?.nativeElement.addEventListener(
       'click',
       (evento) => {
         const enlace = (evento.target as Element).closest('a.enlace, a.nombre');
