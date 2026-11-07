@@ -219,8 +219,7 @@ import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publi
     .pantalla {
       padding-top: 24px;
     }
-    .lateral,
-    .portada {
+    .lateral {
       display: none;
     }
     .categorias {

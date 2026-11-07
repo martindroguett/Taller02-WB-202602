@@ -84,6 +84,34 @@ import { Icon } from './icon';
       max-width: 132px;
       transform: rotate(-12deg);
     }
+    /* En el teléfono es una franja baja: título y botón, con la foto saliéndose del marco. */
+    @media (max-width: 999px) {
+      .banner {
+        grid-template-columns: minmax(0, 1fr) 104px;
+        gap: var(--space-3);
+        padding: 16px 18px;
+        border-radius: var(--radius-lg);
+        overflow: visible;
+      }
+      h2 {
+        font-size: 18px;
+        line-height: 22px;
+      }
+      p,
+      vt-piece-art {
+        display: none;
+      }
+      .visual {
+        height: 88px;
+      }
+      img {
+        width: 104px;
+        height: 104px;
+        margin-top: -22px;
+        border-width: 3px;
+        border-radius: 20px;
+      }
+    }
     @media (max-width: 380px) {
       .banner {
         gap: var(--space-2);
