@@ -160,6 +160,12 @@ import { PieceArt } from './piece-art';
       color: var(--brand);
       background: var(--brand-soft);
     }
+    /* En escritorio la foto es más baja para que se vea más de una publicación a la vez. */
+    @media (min-width: 1000px) {
+      .foto {
+        aspect-ratio: 5 / 4;
+      }
+    }
     @media (max-width: 360px) {
       article {
         padding: 12px;
