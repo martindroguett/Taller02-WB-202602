@@ -18,6 +18,7 @@ import { Button } from '../components/button';
 import { EmptyState } from '../components/empty-state';
 import { PieceCard } from '../components/piece-card';
 import { AuthService } from '../services/auth.service';
+import { DetalleDialogo } from '../services/detalle-dialogo';
 import { ToastService } from '../services/toast.service';
 import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
 
@@ -170,6 +171,7 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
 })
 export class PublicProfilePage {
   private readonly api = inject(UsuariosPublicosService);
+  private readonly detalle = inject(DetalleDialogo);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
@@ -196,6 +198,7 @@ export class PublicProfilePage {
   private version = 0;
 
   constructor() {
+    effect(() => this.detalle.lista.set(this.piezas.value()?.items.map((p) => p.id) ?? []));
     this.route.paramMap
       .pipe(
         map((params) => params.get('usuario')),

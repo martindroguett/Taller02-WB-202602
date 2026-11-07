@@ -164,6 +164,23 @@ img {
   animation-duration: 160ms;
   animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
 }
+.vt-pieza-dialogo {
+  --mat-dialog-container-color: transparent;
+  --mat-dialog-container-shape: var(--radius-xl);
+  --mat-dialog-container-max-width: none;
+  --mat-dialog-container-min-width: 0;
+}
+.vt-pieza-dialogo .mat-mdc-dialog-surface {
+  overflow: visible !important;
+  box-shadow: none;
+  background: transparent;
+}
+.vt-pieza-dialogo .mat-mdc-dialog-container {
+  --mat-dialog-container-small-max-width: none;
+}
+.vt-pieza-fondo {
+  background: rgba(21, 23, 43, 0.58);
+}
 .cdk-overlay-backdrop {
   transition-duration: 200ms !important;
 }

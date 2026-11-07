@@ -26,6 +26,7 @@ import { SearchField } from '../components/search-field';
 import { TopBar } from '../components/top-bar';
 import { CATEGORIAS, Filtro } from '../models/vitrina';
 import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publico.service';
+import { DetalleDialogo } from '../services/detalle-dialogo';
 
 @Component({
   selector: 'vt-explore-page',
@@ -388,6 +389,7 @@ export class ExplorePage {
   protected readonly compacto = compacto;
   protected readonly comunidad = this.catalogo.usuarios.filter((u) => u.id !== this.catalogo.yo.id);
   private readonly api = inject(CatalogoPublicoService);
+  private readonly detalle = inject(DetalleDialogo);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroy = inject(DestroyRef);
@@ -411,6 +413,7 @@ export class ExplorePage {
   protected desplazamiento = 0;
 
   constructor() {
+    effect(() => this.detalle.lista.set(this.resultados().map((p) => p.id)));
     effect(() => {
       this.piezasDestacadas();
       this.medirRiel();

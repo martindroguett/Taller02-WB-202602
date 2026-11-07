@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, inject, input, signal, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bottom-sheet';
 import { Router } from '@angular/router';
@@ -28,14 +28,16 @@ export interface DatosHoja {
       <h2 class="title" id="comentarios-titulo">
         Comentarios <span class="total">{{ comentarios.total() }}</span>
       </h2>
-      <button
-        type="button"
-        vt-icon-button
-        tone="sunken"
-        icon="close"
-        label="Cerrar comentarios"
-        (click)="ref.dismiss()"
-      ></button>
+      @if (!enLinea()) {
+        <button
+          type="button"
+          vt-icon-button
+          tone="sunken"
+          icon="close"
+          label="Cerrar comentarios"
+          (click)="ref?.dismiss()"
+        ></button>
+      }
     </header>
 
     <div #lista class="lista" role="log" aria-live="polite" aria-labelledby="comentarios-titulo">
@@ -80,7 +82,7 @@ export interface DatosHoja {
         <div class="cuerpo">
           <p class="quien">
             <strong>&#64;{{ c.autor.username }}</strong>
-            @if (c.autor.id === datos.duenoId) {
+            @if (c.autor.id === duenoId()) {
               <span class="dueno">Dueño</span>
             }
             <span class="caption vt-muted">· {{ cuando(c) }}</span>
@@ -375,8 +377,14 @@ export interface DatosHoja {
 export class CommentSheet {
   protected readonly comentarios = inject(ComentariosService);
   protected readonly auth = inject(AuthService);
-  protected readonly datos = inject<DatosHoja>(MAT_BOTTOM_SHEET_DATA);
-  protected readonly ref = inject<MatBottomSheetRef<CommentSheet>>(MatBottomSheetRef);
+  /** En la hoja inferior (móvil) los datos llegan por MAT_BOTTOM_SHEET_DATA; en escritorio se usa en línea con inputs. */
+  private readonly datos = inject<DatosHoja>(MAT_BOTTOM_SHEET_DATA, { optional: true });
+  protected readonly ref = inject<MatBottomSheetRef<CommentSheet>>(MatBottomSheetRef, {
+    optional: true,
+  });
+  readonly duenoIdEntrada = input<number>(undefined, { alias: 'duenoId' });
+  readonly enLinea = input(false);
+  protected readonly duenoId = computed(() => this.duenoIdEntrada() ?? this.datos?.duenoId ?? -1);
   private readonly router = inject(Router);
   private readonly lista = viewChild<ElementRef<HTMLElement>>('lista');
   private readonly campo = viewChild<ElementRef<HTMLTextAreaElement>>('campo');
@@ -401,7 +409,7 @@ export class CommentSheet {
 
   protected puedeEliminar(c: ComentarioLocal): boolean {
     const yo = this.auth.usuario()?.id;
-    return yo !== undefined && (c.autor.id === yo || this.datos.duenoId === yo);
+    return yo !== undefined && (c.autor.id === yo || this.duenoId() === yo);
   }
 
   protected enviar(evento: Event, id: number, username: string): void {
@@ -434,7 +442,7 @@ export class CommentSheet {
   }
 
   protected ingresar(): void {
-    this.ref.dismiss();
+    this.ref?.dismiss();
     void this.router.navigate(['/ingresar'], { queryParams: { returnUrl: this.router.url } });
   }
 }

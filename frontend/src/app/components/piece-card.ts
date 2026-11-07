@@ -1,9 +1,10 @@
-import { Component, computed, inject, input, linkedSignal } from '@angular/core';
+import { Component, computed, ElementRef, inject, input, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ToastService } from '../services/toast.service';
 import { CatalogoService } from '../services/catalogo.service';
 import { compacto, relativo } from '../models/format';
 import { Pieza } from '../models/vitrina';
+import { DetalleDialogo } from '../services/detalle-dialogo';
 import { PiezaPublica } from '../services/catalogo-publico.service';
 import { IconButton } from './icon-button';
 import { Icon } from './icon';
@@ -263,6 +264,23 @@ import { CatalogTag } from './catalog-tag';
 })
 export class PieceCard {
   protected readonly catalogo = inject(CatalogoService);
+  constructor() {
+    // En escritorio la pieza se abre en una ventana sobre la lista. Se escucha en la fase de captura
+    // para frenar el enlace antes de que el router navegue; con Ctrl o Cmd sigue el enlace normal.
+    inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.addEventListener(
+      'click',
+      (evento) => {
+        const enlace = (evento.target as Element).closest('a.enlace, a.nombre');
+        if (!enlace || !this.esPublica()) return;
+        if (evento.button !== 0 || evento.ctrlKey || evento.metaKey || evento.shiftKey) return;
+        if (this.detalle.abrir(this.pieza().id)) {
+          evento.preventDefault();
+          evento.stopPropagation();
+        }
+      },
+      true,
+    );
+  }
   readonly pieza = input.required<Pieza | PiezaPublica>();
   readonly variante = input<'grid' | 'row'>('grid');
   protected readonly fallo = linkedSignal(() => {
@@ -270,6 +288,7 @@ export class PieceCard {
     return false;
   });
   private readonly toast = inject(ToastService);
+  private readonly detalle = inject(DetalleDialogo);
   protected readonly guardada = computed(() => {
     const p = this.pieza();
     return 'dueno' in p ? p.guardada : this.catalogo.guardadas().has(p.id);

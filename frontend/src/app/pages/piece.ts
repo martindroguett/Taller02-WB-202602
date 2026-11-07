@@ -26,6 +26,8 @@ import { compacto, relativo } from '../models/format';
 import { categoriaDe } from '../models/vitrina';
 import { CatalogoPublicoService } from '../services/catalogo-publico.service';
 import { ComentariosService } from '../services/comentarios.service';
+import { Pantalla } from '../services/pantalla';
+import { PieceDetail } from '../components/piece-detail';
 import { ToastService } from '../services/toast.service';
 
 @Component({
@@ -41,137 +43,142 @@ import { ToastService } from '../services/toast.service';
     IconButton,
     LikeButton,
     PieceArt,
+    PieceDetail,
     RouterLink,
   ],
   template: `
     @if (pieza.hasValue()) {
       @let p = pieza.value();
-      <div class="detalle vt-c-{{ p.categoria }}">
-        <div class="foto">
-          @if (p.imagen_url && !fallo()) {
-            <img [src]="p.imagen_url" alt="" (error)="fallo.set(true)" />
-          } @else {
-            <vt-piece-art [categoria]="p.categoria" />
-          }
-          <div class="barra">
-            <button
-              type="button"
-              vt-icon-button
-              tone="glass"
-              icon="arrow_back"
-              label="Volver"
-              (click)="volver()"
-            ></button>
-            <button
-              type="button"
-              vt-icon-button
-              tone="glass"
-              icon="bookmark"
-              [label]="
-                (p.guardada ? 'Quitar de favoritos' : 'Guardar en favoritos') +
-                ': pendiente de conectar'
-              "
-              [active]="p.guardada"
-              [pressed]="p.guardada"
-              title="Pendiente de conectar"
-              (click)="pendiente('Favoritos')"
-            ></button>
-          </div>
-        </div>
-        <article class="hoja">
-          <vt-catalog-tag class="ficha" [categoria]="p.categoria" [numero]="p.id" />
-          <h1 class="display-lg nombre">{{ p.nombre }}</h1>
-          <p class="categoria caption">
-            <vt-icon [name]="categoriaDe(p.categoria).icono" [size]="16" />{{
-              categoriaDe(p.categoria).nombre
-            }}
-            · {{ cuando(p.creado_en) }}
-          </p>
-          <p class="body">{{ p.descripcion }}</p>
-          @if (p.megusta || p.guardados) {
-            <dl class="cifras">
-              <div>
-                <dd class="stat">{{ compacto(p.megusta) }}</dd>
-                <dt class="caption vt-muted">Me gusta</dt>
-              </div>
-              <div>
-                <dd class="stat">{{ compacto(p.guardados) }}</dd>
-                <dt class="caption vt-muted">Favoritos</dt>
-              </div>
-            </dl>
-          }
-          <div class="dueno">
-            <a class="persona" [routerLink]="['/coleccionistas', p.dueno.username]">
-              <vt-avatar [nombre]="p.dueno.username" [tam]="52" />
-              <span class="body-strong">&#64;{{ p.dueno.username }}</span>
-            </a>
-            <a vt-button variant="secondary" [routerLink]="['/coleccionistas', p.dueno.username]"
-              >Ver perfil</a
-            >
-          </div>
-          <vt-comments #comentarios [piezaId]="p.id" [duenoId]="p.dueno.id" />
-          <p class="caption vt-muted">
-            Las acciones sociales de la pieza están pendientes de conexión.
-          </p>
-          @if (auth.usuario()?.id === p.dueno.id) {
-            <div class="gestion">
-              <a
-                vt-button
-                variant="secondary"
-                icon="edit"
-                [routerLink]="['/coleccion', p.id, 'editar']"
-                >Editar pieza</a
-              >
+      @if (pantalla.escritorio()) {
+        <div class="escritorio"><vt-piece-detail [pieza]="p" modo="pagina" /></div>
+      } @else {
+        <div class="detalle vt-c-{{ p.categoria }}">
+          <div class="foto">
+            @if (p.imagen_url && !fallo()) {
+              <img [src]="p.imagen_url" alt="" (error)="fallo.set(true)" />
+            } @else {
+              <vt-piece-art [categoria]="p.categoria" />
+            }
+            <div class="barra">
               <button
                 type="button"
-                vt-button
-                variant="danger"
-                icon="delete"
-                [disabled]="eliminando()"
-                (click)="errorEliminar.set(''); confirmando.set(true)"
-              >
-                Eliminar
-              </button>
+                vt-icon-button
+                tone="glass"
+                icon="arrow_back"
+                label="Volver"
+                (click)="volver()"
+              ></button>
+              <button
+                type="button"
+                vt-icon-button
+                tone="glass"
+                icon="bookmark"
+                [label]="
+                  (p.guardada ? 'Quitar de favoritos' : 'Guardar en favoritos') +
+                  ': pendiente de conectar'
+                "
+                [active]="p.guardada"
+                [pressed]="p.guardada"
+                title="Pendiente de conectar"
+                (click)="pendiente('Favoritos')"
+              ></button>
             </div>
-            @if (errorEliminar()) {
-              <p role="alert">{{ errorEliminar() }}</p>
+          </div>
+          <article class="hoja">
+            <vt-catalog-tag class="ficha" [categoria]="p.categoria" [numero]="p.id" />
+            <h1 class="display-lg nombre">{{ p.nombre }}</h1>
+            <p class="categoria caption">
+              <vt-icon [name]="categoriaDe(p.categoria).icono" [size]="16" />{{
+                categoriaDe(p.categoria).nombre
+              }}
+              · {{ cuando(p.creado_en) }}
+            </p>
+            <p class="body">{{ p.descripcion }}</p>
+            @if (p.megusta || p.guardados) {
+              <dl class="cifras">
+                <div>
+                  <dd class="stat">{{ compacto(p.megusta) }}</dd>
+                  <dt class="caption vt-muted">Me gusta</dt>
+                </div>
+                <div>
+                  <dd class="stat">{{ compacto(p.guardados) }}</dd>
+                  <dt class="caption vt-muted">Favoritos</dt>
+                </div>
+              </dl>
             }
-            <vt-confirm-sheet
-              [categoria]="p.categoria"
-              [abierto]="confirmando()"
-              [pendiente]="eliminando()"
-              [error]="errorEliminar()"
-              titulo="¿Eliminar esta pieza?"
-              [texto]="'Vas a quitar «' + p.nombre + '» de tu colección. No se puede deshacer.'"
-              (cancelado)="confirmando.set(false)"
-              (confirmado)="eliminar()"
-            />
-          }
-        </article>
-        <div class="accion-fija">
-          <vt-like-button [pieza]="p" />
-          <button
-            type="button"
-            vt-button
-            variant="secondary"
-            icon="chat_bubble"
-            [attr.aria-label]="'Comentarios: ' + comentariosTotal()"
-            (click)="comentarios.abrir()"
-          >
-            {{ comentariosTotal() }}
-          </button>
-          <button
-            type="button"
-            vt-button
-            class="compartir"
-            variant="secondary"
-            icon="link"
-            (click)="compartir()"
-          >
-            Compartir
-          </button>
+            <div class="dueno">
+              <a class="persona" [routerLink]="['/coleccionistas', p.dueno.username]">
+                <vt-avatar [nombre]="p.dueno.username" [tam]="52" />
+                <span class="body-strong">&#64;{{ p.dueno.username }}</span>
+              </a>
+              <a vt-button variant="secondary" [routerLink]="['/coleccionistas', p.dueno.username]"
+                >Ver perfil</a
+              >
+            </div>
+            <vt-comments #comentarios [piezaId]="p.id" [duenoId]="p.dueno.id" />
+            <p class="caption vt-muted">
+              Las acciones sociales de la pieza están pendientes de conexión.
+            </p>
+            @if (auth.usuario()?.id === p.dueno.id) {
+              <div class="gestion">
+                <a
+                  vt-button
+                  variant="secondary"
+                  icon="edit"
+                  [routerLink]="['/coleccion', p.id, 'editar']"
+                  >Editar pieza</a
+                >
+                <button
+                  type="button"
+                  vt-button
+                  variant="danger"
+                  icon="delete"
+                  [disabled]="eliminando()"
+                  (click)="errorEliminar.set(''); confirmando.set(true)"
+                >
+                  Eliminar
+                </button>
+              </div>
+              @if (errorEliminar()) {
+                <p role="alert">{{ errorEliminar() }}</p>
+              }
+              <vt-confirm-sheet
+                [categoria]="p.categoria"
+                [abierto]="confirmando()"
+                [pendiente]="eliminando()"
+                [error]="errorEliminar()"
+                titulo="¿Eliminar esta pieza?"
+                [texto]="'Vas a quitar «' + p.nombre + '» de tu colección. No se puede deshacer.'"
+                (cancelado)="confirmando.set(false)"
+                (confirmado)="eliminar()"
+              />
+            }
+          </article>
+          <div class="accion-fija">
+            <vt-like-button [pieza]="p" />
+            <button
+              type="button"
+              vt-button
+              variant="secondary"
+              icon="chat_bubble"
+              [attr.aria-label]="'Comentarios: ' + comentariosTotal()"
+              (click)="comentarios.abrir()"
+            >
+              {{ comentariosTotal() }}
+            </button>
+            <button
+              type="button"
+              vt-button
+              class="compartir"
+              variant="secondary"
+              icon="link"
+              (click)="compartir()"
+            >
+              Compartir
+            </button>
+          </div>
         </div>
-      </div>
+      }
     } @else if (pieza.isLoading()) {
       <div class="detalle" aria-hidden="true">
         <div class="vt-esqueleto cuadrado"></div>
@@ -203,6 +210,11 @@ import { ToastService } from '../services/toast.service';
     }
   `,
   styles: `
+    /* Desde 1000 px la página ocupa toda la pantalla: foto a un lado y comentarios al otro. */
+    .escritorio {
+      height: 100dvh;
+      padding: var(--space-4);
+    }
     .detalle {
       max-width: 720px;
       margin-inline: auto;
@@ -351,6 +363,7 @@ import { ToastService } from '../services/toast.service';
 export class PiecePage {
   private readonly api = inject(CatalogoPublicoService);
   protected readonly auth = inject(AuthService);
+  protected readonly pantalla = inject(Pantalla);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly toast = inject(ToastService);
