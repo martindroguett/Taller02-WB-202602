@@ -48,13 +48,14 @@ Explorar, el detalle de piezas, los perfiles públicos, el ingreso y el registro
 - Ver el Feed, perfiles y colecciones.
 - Dar likes, seguir coleccionistas y guardar favoritos.
 - Agregar, editar y eliminar piezas propias.
+- Comentar las piezas desde una hoja inferior en el detalle; el autor y el dueño de la pieza pueden eliminar comentarios.
 - Crear una cuenta, ingresar y cerrar sesión. La sesión se mantiene al recargar la página.
 
 Feed, perfil propio y perfiles en `/perfil`, favoritos y sus interacciones sociales usan datos de muestra y sus cambios se pierden al recargar la página. Las piezas de muestra no se enlazan al detalle real. Esas pantallas usan un usuario de demostración fijo, `tomas_retro`, aunque se ingrese con otra cuenta. Desde el perfil de demostración se puede abrir la colección real de la cuenta; allí se agregan piezas y desde el detalle propio se editan o eliminan. Los seguimientos reales se realizan desde `/coleccionistas/:usuario`; el Feed de demostración todavía no los refleja.
 
 ## Tecnologías
 
-El frontend usa **Angular**, con Angular Material para iconos, botones y estados de carga del perfil público. Sus lecturas usan `httpResource`, con Signals y el interceptor de autenticación. El backend usa **FastAPI** con una API REST en JSON, **PostgreSQL** como base de datos, **SQLAlchemy** como ORM, **Alembic** para las migraciones y autenticación con **JWT**. Las contraseñas se guardan como hash con bcrypt.
+El frontend usa **Angular**, con Angular Material para iconos, campos de formulario, selector de secciones, barra superior, avisos, la hoja de comentarios y el botón y la carga del perfil público (con la paleta de Vitrina en `styles.css`). Sus lecturas usan `httpResource`, con Signals y el interceptor de autenticación. El backend usa **FastAPI** con una API REST en JSON, **PostgreSQL** como base de datos, **SQLAlchemy** como ORM, **Alembic** para las migraciones y autenticación con **JWT**. Las contraseñas se guardan como hash con bcrypt.
 
 ## Comprobaciones
 
