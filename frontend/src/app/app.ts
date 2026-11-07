@@ -3,13 +3,12 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { TabBar } from './components/tab-bar';
-import { ToastHost } from './components/toast-host';
 
 const SIN_NAV = ['/ingresar', '/pieza', '/coleccion'];
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, TabBar, ToastHost],
+  imports: [RouterOutlet, TabBar],
   template: `
     <div class="shell" [class.con-nav]="conNav()">
       <router-outlet />
@@ -17,7 +16,6 @@ const SIN_NAV = ['/ingresar', '/pieza', '/coleccion'];
     @if (conNav()) {
       <vt-tab-bar />
     }
-    <vt-toast-host />
   `,
   styles: `
     .shell {

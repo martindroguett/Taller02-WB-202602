@@ -57,6 +57,24 @@ img {
   --mat-sys-body-medium-font: var(--font-sans);
 }
 
+.vt-aviso {
+  --mat-snack-bar-container-color: var(--night);
+  --mat-snack-bar-supporting-text-color: var(--on-night);
+  --mat-snack-bar-button-color: var(--on-night);
+  --mat-snack-bar-container-shape: var(--radius-pill);
+  margin-bottom: 96px !important;
+}
+.vt-aviso-danger {
+  --mat-snack-bar-container-color: var(--danger);
+  --mat-snack-bar-supporting-text-color: var(--on-danger);
+  --mat-snack-bar-button-color: var(--on-danger);
+}
+.vt-aviso-success {
+  --mat-snack-bar-container-color: var(--success);
+  --mat-snack-bar-supporting-text-color: #fff;
+  --mat-snack-bar-button-color: #fff;
+}
+
 .vt-hoja {
   --mat-bottom-sheet-container-background-color: var(--surface);
   --mat-bottom-sheet-container-text-color: var(--ink);
