@@ -11,6 +11,8 @@ export interface DatosDialogoPieza {
   id: number;
   /** Piezas de la lista que se está viendo, para pasar a la anterior o a la siguiente. */
   ids: number[];
+  /** Dirección que había antes de abrir la ventana. */
+  anterior: string;
 }
 
 /** Ventana con el detalle de la pieza sobre Explorar o un perfil, con flechas entre piezas. */
@@ -24,7 +26,7 @@ export interface DatosDialogoPieza {
   template: `
     <div class="marco" role="dialog" aria-modal="true" aria-label="Detalle de la pieza">
       @if (pieza.hasValue()) {
-        <vt-piece-detail [pieza]="pieza.value()" modo="ventana" (irA)="ref.close('navegar')" />
+        <vt-piece-detail [pieza]="pieza.value()" modo="ventana" (irA)="irA()" />
       } @else if (pieza.error()) {
         <div class="vacio">
           <vt-empty-state
@@ -123,6 +125,12 @@ export class PieceDialog {
   private readonly id = signal(this.datos.id);
   protected readonly pieza = this.api.detalle(() => String(this.id()));
   protected readonly indice = computed(() => this.datos.ids.indexOf(this.id()));
+
+  /** Antes de navegar a otra página se restaura la dirección anterior, para que el historial quede limpio. */
+  protected irA(): void {
+    this.location.replaceState(this.datos.anterior);
+    this.ref.close('navegar');
+  }
 
   protected mover(paso: 1 | -1): void {
     const destino = this.datos.ids[this.indice() + paso];
