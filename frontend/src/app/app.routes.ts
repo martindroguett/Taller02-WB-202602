@@ -25,11 +25,7 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/profile').then((m) => m.ProfilePage),
     canActivate: [authGuard],
   },
-  {
-    path: 'perfil/:usuario',
-    title: 'Perfil · Vitrina',
-    loadComponent: () => import('./pages/profile').then((m) => m.ProfilePage),
-  },
+  { path: 'perfil/:usuario', redirectTo: 'coleccionistas/:usuario' },
   {
     path: 'coleccionistas/:usuario',
     title: 'Coleccionista · Vitrina',

@@ -39,19 +39,20 @@ npm start
 
 Abrir **http://localhost:4200/** en el navegador. Para detener el servidor, usar `Ctrl+C` en la terminal.
 
-Explorar, el detalle de piezas, los perfiles públicos, el ingreso y el registro consultan la API; requieren el backend y la base de datos en ejecución. El servidor de desarrollo redirige `/api` a `http://localhost:8000`. Desde el propietario de una pieza se abre su perfil en `/coleccionistas/:usuario`, con su colección y seguimientos persistentes. Feed, favoritos, me gusta y guardados de piezas reales también usan la API. El perfil de muestra sigue pendiente de conectar.
+Explorar, el detalle de piezas, los perfiles públicos, el ingreso y el registro consultan la API; requieren el backend y la base de datos en ejecución. El servidor de desarrollo redirige `/api` a `http://localhost:8000`. Desde el propietario de una pieza se abre su perfil en `/coleccionistas/:usuario`, con su colección y seguimientos persistentes. Feed, favoritos, me gusta y guardados de piezas reales también usan la API. El perfil propio en `/perfil` muestra la cuenta y la colección real.
 
 ## Funciones
 
 - Explorar piezas reales, buscar, filtrar por categoría y cargar más resultados. El detalle consulta la API por ID.
 - Consultar perfiles públicos y su colección paginada; seguir y dejar de seguir con la sesión real.
+- Ver el perfil propio con los datos de la cuenta, sus contadores y su colección paginada.
 - Ver el Feed, perfiles y colecciones.
 - Dar likes, seguir coleccionistas y guardar favoritos.
 - Agregar, editar y eliminar piezas propias.
 - Comentar las piezas desde una hoja inferior en el detalle, responder (un solo nivel) y dar me gusta a los comentarios; el autor y el dueño de la pieza pueden eliminarlos.
 - Crear una cuenta, ingresar y cerrar sesión. La sesión se mantiene al recargar la página.
 
-El perfil propio en `/perfil` y los perfiles de muestra en `/perfil/:usuario` siguen usando datos de demostración. Los perfiles reales y seguimientos están en `/coleccionistas/:usuario`. El Feed y Favoritos muestran datos reales y las interacciones persisten en la API.
+El perfil propio en `/perfil` usa datos reales de la API. Los perfiles de otros coleccionistas y los seguimientos están en `/coleccionistas/:usuario`; las direcciones antiguas `/perfil/:usuario` redirigen ahí. El Feed y Favoritos muestran datos reales y las interacciones persisten en la API.
 
 ## Tecnologías
 
