@@ -17,7 +17,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(solicitud).pipe(
     catchError((error: HttpErrorResponse) => {
       const esAuth = req.url.startsWith(`${environment.apiUrl}/auth/`);
-      if (error.status === 401 && esApi && !esAuth) {
+      // Sin token enviado no hay sesión que vencer (p. ej. justo después de cerrar sesión).
+      if (error.status === 401 && esApi && !esAuth && token) {
         auth.cerrarSesion();
         router.navigate(['/ingresar'], { queryParams: { returnUrl: router.url } });
       }

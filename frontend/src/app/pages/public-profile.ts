@@ -9,12 +9,14 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { distinctUntilChanged, map } from 'rxjs';
 import { Avatar } from '../components/avatar';
 import { Button } from '../components/button';
+import { abrirListaUsuarios } from '../components/user-list-dialog';
 import { EmptyState } from '../components/empty-state';
 import { PieceCard } from '../components/piece-card';
 import { compacto } from '../models/format';
@@ -86,20 +88,22 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
               }
             </div>
             <div class="datos">
-              <dl class="cifras">
-                <div>
-                  <dt>Piezas</dt>
-                  <dd class="stat">{{ compacto(piezas.hasValue() ? piezas.value().total : 0) }}</dd>
-                </div>
-                <div>
-                  <dt>Seguidores</dt>
-                  <dd class="stat">{{ compacto(usuario.seguidores) }}</dd>
-                </div>
-                <div>
-                  <dt>Siguiendo</dt>
-                  <dd class="stat">{{ compacto(usuario.siguiendo) }}</dd>
-                </div>
-              </dl>
+              <div class="cifras">
+                <button type="button" (click)="coleccion.scrollIntoView({ behavior: 'smooth' })">
+                  <span class="stat">{{
+                    compacto(piezas.hasValue() ? piezas.value().total : 0)
+                  }}</span>
+                  <span>Piezas</span>
+                </button>
+                <button type="button" (click)="verLista('seguidores')">
+                  <span class="stat">{{ compacto(usuario.seguidores) }}</span>
+                  <span>Seguidores</span>
+                </button>
+                <button type="button" (click)="verLista('seguidos')">
+                  <span class="stat">{{ compacto(usuario.siguiendo) }}</span>
+                  <span>Siguiendo</span>
+                </button>
+              </div>
               @if (auth.usuario()?.id !== usuario.id) {
                 <button
                   mat-flat-button
@@ -118,7 +122,7 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
             </div>
           </div>
         </header>
-        <section class="vt-section" aria-labelledby="piezas-titulo">
+        <section class="vt-section" aria-labelledby="piezas-titulo" #coleccion>
           <h2 class="title" id="piezas-titulo">Colección</h2>
           @if (piezas.isLoading()) {
             <div class="cargando" role="status"><mat-spinner diameter="28" /> Cargando piezas…</div>
@@ -204,17 +208,20 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
       gap: var(--space-4);
       margin: 0;
     }
-    .cifras div {
+    .cifras button {
       display: flex;
       flex-direction: column-reverse;
       align-items: flex-start;
-    }
-    .cifras dd {
-      margin: 0;
-    }
-    .cifras dt {
+      min-height: var(--tap-target);
+      padding: 0;
+      border: 0;
+      background: transparent;
       font: var(--text-caption);
       color: var(--ink-muted);
+      cursor: pointer;
+    }
+    .cifras .stat {
+      color: var(--ink);
     }
     @media (min-width: 600px) {
       .cabecera {
@@ -306,6 +313,7 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
 })
 export class PublicProfilePage {
   private readonly api = inject(UsuariosPublicosService);
+  private readonly dialogo = inject(MatDialog);
   private readonly detalle = inject(DetalleDialogo);
   protected readonly pantalla = inject(Pantalla);
   private readonly route = inject(ActivatedRoute);
@@ -363,6 +371,9 @@ export class PublicProfilePage {
       this.version++;
       this.enviando.set(false);
     });
+  }
+  protected verLista(tipo: 'seguidores' | 'seguidos'): void {
+    abrirListaUsuarios(this.dialogo, this.username(), tipo);
   }
   protected alternar(): void {
     const usuario = this.perfil.value();

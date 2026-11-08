@@ -126,7 +126,7 @@ const POR_PAGINA = 20;
         }
       </main>
       <aside class="lateral" aria-label="Tu comunidad">
-        <vt-comunidad-lateral modo="sugerencias" />
+        <vt-comunidad-lateral />
       </aside>
     </div>
   `,

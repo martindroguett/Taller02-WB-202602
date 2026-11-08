@@ -23,6 +23,16 @@ def estado(db: Sesion, seguido_id: int, lo_sigo: bool) -> EstadoSeguimiento:
     return EstadoSeguimiento(lo_sigo=lo_sigo, seguidores=seguidores)
 
 
+@router.get("", response_model=list[Dueno])
+def sugeridos(db: Sesion, usuario: UsuarioOpcional, limite: Limite = 5):
+    """Coleccionistas para seguir: los con más seguidores, sin contarte a ti ni a quienes ya sigues."""
+    consulta = select(Usuario).order_by(Usuario.seguidores.desc(), Usuario.id)
+    if usuario is not None:
+        ya_sigo = select(Seguimiento.seguido_id).where(Seguimiento.seguidor_id == usuario.id)
+        consulta = consulta.where(Usuario.id != usuario.id, Usuario.id.not_in(ya_sigo))
+    return [Dueno.model_validate(u) for u in db.scalars(consulta.limit(limite))]
+
+
 @router.get("/{username}", response_model=PerfilPublico)
 def perfil(username: str, db: Sesion, usuario: UsuarioOpcional):
     perfil = usuario_o_404(db, username)
@@ -43,17 +53,8 @@ def piezas_usuario(
     return paginar(db, consulta, request, usuario, limite, desplazamiento)
 
 
-@router.get("/{username}/seguidos", response_model=Pagina[Dueno])
-def seguidos(
-    username: str, db: Sesion, limite: Limite = 20, desplazamiento: Desplazamiento = 0,
-):
-    """Las personas que sigue el usuario, la seguida más recientemente primero (la fila del Feed)."""
-    perfil = usuario_o_404(db, username)
-    consulta = (
-        select(Usuario)
-        .join(Seguimiento, Seguimiento.seguido_id == Usuario.id)
-        .where(Seguimiento.seguidor_id == perfil.id)
-    )
+def pagina_de_usuarios(db: Sesion, union, filtro, limite: int, desplazamiento: int) -> Pagina[Dueno]:
+    consulta = select(Usuario).join(Seguimiento, union).where(filtro)
     total = db.scalar(select(func.count()).select_from(consulta.subquery()))
     usuarios = db.scalars(
         consulta.order_by(Seguimiento.creado_en.desc(), Usuario.id.desc()).limit(limite).offset(desplazamiento)
@@ -61,6 +62,28 @@ def seguidos(
     return Pagina(
         items=[Dueno.model_validate(u) for u in usuarios],
         total=total, limite=limite, desplazamiento=desplazamiento,
+    )
+
+
+@router.get("/{username}/seguidos", response_model=Pagina[Dueno])
+def seguidos(
+    username: str, db: Sesion, limite: Limite = 20, desplazamiento: Desplazamiento = 0,
+):
+    """Las personas que sigue el usuario, la seguida más recientemente primero (la fila del Feed)."""
+    perfil = usuario_o_404(db, username)
+    return pagina_de_usuarios(
+        db, Seguimiento.seguido_id == Usuario.id, Seguimiento.seguidor_id == perfil.id, limite, desplazamiento
+    )
+
+
+@router.get("/{username}/seguidores", response_model=Pagina[Dueno])
+def seguidores(
+    username: str, db: Sesion, limite: Limite = 20, desplazamiento: Desplazamiento = 0,
+):
+    """Las personas que siguen al usuario, la más reciente primero."""
+    perfil = usuario_o_404(db, username)
+    return pagina_de_usuarios(
+        db, Seguimiento.seguidor_id == Usuario.id, Seguimiento.seguido_id == perfil.id, limite, desplazamiento
     )
 
 
