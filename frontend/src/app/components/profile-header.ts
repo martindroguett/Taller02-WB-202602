@@ -1,16 +1,15 @@
-import { Component, computed, inject, input } from '@angular/core';
-import { CatalogoService } from '../services/catalogo.service';
+import { Component, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { compacto } from '../models/format';
-import { Pieza, Usuario } from '../models/vitrina';
+import { PiezaPublica } from '../services/catalogo-publico.service';
+import { UsuarioPublico } from '../services/usuarios-publicos.service';
 import { Avatar } from './avatar';
 import { Button } from './button';
-import { RouterLink } from '@angular/router';
-import { FollowButton } from './follow-button';
 import { PieceArt } from './piece-art';
 
 @Component({
   selector: 'vt-profile-header',
-  imports: [Avatar, Button, FollowButton, PieceArt, RouterLink],
+  imports: [Avatar, Button, PieceArt, RouterLink],
   template: `
     <div class="abanico" aria-hidden="true">
       @for (p of abanico(); track p.id; let i = $index) {
@@ -29,24 +28,17 @@ import { PieceArt } from './piece-art';
     </div>
     <div class="vitrina vt-showcase"></div>
     <div class="cuerpo">
-      <vt-avatar
-        class="avatar"
-        [nombre]="usuario().username"
-        [tam]="88"
-        [anillo]="esMio() ? 'brand' : 'none'"
-      />
+      <vt-avatar class="avatar" [nombre]="usuario().username" [tam]="88" anillo="brand" />
       <div class="acciones">
-        @if (esMio()) {
-          <a vt-button variant="accent" size="sm" icon="add" routerLink="/coleccion/nueva"
-            >Agregar pieza</a
-          >
-        } @else {
-          <vt-follow-button [usuarioId]="usuario().id" />
-        }
+        <a vt-button variant="accent" size="sm" icon="add" routerLink="/coleccion/nueva"
+          >Agregar pieza</a
+        >
       </div>
       <div class="quien">
         <h1 class="title">&#64;{{ usuario().username }}</h1>
-        <p class="body bio">{{ usuario().bio }}</p>
+        @if (usuario().bio) {
+          <p class="body bio">{{ usuario().bio }}</p>
+        }
       </div>
       <dl class="cifras">
         <div>
@@ -55,13 +47,11 @@ import { PieceArt } from './piece-art';
         </div>
         <div>
           <dt class="caption vt-muted">Seguidores</dt>
-          <dd class="stat">{{ compacto(seguidores()) }}</dd>
+          <dd class="stat">{{ compacto(usuario().seguidores) }}</dd>
         </div>
         <div>
           <dt class="caption vt-muted">Siguiendo</dt>
-          <dd class="stat">
-            {{ compacto(esMio() ? catalogo.seguidos().length : usuario().siguiendo) }}
-          </dd>
+          <dd class="stat">{{ compacto(usuario().siguiendo) }}</dd>
         </div>
       </dl>
     </div>
@@ -164,16 +154,10 @@ import { PieceArt } from './piece-art';
   `,
 })
 export class ProfileHeader {
-  protected readonly catalogo = inject(CatalogoService);
   protected readonly compacto = compacto;
   protected readonly giros = [-10, 4, 12];
 
-  readonly usuario = input.required<Usuario>();
-  readonly esMio = input(false);
-
-  protected readonly abanico = computed<Pieza[]>(() =>
-    this.catalogo.piezasDe(this.usuario().id).slice(0, 3),
-  );
-  protected readonly piezas = computed(() => this.catalogo.piezasDe(this.usuario().id).length);
-  protected readonly seguidores = computed(() => this.catalogo.seguidores(this.usuario()));
+  readonly usuario = input.required<UsuarioPublico>();
+  readonly piezas = input(0);
+  readonly abanico = input<PiezaPublica[]>([]);
 }
