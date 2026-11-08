@@ -37,6 +37,14 @@ class PiezasHTTP(unittest.TestCase):
             self.assertEqual(codigo, 201, respuesta)
             tokens.append(respuesta['access_token'])
             nombres.append(nombre)
+        codigo, login = pedir('POST', '/auth/login', {
+            'email': nombres[0] + '@example.com', 'password': 'prueba123'
+        })
+        self.assertEqual(codigo, 200)
+        self.assertEqual(pedir('GET', '/auth/yo', token=login['access_token'])[1]['username'], nombres[0])
+        self.assertEqual(pedir('POST', '/auth/login', {
+            'email': nombres[0] + '@example.com', 'password': 'incorrecta'
+        })[0], 401)
         png = b'\x89PNG\r\n\x1a\n' + b'prueba'
         foto = 'data:image/png;base64,' + base64.b64encode(png).decode()
         datos = {'nombre': '  Pieza real  ', 'descripcion': '  Descripción  ',

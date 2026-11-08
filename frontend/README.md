@@ -9,25 +9,23 @@ Usar Node.js 24 LTS y las dependencias del archivo de bloqueo:
 ```bash
 npm ci
 npm start       # http://localhost:4200
-npm test        # comprobaciones de catálogo público y de muestra, sin backend
 npm run build
 ```
 
-Para Explorar, el detalle y la sesión, iniciar también la API en `http://localhost:8000` (ver el README raíz). El servidor de desarrollo redirige `/api` a esa dirección. La URL base está en `src/environments/`: en desarrollo se usa `/api` mediante el proxy; para producción se debe configurar `environment.ts` con la URL pública de la API antes de compilar. Su valor actual apunta a `localhost:8000` y solo sirve si la API corre en la misma máquina del navegador.
+Para Explorar, el detalle y la sesión, iniciar también la API en `http://localhost:8000` (ver el README raíz). El servidor de desarrollo redirige `/api` a esa dirección mediante el proxy. La aplicación está configurada para ejecutarse localmente.
 
 La caché de disco está desactivada porque su módulo nativo LMDB aborta en el entorno local. Las fuentes se cargan en el navegador; el build no necesita descargarlas.
 
 ## Cómo está organizado
 
 - `src/app/pages/`: Explorar, Feed, Favoritos, Perfil, detalle de pieza, formulario, ingreso/registro y el perfil público independiente.
-- `src/app/components/`: controles y bloques visuales compartidos. La tarjeta tiene dos presentaciones: grilla y fila. El campo de texto acepta `[(valor)]` o `formControlName`.
+- `src/app/components/`: controles y bloques visuales compartidos. El campo de texto acepta `[(valor)]` o `formControlName`.
 - `src/app/services/auth.service.ts`: la sesión. Guarda el JWT en `localStorage` y, al abrir la app, lo valida con `/auth/yo`.
 - `src/app/interceptors/` y `src/app/guards/`: el interceptor agrega el token a las peticiones a la API y cierra la sesión ante un 401. Los guards piden sesión para Feed, Favoritos, el perfil propio y el formulario, y sacan de `/ingresar` a quien ya ingresó.
 - `src/app/services/catalogo-publico.service.ts`: lecturas públicas, el detalle de una pieza como recurso `httpResource` (se recarga solo al cambiar el `id` de la ruta) y operaciones HTTP de creación, edición y eliminación de piezas.
 - `src/app/services/usuarios-publicos.service.ts`: recursos `httpResource` de un perfil y su colección, que usan el perfil propio y el público, y solicitudes HTTP para seguir y dejar de seguir. Las lecturas reaccionan a cambios de ruta y sesión.
 - `src/app/services/interacciones.service.ts`: me gusta y guardados persistentes, estado compartido y recursos paginados de Feed y Favoritos.
 - `src/app/services/comentarios.service.ts`: carga y operaciones de comentarios, respuestas y me gusta.
-- `src/app/services/catalogo.service.ts`: datos de muestra. Ninguna página lo usa directamente; solo lo conservan las partes de prueba de `piece-card`, `feed-post`, `like-button`, `follow-button`, `activity-row` y `piece-float`.
 - `src/app/services/toast.service.ts`: avisos breves y la acción de deshacer un favorito.
 - `src/app/models/`: tipos de datos y formatos de presentación.
 - `src/styles/tokens.css`: colores, espaciado y tipografía. `src/styles.css` define la base y la distribución adaptable.
@@ -61,8 +59,9 @@ El perfil propio en `/perfil` muestra el email, la fecha de registro, los contad
 8. Revisar móvil (320 y 390 px), tableta y escritorio: sin desplazamiento horizontal ni controles superpuestos. Probar comentarios, teclado y compartir en un teléfono real.
 9. En escritorio, abrir y cerrar el detalle sobre una lista, entrar al perfil o editar y volver; comprobar el retorno a la pieza y a la lista.
 10. Entrar a `/perfil` con una cuenta real: deben verse sus datos, contadores y piezas. Agregar una pieza o seguir a alguien y volver: los contadores deben actualizarse. `/perfil/:usuario` debe abrir `/coleccionistas/:usuario`.
+11. En una pieza con más de 50 comentarios, publicar uno antes de pulsar «Ver más comentarios»: deben aparecer los comentarios restantes y el nuevo una sola vez.
 
-`npm test` verifica el CRUD, la validación, la lectura de imágenes, las interacciones y el catálogo de muestra; utiliza `HttpTestingController` para comprobar filtros, cancelación, paginación, errores, reintentos, detalle público y aislamiento de las acciones públicas respecto de los datos de muestra. También ejecuta los recursos y la lógica del perfil público: cambios de ruta y sesión, retorno al ingresar, paginación, bloqueo de doble envío y descarte de respuestas de seguimientos anteriores.
+Las pruebas HTTP contra PostgreSQL se describen en el README principal. Para el frontend, usar `npm run build` y la lista manual anterior.
 
 ## Fotos de muestra
 

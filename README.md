@@ -63,16 +63,14 @@ El frontend usa **Angular**, con Angular Material para iconos, campos de formula
 Desde la carpeta `frontend`:
 
 ```bash
-npm test        # Comprueba los catálogos y el perfil público, sin backend
 npm run build  # Genera la versión de producción en dist/frontend/browser
 ```
 
 Los detalles técnicos del frontend están en [frontend/README.md](frontend/README.md).
 
-Para comprobar perfiles, seguimientos, CRUD de piezas, me gusta, favoritos y feed contra PostgreSQL, ejecutar lo siguiente desde la raíz, con una API migrada conectada a una **base desechable de pruebas**. La comprobación crea cuentas y piezas; no usar la base personal ni una de producción.
+Para comprobar el CRUD, la autenticación, los permisos y los comentarios contra PostgreSQL, ejecutar lo siguiente desde la raíz, con una API migrada conectada a una **base desechable de pruebas**. Las pruebas crean cuentas y piezas; no usar la base personal.
 
 ```bash
-TEST_API_URL=http://127.0.0.1:8000/api python3 backend/tests/test_perfiles_http.py
 TEST_API_URL=http://127.0.0.1:8000/api python3 backend/tests/test_piezas_http.py
-TEST_API_URL=http://127.0.0.1:8000/api python3 backend/tests/test_interacciones_http.py
+TEST_API_URL=http://127.0.0.1:8000/api python3 backend/tests/test_comentarios_http.py
 ```

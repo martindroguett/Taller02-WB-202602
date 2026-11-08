@@ -5,8 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "node scripts/check-catalogo.mjs && node scripts/check-publico.mjs"
+    "watch": "ng build --watch --configuration development"
   },
   "private": true,
   "packageManager": "npm@11.13.0",
