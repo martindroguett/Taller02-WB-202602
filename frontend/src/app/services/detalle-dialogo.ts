@@ -44,7 +44,7 @@ export class DetalleDialogo {
   }
 
   /** Devuelve true si abrió la ventana; si no, el enlace debe seguir su curso. */
-  abrir(id: number): boolean {
+  abrir(id: number, ids = this.lista()): boolean {
     if (!this.pantalla.escritorio()) return false;
     if (this.dialogo.openDialogs.length) return true;
     const anterior = this.location.path();
@@ -54,7 +54,7 @@ export class DetalleDialogo {
     // otra pantalla (por ejemplo, tras editar) lleva a la lista y no a la página de la pieza.
     this.location.replaceState(`/pieza/${id}`);
     const ref = this.dialogo.open<PieceDialog, DatosDialogoPieza, string>(PieceDialog, {
-      data: { id, ids: this.lista(), anterior },
+      data: { id, ids, anterior },
       panelClass: 'vt-pieza-dialogo',
       backdropClass: 'vt-pieza-fondo',
       width: 'min(1120px, calc(100vw - 280px))',

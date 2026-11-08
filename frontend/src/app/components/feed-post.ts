@@ -1,10 +1,8 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CatalogoService } from '../services/catalogo.service';
 import { PiezaPublica } from '../services/catalogo-publico.service';
 import { InteraccionesService } from '../services/interacciones.service';
 import { relativo } from '../models/format';
-import { Pieza } from '../models/vitrina';
 import { Avatar } from './avatar';
 import { CatalogTag } from './catalog-tag';
 import { Icon } from './icon';
@@ -190,42 +188,18 @@ import { PieceArt } from './piece-art';
   `,
 })
 export class FeedPost {
-  protected readonly catalogo = inject(CatalogoService);
   private readonly interacciones = inject(InteraccionesService);
 
-  readonly pieza = input.required<Pieza | PiezaPublica>();
+  readonly pieza = input.required<PiezaPublica>();
   protected readonly fallo = signal(false);
-  // Las piezas de la API traen su dueño y su fecha; las de muestra, solo el id del dueño y los minutos.
-  protected readonly autor = computed(() => {
-    const p = this.pieza();
-    return 'dueno' in p ? p.dueno : this.catalogo.usuario(p.duenoId);
-  });
-  protected readonly perfilLink = computed(() =>
-    'dueno' in this.pieza()
-      ? ['/coleccionistas', this.autor().username]
-      : ['/perfil', this.autor().username],
+  protected readonly autor = computed(() => this.pieza().dueno);
+  protected readonly perfilLink = computed(() => ['/coleccionistas', this.autor().username]);
+  protected readonly numero = computed(() => this.pieza().id);
+  protected readonly guardada = computed(() => this.interacciones.estado(this.pieza()).guardada);
+  protected readonly cuando = computed(() =>
+    relativo(Math.max(0, Math.floor((Date.now() - Date.parse(this.pieza().creado_en)) / 60_000))),
   );
-  protected readonly numero = computed(() => {
-    const p = this.pieza();
-    return 'dueno' in p ? p.id : p.numero;
-  });
-  protected readonly guardada = computed(() => {
-    const p = this.pieza();
-    return 'dueno' in p
-      ? this.interacciones.estado(p).guardada
-      : this.catalogo.guardadas().has(p.id);
-  });
-  protected readonly cuando = computed(() => {
-    const p = this.pieza();
-    return relativo(
-      'dueno' in p
-        ? Math.max(0, Math.floor((Date.now() - Date.parse(p.creado_en)) / 60_000))
-        : p.hace,
-    );
-  });
   protected alternarGuardar(): void {
-    const p = this.pieza();
-    if ('dueno' in p) this.interacciones.alternarGuardado(p);
-    else this.catalogo.toggleGuardar(p.id);
+    this.interacciones.alternarGuardado(this.pieza());
   }
 }

@@ -34,9 +34,6 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
             <a vt-button variant="secondary" [routerLink]="['/coleccionistas', usuario.username]"
               >Ver mi perfil público</a
             >
-            <button type="button" class="salir caption vt-muted" (click)="cerrarSesion()">
-              Cerrar sesión
-            </button>
           </div>
         </section>
 
@@ -92,6 +89,9 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
           }
         </section>
       }
+      <button type="button" class="salir caption vt-muted" (click)="cerrarSesion()">
+        Cerrar sesión
+      </button>
     </div>
   `,
   styles: `
@@ -148,7 +148,7 @@ export class ProfilePage {
   protected readonly piezas = this.api.piezas(this.username, this.desplazamiento, this.auth.token);
 
   protected readonly total = computed(() =>
-    this.piezas.hasValue() ? this.piezas.value().total : 0,
+    this.piezas.hasValue() ? this.piezas.value().total : null,
   );
   protected readonly abanico = computed(() =>
     (this.piezas.hasValue() ? this.piezas.value().items : []).slice(0, 3),

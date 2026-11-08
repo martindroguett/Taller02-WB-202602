@@ -87,7 +87,7 @@ const POR_PAGINA = 20;
           <h2 class="title">Guardadas · {{ total() }}</h2>
           <div class="vt-grid">
             @for (p of visibles(); track p.id) {
-              <vt-piece-card [pieza]="p" />
+              <vt-piece-card [pieza]="p" [ids]="idsVisibles()" />
             }
           </div>
           @if (!visibles().length) {
@@ -268,6 +268,7 @@ export class FavoritesPage {
     (this.favoritos.value()?.items ?? []).filter((p) => this.interacciones.estado(p).guardada),
   );
   protected readonly visibles = this.guardadas;
+  protected readonly idsVisibles = computed(() => this.visibles().map((p) => p.id));
 
   protected filtrar(filtro: Filtro): void {
     this.desplazamiento.set(0);

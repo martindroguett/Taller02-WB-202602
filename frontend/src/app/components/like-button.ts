@@ -1,9 +1,7 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { PiezaPublica } from '../services/catalogo-publico.service';
-import { CatalogoService } from '../services/catalogo.service';
 import { InteraccionesService } from '../services/interacciones.service';
 import { compacto } from '../models/format';
-import { Pieza } from '../models/vitrina';
 import { Icon } from './icon';
 
 @Component({
@@ -66,20 +64,12 @@ import { Icon } from './icon';
   `,
 })
 export class LikeButton {
-  protected readonly catalogo = inject(CatalogoService);
   private readonly interacciones = inject(InteraccionesService);
-  readonly pieza = input.required<Pieza | PiezaPublica>();
-  // Las piezas de la API ('dueno' in p) se guardan con InteraccionesService; las de muestra, en memoria.
-  protected readonly activo = computed(() => {
-    const p = this.pieza();
-    return 'dueno' in p ? this.interacciones.estado(p).gustada : this.catalogo.gustadas().has(p.id);
-  });
+  readonly pieza = input.required<PiezaPublica>();
+  protected readonly activo = computed(() => this.interacciones.estado(this.pieza()).gustada);
   protected readonly latido = signal(false);
   private previo = false;
-  protected readonly cuenta = computed(() => {
-    const p = this.pieza();
-    return compacto('dueno' in p ? this.interacciones.estado(p).megusta : this.catalogo.megusta(p));
-  });
+  protected readonly cuenta = computed(() => compacto(this.interacciones.estado(this.pieza()).megusta));
   constructor() {
     // El corazón late solo cuando pasa de apagado a encendido, no al cargar la pieza ya gustada.
     effect(() => {
@@ -94,8 +84,6 @@ export class LikeButton {
 
   protected readonly ocupado = computed(() => this.interacciones.ocupada(this.pieza().id));
   protected alternar(): void {
-    const p = this.pieza();
-    if ('dueno' in p) this.interacciones.alternarMeGusta(p);
-    else this.catalogo.toggleMeGusta(p.id);
+    this.interacciones.alternarMeGusta(this.pieza());
   }
 }

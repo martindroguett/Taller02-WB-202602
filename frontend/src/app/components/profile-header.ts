@@ -43,7 +43,7 @@ import { PieceArt } from './piece-art';
       <dl class="cifras">
         <div>
           <dt class="caption vt-muted">Piezas</dt>
-          <dd class="stat">{{ compacto(piezas()) }}</dd>
+          <dd class="stat">{{ piezas() === null ? '—' : compacto(piezas()!) }}</dd>
         </div>
         <div>
           <dt class="caption vt-muted">Seguidores</dt>
@@ -158,6 +158,6 @@ export class ProfileHeader {
   protected readonly giros = [-10, 4, 12];
 
   readonly usuario = input.required<UsuarioPublico>();
-  readonly piezas = input(0);
+  readonly piezas = input<number | null>(null);
   readonly abanico = input<PiezaPublica[]>([]);
 }
