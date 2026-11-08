@@ -19,6 +19,7 @@ import { CatalogTag } from '../components/catalog-tag';
 import { Comments } from '../components/comments';
 import { EmptyState } from '../components/empty-state';
 import { LikeButton } from '../components/like-button';
+import { LikeBurst } from '../components/like-burst';
 import { IconButton } from '../components/icon-button';
 import { Icon } from '../components/icon';
 import { PieceArt } from '../components/piece-art';
@@ -43,6 +44,7 @@ import { InteraccionesService } from '../services/interacciones.service';
     Icon,
     IconButton,
     LikeButton,
+    LikeBurst,
     PieceArt,
     PieceDetail,
     RouterLink,
@@ -55,11 +57,13 @@ import { InteraccionesService } from '../services/interacciones.service';
       } @else {
         <div class="detalle vt-c-{{ p.categoria }}">
           <div class="foto">
-            @if (p.imagen_url && !fallo()) {
-              <img [src]="p.imagen_url" alt="" (error)="fallo.set(true)" />
-            } @else {
-              <vt-piece-art [categoria]="p.categoria" />
-            }
+            <vt-like-burst class="foto-contenido" [pieza]="p">
+              @if (p.imagen_url && !fallo()) {
+                <img [src]="p.imagen_url" alt="" (error)="fallo.set(true)" />
+              } @else {
+                <vt-piece-art [categoria]="p.categoria" />
+              }
+            </vt-like-burst>
             <div class="barra">
               <button
                 type="button"
@@ -234,6 +238,11 @@ import { InteraccionesService } from '../services/interacciones.service';
       aspect-ratio: 1;
       background: var(--c-soft);
       overflow: hidden;
+    }
+    .foto-contenido {
+      width: 100%;
+      height: 100%;
+      touch-action: manipulation;
     }
     .foto img,
     .foto vt-piece-art {

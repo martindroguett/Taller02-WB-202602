@@ -26,6 +26,7 @@ import { CommentSheet } from './comment-sheet';
 import { ConfirmSheet } from './confirm-sheet';
 import { IconButton } from './icon-button';
 import { LikeButton } from './like-button';
+import { LikeBurst } from './like-burst';
 import { PieceArt } from './piece-art';
 
 /**
@@ -42,6 +43,7 @@ import { PieceArt } from './piece-art';
     ConfirmSheet,
     IconButton,
     LikeButton,
+    LikeBurst,
     PieceArt,
     RouterLink,
   ],
@@ -49,13 +51,13 @@ import { PieceArt } from './piece-art';
   template: `
     @let p = pieza();
     <section class="foto" aria-label="Foto de la pieza">
-      <div class="ph">
+      <vt-like-burst class="ph" [pieza]="p">
         @if (p.imagen_url && !fallo()) {
           <img [src]="p.imagen_url" [alt]="'Foto de ' + p.nombre" (error)="fallo.set(true)" />
         } @else {
           <vt-piece-art [categoria]="p.categoria" />
         }
-      </div>
+      </vt-like-burst>
       @if (modo() === 'pagina') {
         <button
           type="button"
@@ -173,6 +175,7 @@ import { PieceArt } from './piece-art';
       min-width: 0;
     }
     .ph {
+      touch-action: manipulation;
       position: absolute;
       inset: 0;
       overflow: hidden;

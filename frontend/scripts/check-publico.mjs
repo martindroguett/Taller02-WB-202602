@@ -322,6 +322,22 @@ try {
     .flush('error', { status: 500, statusText: 'Error' });
   assert.equal(interacciones.estado(guardar).guardada, false, 'Un error revierte el guardado');
 
+  const dobleToque = { ...fixture(91) };
+  interacciones.darMeGusta(dobleToque);
+  const primero = http.expectOne({
+    method: 'POST',
+    url: `${environment.apiUrl}/piezas/91/megusta`,
+  });
+  interacciones.darMeGusta(dobleToque);
+  primero.flush({ gustada: true, megusta: 1 });
+  interacciones.darMeGusta(dobleToque);
+  http.expectNone((r) => r.url === `${environment.apiUrl}/piezas/91/megusta`);
+  assert.equal(
+    interacciones.estado(dobleToque).gustada,
+    true,
+    'Repetir el gesto conserva el me gusta',
+  );
+
   const antigua = { ...fixture(89) };
   interacciones.alternarMeGusta(antigua);
   const solicitudAnterior = http.expectOne(`${environment.apiUrl}/piezas/89/megusta`);

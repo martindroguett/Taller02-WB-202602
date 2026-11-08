@@ -1,6 +1,6 @@
 # Vitrina · Frontend del taller
 
-Frontend Angular con componentes standalone, señales y estilos propios. Angular Material se utiliza en campos, avisos, navegación, diálogos, comentarios e indicadores de carga. Explorar, Feed, Favoritos, detalle, perfiles públicos, ingreso, registro y gestión de piezas consultan la API. El perfil de demostración sigue usando datos en memoria.
+Frontend Angular con componentes standalone, señales y estilos propios. Angular Material se utiliza en campos, chips de categoría, avisos, navegación, diálogos, comentarios e indicadores de carga. Explorar, Feed, Favoritos, detalle, perfiles públicos, ingreso, registro y gestión de piezas consultan la API. El perfil de demostración sigue usando datos en memoria.
 
 ## Ejecutar y comprobar
 
@@ -39,7 +39,7 @@ No se incluyen chat, sets ni cargas simuladas.
 
 Explorar consulta piezas reales, permite buscar y filtrar por categoría, y carga páginas de 20 resultados. Sin búsqueda ni filtro, muestra arriba las 6 piezas más populares (`orden=populares`, por me gusta; con empate, la más nueva) como «Destacadas». La URL conserva los filtros al volver desde el detalle. La pantalla informa carga, ausencia de resultados y errores con reintento; el detalle permite copiar su enlace y abrir el perfil real del propietario en `/coleccionistas/:usuario`.
 
-El perfil público muestra la colección con páginas de 20 piezas y permite seguir y dejar de seguir de forma persistente. Sin sesión, el botón lleva a ingresar y vuelve al perfil; hay que pulsarlo otra vez para confirmar el seguimiento. No se muestra para la propia cuenta. Las pantallas informan carga, errores, usuario inexistente y colección vacía. La cuenta propietaria puede agregar piezas desde su colección y editarlas o eliminarlas desde su detalle. Los me gusta, guardados y comentarios de las piezas reales se guardan en la API.
+El perfil público muestra la colección con páginas de 20 piezas y permite seguir y dejar de seguir de forma persistente. Sin sesión, el botón lleva a ingresar y vuelve al perfil; hay que pulsarlo otra vez para confirmar el seguimiento. No se muestra para la propia cuenta. Las pantallas informan carga, errores, usuario inexistente y colección vacía. La cuenta propietaria puede agregar piezas desde su colección y editarlas o eliminarlas desde su detalle. Los me gusta, guardados y comentarios de las piezas reales se guardan en la API. Un doble toque sobre la foto del detalle agrega me gusta y muestra una confirmación visual.
 
 El formulario de piezas usa Reactive Forms: valida nombre y descripción recortados de hasta 100 y 2.000 caracteres, categoría y foto JPEG, PNG o WebP de hasta 2 MiB. Al editar sin cambiar la foto, conserva la dirección recibida. Crear o guardar cambios abre el detalle de la pieza; eliminarla lleva a la colección real de su propietario.
 

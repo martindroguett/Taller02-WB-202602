@@ -62,11 +62,17 @@ export class InteraccionesService {
     return this.enCurso().has(id);
   }
 
-  alternarMeGusta(pieza: PiezaPublica): void {
+  /** El gesto de doble toque solo agrega el me gusta, no lo quita si ya estaba. */
+  darMeGusta(pieza: PiezaPublica): boolean {
+    if (this.estado(pieza).gustada) return this.auth.autenticado();
+    return this.alternarMeGusta(pieza);
+  }
+
+  alternarMeGusta(pieza: PiezaPublica): boolean {
     const antes = this.estado(pieza);
     const gustada = !antes.gustada;
     const url = `${environment.apiUrl}/piezas/${pieza.id}/megusta`;
-    this.enviar(
+    return this.enviar(
       pieza.id,
       { gustada, megusta: antes.megusta + (gustada ? 1 : -1) },
       { gustada: antes.gustada, megusta: antes.megusta },
