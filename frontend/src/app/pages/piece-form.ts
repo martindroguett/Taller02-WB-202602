@@ -1,3 +1,4 @@
+import { MatChipsModule } from '@angular/material/chips';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   Component,
@@ -47,6 +48,7 @@ const texto: (max: number) => ValidatorFn = (max) => (control) => {
     Avatar,
     Button,
     CategoryChip,
+    MatChipsModule,
     ConfirmSheet,
     EmptyState,
     Icon,
@@ -89,18 +91,27 @@ const texto: (max: number) => ValidatorFn = (max) => (control) => {
           />
           <fieldset>
             <legend class="label">Categoría</legend>
-            <div class="vt-rail" role="group" aria-label="Categoría de la pieza">
+            <mat-chip-listbox
+              class="vt-rail vt-category-list form-categorias"
+              aria-label="Categoría de la pieza"
+              [value]="formulario.controls.categoria.value"
+              (change)="formulario.controls.categoria.setValue($event.value)"
+            >
               @for (c of categorias; track c.slug) {
-                <button
-                  type="button"
-                  vt-category-chip
-                  [slug]="c.slug"
-                  [active]="formulario.controls.categoria.value === c.slug"
+                <mat-basic-chip-option
+                  [value]="c.slug"
                   [disabled]="ocupado()"
-                  (click)="formulario.controls.categoria.setValue(c.slug)"
-                ></button>
+                  (selectionChange)="
+                    $event.isUserInput && !$event.selected && $event.source.select()
+                  "
+                >
+                  <vt-category-chip
+                    [slug]="c.slug"
+                    [active]="formulario.controls.categoria.value === c.slug"
+                  />
+                </mat-basic-chip-option>
               }
-            </div>
+            </mat-chip-listbox>
             @if (intento() && formulario.controls.categoria.invalid) {
               <p class="error-txt" role="alert">Elige la categoría de tu pieza.</p>
             }

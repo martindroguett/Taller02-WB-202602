@@ -1,3 +1,4 @@
+import { MatChipsModule } from '@angular/material/chips';
 import {
   Component,
   computed,
@@ -34,6 +35,7 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
     Avatar,
     Button,
     CategoryChip,
+    MatChipsModule,
     EmptyState,
     ComunidadLateral,
     IconButton,
@@ -64,17 +66,21 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
           />
         </div>
         <vt-promo-banner class="portada" (accion)="elegirCategoria('vinilos')" />
-        <div class="vt-rail categorias" role="group" aria-label="Categorías">
+        <mat-chip-listbox
+          class="vt-rail vt-category-list categorias"
+          aria-label="Categorías"
+          [value]="filtro()"
+          (change)="elegirCategoria($event.value)"
+        >
           @for (f of filtros; track f) {
-            <button
-              type="button"
-              vt-category-chip
-              [slug]="f"
-              [active]="filtro() === f"
-              (click)="elegirCategoria(f)"
-            ></button>
+            <mat-basic-chip-option
+              [value]="f"
+              (selectionChange)="$event.isUserInput && !$event.selected && $event.source.select()"
+            >
+              <vt-category-chip [slug]="f" [active]="filtro() === f" />
+            </mat-basic-chip-option>
           }
-        </div>
+        </mat-chip-listbox>
         @if (!busqueda().trim() && filtro() === 'todas' && piezasDestacadas().length) {
           <section class="vt-section" aria-labelledby="destacadas-titulo">
             <h2 class="title" id="destacadas-titulo">Destacadas</h2>

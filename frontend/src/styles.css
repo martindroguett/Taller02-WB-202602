@@ -259,6 +259,24 @@ img {
   flex: none;
 }
 
+/* Material maneja selección, foco y teclado; Vitrina conserva el riel y su presentación. */
+.vt-category-list .mdc-evolution-chip-set__chips {
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+  margin: 0;
+}
+.vt-category-list .mat-mdc-chip {
+  margin: 0;
+}
+.vt-category-list .mat-mdc-chip-disabled {
+  opacity: 0.5;
+}
+@media (min-width: 1000px) {
+  .vt-category-list.form-categorias .mdc-evolution-chip-set__chips {
+    flex-wrap: wrap;
+  }
+}
+
 /* El espacio inferior deja libre la navegación flotante en móvil. */
 .vt-screen {
   display: flex;

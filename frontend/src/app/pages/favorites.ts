@@ -1,3 +1,4 @@
+import { MatChipsModule } from '@angular/material/chips';
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
@@ -17,6 +18,7 @@ const POR_PAGINA = 20;
   imports: [
     Button,
     CategoryChip,
+    MatChipsModule,
     EmptyState,
     Icon,
     MatProgressSpinnerModule,
@@ -66,17 +68,21 @@ const POR_PAGINA = 20;
             </button>
           }
         </div>
-        <div class="vt-rail chips" role="group" aria-label="Categorías">
+        <mat-chip-listbox
+          class="vt-rail vt-category-list chips"
+          aria-label="Categorías"
+          [value]="filtro()"
+          (change)="filtrar($event.value)"
+        >
           @for (f of filtros; track f) {
-            <button
-              type="button"
-              vt-category-chip
-              [slug]="f"
-              [active]="filtro() === f"
-              (click)="filtrar(f)"
-            ></button>
+            <mat-basic-chip-option
+              [value]="f"
+              (selectionChange)="$event.isUserInput && !$event.selected && $event.source.select()"
+            >
+              <vt-category-chip [slug]="f" [active]="filtro() === f" />
+            </mat-basic-chip-option>
           }
-        </div>
+        </mat-chip-listbox>
         <section class="vt-section">
           <h2 class="title">Guardadas · {{ total() }}</h2>
           <div class="vt-grid">
