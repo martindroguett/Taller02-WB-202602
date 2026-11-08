@@ -103,6 +103,25 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
       flex-direction: column;
       gap: var(--space-1);
     }
+    @media (min-width: 1000px) {
+      .perfil {
+        max-width: var(--content-max);
+        padding-top: var(--space-6);
+      }
+      .cuenta {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-4);
+      }
+      .enlaces {
+        margin: 0 0 0 auto;
+      }
+      .vt-grid {
+        grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
+        gap: var(--space-4);
+      }
+    }
     .cuenta p {
       margin: 0;
     }
