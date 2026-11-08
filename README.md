@@ -9,6 +9,12 @@ Aplicación web para organizar y mostrar colecciones (cartas, videojuegos, jugue
 | Base de datos | PostgreSQL con SQLAlchemy y Alembic |
 | Autenticación | JWT, contraseñas con hash bcrypt |
 
+## Integrantes
+
+- Gael Ortega
+- Martín Droguett
+- Catalina Galleguillos
+
 ## Requisitos
 
 - Docker Desktop (abierto)
