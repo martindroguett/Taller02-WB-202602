@@ -39,3 +39,6 @@ htmlcov/
 ._*
 Thumbs.db
 Desktop.ini
+
+# Fotos de demo (se descargan con backend/descargar_fotos_demo.py)
+/frontend/public/fotos-demo/

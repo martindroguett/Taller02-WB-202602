@@ -1,0 +1,832 @@
+[
+ {
+  "archivo": "cartas-carta-t206-de-boston.jpg",
+  "categoria": "cartas",
+  "nombre": "Carta T206 de Boston",
+  "descripcion": "Bateador de la serie de tabaco de 1909, con colores todavía vivos.",
+  "autor": "Template:American Tobacco Company",
+  "licencia": "CC0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Bates,_Boston,_National_League,_from_the_White_Border_series_(T206)_for_the_American_Tobacco_Company_MET_DP843255.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/Bates%2C_Boston%2C_National_League%2C_from_the_White_Border_series_%28T206%29_for_the_American_Tobacco_Company_MET_DP843255.jpg/960px-Bates%2C_Boston%2C_National_League%2C_from_the_White_Border_series_%28T206%29_for_the_American_Tobacco_Company_MET_DP843255.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "cartas-carta-t206-de-washington.jpg",
+  "categoria": "cartas",
+  "nombre": "Carta T206 de Washington",
+  "descripcion": "Fondo rojo poco común dentro de la serie.",
+  "autor": "Issued by: American Tobacco Company",
+  "licencia": "Public domain",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Bob_Unglaub_baseball_card.jpg",
+  "url": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Bob_Unglaub_baseball_card.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+ },
+ {
+  "archivo": "cartas-carta-t206-de-pittsburgh.jpg",
+  "categoria": "cartas",
+  "nombre": "Carta T206 de Pittsburgh",
+  "descripcion": "La más famosa de la serie; la guardo en funda rígida.",
+  "autor": "Unknown authorUnknown author",
+  "licencia": "Public domain",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Honus_wagner_t206_baseball_card.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/Honus_wagner_t206_baseball_card.jpg/960px-Honus_wagner_t206_baseball_card.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "cartas-carta-t206-de-los-cardinals.jpg",
+  "categoria": "cartas",
+  "nombre": "Carta T206 de los Cardinals",
+  "descripcion": "Fondo rosado, esquinas bien conservadas.",
+  "autor": "Template:American Tobacco Company",
+  "licencia": "CC0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Jones,_St._Louis,_American_League,_from_the_White_Border_series_(T206)_for_the_American_Tobacco_Company_MET_DP843223.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/Jones%2C_St._Louis%2C_American_League%2C_from_the_White_Border_series_%28T206%29_for_the_American_Tobacco_Company_MET_DP843223.jpg/960px-Jones%2C_St._Louis%2C_American_League%2C_from_the_White_Border_series_%28T206%29_for_the_American_Tobacco_Company_MET_DP843223.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "cartas-carta-t206-de-bateador.jpg",
+  "categoria": "cartas",
+  "nombre": "Carta T206 de bateador",
+  "descripcion": "Fondo azul y pasto verde, como salían en los paquetes.",
+  "autor": "Template:American Tobacco Company",
+  "licencia": "CC0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Oldring,_Philadelphia,_American_League,_from_the_White_Border_series_(T206)_for_the_American_Tobacco_Company_MET_DP845139.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/19/Oldring%2C_Philadelphia%2C_American_League%2C_from_the_White_Border_series_%28T206%29_for_the_American_Tobacco_Company_MET_DP845139.jpg/960px-Oldring%2C_Philadelphia%2C_American_League%2C_from_the_White_Border_series_%28T206%29_for_the_American_Tobacco_Company_MET_DP845139.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "cartas-carta-t206-con-guante.jpg",
+  "categoria": "cartas",
+  "nombre": "Carta T206 con guante",
+  "descripcion": "Jugador de Washington con el guante listo.",
+  "autor": "Template:American Tobacco Company",
+  "licencia": "CC0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Shipke,_Washington,_American_League,_from_the_White_Border_series_(T206)_for_the_American_Tobacco_Company_MET_DP843250.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Shipke%2C_Washington%2C_American_League%2C_from_the_White_Border_series_%28T206%29_for_the_American_Tobacco_Company_MET_DP843250.jpg/960px-Shipke%2C_Washington%2C_American_League%2C_from_the_White_Border_series_%28T206%29_for_the_American_Tobacco_Company_MET_DP843250.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "cartas-tirada-de-tarot-en-cruz.jpg",
+  "categoria": "cartas",
+  "nombre": "Tirada de tarot en cruz",
+  "descripcion": "Mazo Rider-Waite abierto en una tirada completa.",
+  "autor": "Nosferattus",
+  "licencia": "CC0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Tarot_cards_-_Celtic_cross_spread.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/34/Tarot_cards_-_Celtic_cross_spread.jpg/960px-Tarot_cards_-_Celtic_cross_spread.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "cartas-mazo-con-dados.jpg",
+  "categoria": "cartas",
+  "nombre": "Mazo con dados",
+  "descripcion": "Cartas, dados y un mazo atado con elástico para jugar.",
+  "autor": "Feen",
+  "licencia": "CC BY-SA 3.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Cartas_e_dados_Magic.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e6/Cartas_e_dados_Magic.jpg/960px-Cartas_e_dados_Magic.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "cartas-tapete-de-magic.jpg",
+  "categoria": "cartas",
+  "nombre": "Tapete de Magic",
+  "descripcion": "Tapete con tablero de cartas desplegado.",
+  "autor": "Sebastian Rittau",
+  "licencia": "CC0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Eventide_Foil_Print_Sheets.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a9/Eventide_Foil_Print_Sheets.jpg/960px-Eventide_Foil_Print_Sheets.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "videojuegos-cartucho-de-nes.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Cartucho de NES",
+  "descripcion": "Carcasa gris original, sin marcas de uso.",
+  "autor": "Evan-Amos",
+  "licencia": "Public domain",
+  "pagina": "https://commons.wikimedia.org/wiki/File:NES-Cartridge.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/NES-Cartridge.jpg/960px-NES-Cartridge.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "videojuegos-cartucho-de-super-nintendo.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Cartucho de Super Nintendo",
+  "descripcion": "Etiqueta de advertencia original.",
+  "autor": "Sculptured Software, photo cropped by me to get rid of excess image space.",
+  "licencia": "Public domain",
+  "pagina": "https://commons.wikimedia.org/wiki/File:MACS_version_1994_cartridge_rear.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/MACS_version_1994_cartridge_rear.jpg/960px-MACS_version_1994_cartridge_rear.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "videojuegos-cartucho-de-super-famicom.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Cartucho de Super Famicom",
+  "descripcion": "Edición japonesa con la etiqueta en perfecto estado.",
+  "autor": "Nintendo, Koei, and Flora fon Esth",
+  "licencia": "Public domain",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Super-Famicom-Angelique-1994-Cartridge.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Super-Famicom-Angelique-1994-Cartridge.jpg/960px-Super-Famicom-Angelique-1994-Cartridge.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "vinilos-disco-de-vinilo-con-etiqueta-amarilla.jpg",
+  "categoria": "vinilos",
+  "nombre": "Disco de vinilo con etiqueta amarilla",
+  "descripcion": "Prensado clásico de RCA, suena limpio.",
+  "autor": "Evan-Amos",
+  "licencia": "Public domain",
+  "pagina": "https://commons.wikimedia.org/wiki/File:12in-Vinyl-LP-Record-Angle.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/12in-Vinyl-LP-Record-Angle.jpg/960px-12in-Vinyl-LP-Record-Angle.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "vinilos-vinilo-de-queen.jpg",
+  "categoria": "vinilos",
+  "nombre": "Vinilo de Queen",
+  "descripcion": "Etiqueta roja de EMI, prensado de los 70.",
+  "autor": "KarleHorn",
+  "licencia": "CC BY-SA 3.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:LP_Label_Queen.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/LP_Label_Queen.jpg/960px-LP_Label_Queen.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "vinilos-vinilo-naranja-de-cbs.jpg",
+  "categoria": "vinilos",
+  "nombre": "Vinilo naranja de CBS",
+  "descripcion": "Etiqueta naranja inglesa, edición estéreo.",
+  "autor": "CBS/Columbia Records",
+  "licencia": "Public domain",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Simon_%26_Garfunkel_-_Bookends_(side_1).jpg",
+  "url": "https://upload.wikimedia.org/wikipedia/commons/0/08/Simon_%26_Garfunkel_-_Bookends_%28side_1%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+ },
+ {
+  "archivo": "vinilos-single-de-motown.jpg",
+  "categoria": "vinilos",
+  "nombre": "Single de Motown",
+  "descripcion": "Etiqueta púrpura, directo de Detroit.",
+  "autor": "DiscoA340",
+  "licencia": "CC0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Motown_7%22_Single_(Side_1).jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d3/Motown_7%22_Single_%28Side_1%29.jpg/960px-Motown_7%22_Single_%28Side_1%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "vinilos-single-his-master-s-voice.jpg",
+  "categoria": "vinilos",
+  "nombre": "Single His Master's Voice",
+  "descripcion": "Etiqueta azul y perrito en el centro.",
+  "autor": "HMV; Lodge, Neville; New Zealand Broadcasting Service; Irvine, Bob",
+  "licencia": "CC BY 4.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Record,_gramophone_(AM_2005.83.12-25).jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Record%2C_gramophone_%28AM_2005.83.12-25%29.jpg/960px-Record%2C_gramophone_%28AM_2005.83.12-25%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "juguetes-robot-negro-de-hojalata.jpg",
+  "categoria": "juguetes",
+  "nombre": "Robot negro de hojalata",
+  "descripcion": "Con cúpula transparente y luces rojas.",
+  "autor": "D J Shin",
+  "licencia": "CC BY-SA 3.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Osaka_Tin_Toy_Institute_%E2%80%93_The_Tin_Age_Collection_%E2%80%93_Mechanized_Robot_%E2%80%93_Robby_the_Robot_%E2%80%93_Back_Side.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d0/Osaka_Tin_Toy_Institute_%E2%80%93_The_Tin_Age_Collection_%E2%80%93_Mechanized_Robot_%E2%80%93_Robby_the_Robot_%E2%80%93_Back_Side.jpg/960px-Osaka_Tin_Toy_Institute_%E2%80%93_The_Tin_Age_Collection_%E2%80%93_Mechanized_Robot_%E2%80%93_Robby_the_Robot_%E2%80%93_Back_Side.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "juguetes-robot-azul-turquesa.jpg",
+  "categoria": "juguetes",
+  "nombre": "Robot azul turquesa",
+  "descripcion": "Juguete japonés de cuerda en tono turquesa.",
+  "autor": "Thomas Quine",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Tin_toy_robot_(25405001885).jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fd/Tin_toy_robot_%2825405001885%29.jpg/960px-Tin_toy_robot_%2825405001885%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "juguetes-policia-de-lego.jpg",
+  "categoria": "juguetes",
+  "nombre": "Policía de Lego",
+  "descripcion": "Figura de gran tamaño con casco clásico británico.",
+  "autor": "Simeon87",
+  "licencia": "CC BY-SA 4.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Lego_Officer_Lego_Store_Leicester_Square_London_United_Kingdom.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3a/Lego_Officer_Lego_Store_Leicester_Square_London_United_Kingdom.jpg/960px-Lego_Officer_Lego_Store_Leicester_Square_London_United_Kingdom.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "cartas-carta-de-hockey-de-los-rangers.jpg",
+  "categoria": "cartas",
+  "nombre": "Carta de hockey de los Rangers",
+  "descripcion": "Edición de 1954 con firma impresa, esquinas muy bien conservadas.",
+  "autor": "TCG - Topps Gum Cards",
+  "licencia": "Public domain",
+  "pagina": "https://commons.wikimedia.org/wiki/File:1954_Topps_Wally_Hergesheimer.jpg",
+  "url": "https://upload.wikimedia.org/wikipedia/commons/b/bb/1954_Topps_Wally_Hergesheimer.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+ },
+ {
+  "archivo": "cartas-carta-de-los-black-hawks.jpg",
+  "categoria": "cartas",
+  "nombre": "Carta de los Black Hawks",
+  "descripcion": "Serie de hockey de los años 60, con el rostro a color.",
+  "autor": "TGC Topps Gum Cards",
+  "licencia": "Public domain",
+  "pagina": "https://commons.wikimedia.org/wiki/File:1963_Topps_Al_MacNeil.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/1963_Topps_Al_MacNeil.jpg/960px-1963_Topps_Al_MacNeil.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "cartas-cromo-de-peru-del-mundial-70.jpg",
+  "categoria": "cartas",
+  "nombre": "Cromo de Perú del Mundial 70",
+  "descripcion": "Cromo de álbum de fútbol de la copa de México 1970.",
+  "autor": "Panini",
+  "licencia": "Public domain",
+  "pagina": "https://commons.wikimedia.org/wiki/File:H%C3%A9ctor_Chumpitaz_M%C3%A9xico_70_(Panini).jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7c/H%C3%A9ctor_Chumpitaz_M%C3%A9xico_70_%28Panini%29.jpg/960px-H%C3%A9ctor_Chumpitaz_M%C3%A9xico_70_%28Panini%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "cartas-cartas-de-yu-gi-oh.jpg",
+  "categoria": "cartas",
+  "nombre": "Cartas de Yu-Gi-Oh!",
+  "descripcion": "Monstruos y trampas del mazo con el que partí.",
+  "autor": "Timothy Tsui",
+  "licencia": "CC BY-SA 2.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Some_Yu-Gi-Oh!_cards.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/Some_Yu-Gi-Oh%21_cards.jpg/960px-Some_Yu-Gi-Oh%21_cards.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "cartas-mi-tesoro-de-cartas-pokemon.jpg",
+  "categoria": "cartas",
+  "nombre": "Mi tesoro de cartas Pokémon",
+  "descripcion": "Cajón con cartas holográficas que voy juntando.",
+  "autor": "Safa Hovinen",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/63796798@N00/52834569573",
+  "url": "https://live.staticflickr.com/65535/52834569573_aea01fa107_b.jpg"
+ },
+ {
+  "archivo": "cartas-caja-de-cartas-de-beisbol.jpg",
+  "categoria": "cartas",
+  "nombre": "Caja de cartas de béisbol",
+  "descripcion": "Display de sobres de cartas con el puzzle incluido.",
+  "autor": "Davidellias",
+  "licencia": "CC0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:1980sDonruss.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/1980sDonruss.jpg/960px-1980sDonruss.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "videojuegos-switch-con-estuches-de-juegos.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Switch con estuches de juegos",
+  "descripcion": "La consola, dos cartuchos y mi estuche arcoíris.",
+  "autor": "baehqsnd42",
+  "licencia": "CC0",
+  "pagina": "https://www.flickr.com/photos/202583388@N06/54434852100",
+  "url": "https://live.staticflickr.com/65535/54434852100_1975f6dce2_b.jpg"
+ },
+ {
+  "archivo": "videojuegos-coleccion-de-juegos-de-ds.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Colección de juegos de DS",
+  "descripcion": "Zelda, Mario y Final Fantasy, todos con cartucho.",
+  "autor": "30pincom",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/190213398@N06/51925456175",
+  "url": "https://live.staticflickr.com/65535/51925456175_bd8664b872_b.jpg"
+ },
+ {
+  "archivo": "videojuegos-cartuchos-de-final-fantasy.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Cartuchos de Final Fantasy",
+  "descripcion": "Parte de mi colección de rol en Nintendo DS.",
+  "autor": "30pincom",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/190213398@N06/51924916633",
+  "url": "https://live.staticflickr.com/65535/51924916633_357c9f720b_b.jpg"
+ },
+ {
+  "archivo": "videojuegos-dos-juegos-de-nintendo-ds.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Dos juegos de Nintendo DS",
+  "descripcion": "Los últimos que conseguí en una feria.",
+  "autor": "30pincom",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/190213398@N06/51924916538",
+  "url": "https://live.staticflickr.com/65535/51924916538_aafbec73df_b.jpg"
+ },
+ {
+  "archivo": "videojuegos-final-fantasy-en-umd-y-ds.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Final Fantasy en UMD y DS",
+  "descripcion": "El mismo juego en PSP y Nintendo DS.",
+  "autor": "30pincom",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/190213398@N06/51924827196",
+  "url": "https://live.staticflickr.com/65535/51924827196_85bb0fff31_b.jpg"
+ },
+ {
+  "archivo": "videojuegos-cartucho-de-switch.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Cartucho de Switch",
+  "descripcion": "Juego sin abrir bien guardado en su estuche.",
+  "autor": "Kyu3a",
+  "licencia": "CC BY-SA 4.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Nintendo_Switch_game_card_-_5.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Nintendo_Switch_game_card_-_5.jpg/960px-Nintendo_Switch_game_card_-_5.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "videojuegos-vitrina-de-juegos-de-ds.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Vitrina de juegos de DS",
+  "descripcion": "Estante con decenas de cartuchos en su caja.",
+  "autor": "David Morris",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Nintendo_DS_cartridges.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/80/Nintendo_DS_cartridges.jpg/960px-Nintendo_DS_cartridges.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "videojuegos-pokemon-black-para-ds.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Pokémon Black para DS",
+  "descripcion": "Edición europea con su caja transparente.",
+  "autor": "Peter Placzek",
+  "licencia": "CC BY-SA 4.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Pok%C3%A9mon_Black_Version_Translucent_Cartridge_Demonstration.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Pok%C3%A9mon_Black_Version_Translucent_Cartridge_Demonstration.jpg/960px-Pok%C3%A9mon_Black_Version_Translucent_Cartridge_Demonstration.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "videojuegos-juego-de-ds-con-su-manual.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Juego de DS con su manual",
+  "descripcion": "Completo: caja, manual y cartucho.",
+  "autor": "Multicherry",
+  "licencia": "CC BY-SA 4.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Nintendo_DS_game_case_(Euro_type)_(inside_filled).jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Nintendo_DS_game_case_%28Euro_type%29_%28inside_filled%29.jpg/960px-Nintendo_DS_game_case_%28Euro_type%29_%28inside_filled%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "videojuegos-navegador-para-nintendo-ds.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Navegador para Nintendo DS",
+  "descripcion": "Accesorio poco común, con su estuche original.",
+  "autor": "DRAGONBALLXYZ",
+  "licencia": "CC BY-SA 3.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Nintendo_DS_Browser-cartridge_and_DS-Card.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Nintendo_DS_Browser-cartridge_and_DS-Card.jpg/960px-Nintendo_DS_Browser-cartridge_and_DS-Card.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "videojuegos-juegos-de-ps4-en-vitrina.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Juegos de PS4 en vitrina",
+  "descripcion": "Varios títulos de deportes apilados junto al disco.",
+  "autor": "JoRgE-1987",
+  "licencia": "CC BY-SA 4.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Hockey_Hall_of_Fame_de_Toronto_-_Juegos_de_Playstation_4.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/05/Hockey_Hall_of_Fame_de_Toronto_-_Juegos_de_Playstation_4.jpg/960px-Hockey_Hall_of_Fame_de_Toronto_-_Juegos_de_Playstation_4.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "videojuegos-pila-de-juegos-de-ps4.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Pila de juegos de PS4",
+  "descripcion": "Mis juegos de rol favoritos, todos de PlayStation 4.",
+  "autor": "Iain Campbell",
+  "licencia": "CC BY-SA 2.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:PS4_and_Wii_U_collection.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/PS4_and_Wii_U_collection.jpg/960px-PS4_and_Wii_U_collection.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "videojuegos-saga-steins-gate-para-ps4.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Saga Steins;Gate para PS4",
+  "descripcion": "Toda la saga en caja, ordenada en el estante.",
+  "autor": "Alexandra IDV",
+  "licencia": "CC BY-SA 4.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Science_Adventure_shelf.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/98/Science_Adventure_shelf.jpg/960px-Science_Adventure_shelf.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "videojuegos-juegos-de-fifa-para-xbox-360.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Juegos de FIFA para Xbox 360",
+  "descripcion": "Edición del Mundial de Sudáfrica 2010.",
+  "autor": "BrokenSphere",
+  "licencia": "CC BY-SA 3.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:2010_FIFA_World_Cup_South_Africa_for_Xbox_360_boxes_at_Costco,_SSF_ECR.JPG",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/17/2010_FIFA_World_Cup_South_Africa_for_Xbox_360_boxes_at_Costco%2C_SSF_ECR.JPG/960px-2010_FIFA_World_Cup_South_Africa_for_Xbox_360_boxes_at_Costco%2C_SSF_ECR.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "videojuegos-pared-de-juegos-de-playstation.jpg",
+  "categoria": "videojuegos",
+  "nombre": "Pared de juegos de PlayStation",
+  "descripcion": "Un muro completo de títulos físicos.",
+  "autor": "Rowanswiki",
+  "licencia": "CC0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:PlayStation_4_Games_and_Accessories_Walmart_Edmonton_2021.jpg",
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dd/PlayStation_4_Games_and_Accessories_Walmart_Edmonton_2021.jpg/960px-PlayStation_4_Games_and_Accessories_Walmart_Edmonton_2021.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+ },
+ {
+  "archivo": "vinilos-vinilo-de-los-bee-gees.jpg",
+  "categoria": "vinilos",
+  "nombre": "Vinilo de los Bee Gees",
+  "descripcion": "Etiqueta roja, suena clarísimo.",
+  "autor": "bradjavernick",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/156466858@N02/49721037606",
+  "url": "https://live.staticflickr.com/65535/49721037606_e8523d3d43_b.jpg"
+ },
+ {
+  "archivo": "vinilos-cajon-de-vinilos-usados.jpg",
+  "categoria": "vinilos",
+  "nombre": "Cajón de vinilos usados",
+  "descripcion": "Rebusqué en un cajón durante horas.",
+  "autor": "Mr Cup / Fabien Barral",
+  "licencia": "CC0",
+  "pagina": "https://stocksnap.io/photo/vinyl-music-DPMX3QCLBT",
+  "url": "https://cdn.stocksnap.io/img-thumbs/960w/DPMX3QCLBT.jpg"
+ },
+ {
+  "archivo": "vinilos-estante-de-vinilos-con-luz.jpg",
+  "categoria": "vinilos",
+  "nombre": "Estante de vinilos con luz",
+  "descripcion": "Mi estante, ordenado por colores.",
+  "autor": "dejankrsmanovic",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/155403590@N07/54322437745",
+  "url": "https://live.staticflickr.com/65535/54322437745_eee591d64c_b.jpg"
+ },
+ {
+  "archivo": "vinilos-vinilos-de-ac-dc-y-pink-floyd.jpg",
+  "categoria": "vinilos",
+  "nombre": "Vinilos de AC/DC y Pink Floyd",
+  "descripcion": "Dos clásicos en edición de colección.",
+  "autor": "paramsach",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/31112358@N03/53034202928",
+  "url": "https://live.staticflickr.com/65535/53034202928_c56f30eda8_b.jpg"
+ },
+ {
+  "archivo": "vinilos-pila-de-lps-de-colores.jpg",
+  "categoria": "vinilos",
+  "nombre": "Pila de LPs de colores",
+  "descripcion": "Portadas de todas las décadas, apiladas de lado.",
+  "autor": "Desconocido",
+  "licencia": "CC0",
+  "pagina": "https://www.rawpixel.com/image/5924465/photo-image-public-domain-art-vintage",
+  "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvcHgxMjQzNjM2LWltYWdlLWt3dnkxaHRtLmpwZw.jpg"
+ },
+ {
+  "archivo": "vinilos-cajones-de-una-tienda-de-discos.jpg",
+  "categoria": "vinilos",
+  "nombre": "Cajones de una tienda de discos",
+  "descripcion": "Mi tienda favorita para buscar vinilos.",
+  "autor": "Desconocido",
+  "licencia": "CC0",
+  "pagina": "https://www.rawpixel.com/image/5921492/photo-image-public-domain-vintage-room",
+  "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvcHg2ODY0ODEtaW1hZ2Uta3d2eGlyaXIuanBn.jpg"
+ },
+ {
+  "archivo": "vinilos-vinilo-transparente-dorado.jpg",
+  "categoria": "vinilos",
+  "nombre": "Vinilo transparente dorado",
+  "descripcion": "Edición limitada en vinilo translúcido.",
+  "autor": "swimfinfan",
+  "licencia": "CC BY-SA 2.0",
+  "pagina": "https://www.flickr.com/photos/12842055@N03/13614646153",
+  "url": "https://live.staticflickr.com/2825/13614646153_bf7a53f3c6_b.jpg"
+ },
+ {
+  "archivo": "vinilos-vinilo-azul-jaspeado.jpg",
+  "categoria": "vinilos",
+  "nombre": "Vinilo azul jaspeado",
+  "descripcion": "Prensado de colores, edición numerada.",
+  "autor": "dwhartwig",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/9751269@N07/54118281584",
+  "url": "https://live.staticflickr.com/65535/54118281584_84ff3536ca_b.jpg"
+ },
+ {
+  "archivo": "vinilos-thirteen-tales-from-urban-bohemia.jpg",
+  "categoria": "vinilos",
+  "nombre": "Thirteen Tales From Urban Bohemia",
+  "descripcion": "Edición en vinilo de color, todavía sellada.",
+  "autor": "dwhartwig",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/9751269@N07/54118279834",
+  "url": "https://live.staticflickr.com/65535/54118279834_6bfa85f232_b.jpg"
+ },
+ {
+  "archivo": "vinilos-vinilo-azul-marino.jpg",
+  "categoria": "vinilos",
+  "nombre": "Vinilo azul marino",
+  "descripcion": "Prensado en azul, sin ninguna marca.",
+  "autor": "dwhartwig",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/9751269@N07/54118219193",
+  "url": "https://live.staticflickr.com/65535/54118219193_a0c2a73654_b.jpg"
+ },
+ {
+  "archivo": "vinilos-stop-making-sense-tour.jpg",
+  "categoria": "vinilos",
+  "nombre": "Stop Making Sense Tour",
+  "descripcion": "Doble LP de 180 gramos en portada roja.",
+  "autor": "dwhartwig",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/9751269@N07/53951000950",
+  "url": "https://live.staticflickr.com/65535/53951000950_5e48c78e88_b.jpg"
+ },
+ {
+  "archivo": "vinilos-vinilo-con-salpicaduras-verdes.jpg",
+  "categoria": "vinilos",
+  "nombre": "Vinilo con salpicaduras verdes",
+  "descripcion": "Edición de colores, cada copia es distinta.",
+  "autor": "dwhartwig",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/9751269@N07/54275721819",
+  "url": "https://live.staticflickr.com/65535/54275721819_a744567499_b.jpg"
+ },
+ {
+  "archivo": "vinilos-single-45-rpm-naranja-y-verde.jpg",
+  "categoria": "vinilos",
+  "nombre": "Single 45 rpm naranja y verde",
+  "descripcion": "Mi single más colorido, girando en el tocadiscos.",
+  "autor": "Krzysztof%20Puszczy%u0144ski",
+  "licencia": "CC0",
+  "pagina": "https://stocksnap.io/photo/turntable-record-0RN44JI11G",
+  "url": "https://cdn.stocksnap.io/img-thumbs/960w/0RN44JI11G.jpg"
+ },
+ {
+  "archivo": "vinilos-vinilo-azul-en-tocadiscos-rojo.jpg",
+  "categoria": "vinilos",
+  "nombre": "Vinilo azul en tocadiscos rojo",
+  "descripcion": "Escuchando mi última compra.",
+  "autor": "aparlette",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/9297241@N02/52631977146",
+  "url": "https://live.staticflickr.com/65535/52631977146_41bf7857ea_b.jpg"
+ },
+ {
+  "archivo": "vinilos-tocadiscos-portatil-con-lps.jpg",
+  "categoria": "vinilos",
+  "nombre": "Tocadiscos portátil con LPs",
+  "descripcion": "Un tocadiscos de maleta y mis primeros discos.",
+  "autor": "Spencer Selover",
+  "licencia": "CC0",
+  "pagina": "https://stocksnap.io/photo/vinyl-record-DILOPNOHDI",
+  "url": "https://cdn.stocksnap.io/img-thumbs/960w/DILOPNOHDI.jpg"
+ },
+ {
+  "archivo": "juguetes-estante-de-funko-pop.jpg",
+  "categoria": "juguetes",
+  "nombre": "Estante de Funko Pop",
+  "descripcion": "Fila completa de Funko Pop a la venta.",
+  "autor": "Phillip Pessar",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/25955895@N03/52371784713",
+  "url": "https://live.staticflickr.com/65535/52371784713_308193100f_b.jpg"
+ },
+ {
+  "archivo": "juguetes-funko-pop-de-corduroy.jpg",
+  "categoria": "juguetes",
+  "nombre": "Funko Pop de Corduroy",
+  "descripcion": "Con su caja original de la serie del oso.",
+  "autor": "PatrickRich",
+  "licencia": "Public domain",
+  "pagina": "https://www.flickr.com/photos/91689877@N03/54411046327",
+  "url": "https://live.staticflickr.com/65535/54411046327_2b03bbd7f4_b.jpg"
+ },
+ {
+  "archivo": "juguetes-funko-pop-de-doctor-who.jpg",
+  "categoria": "juguetes",
+  "nombre": "Funko Pop de Doctor Who",
+  "descripcion": "Los cuatro Doctores juntos en la nieve.",
+  "autor": "JamesInOregon",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/55370236@N07/31589655352",
+  "url": "https://live.staticflickr.com/614/31589655352_99a7c82798_b.jpg"
+ },
+ {
+  "archivo": "juguetes-repisa-de-funko-pop.jpg",
+  "categoria": "juguetes",
+  "nombre": "Repisa de Funko Pop",
+  "descripcion": "Stormtrooper, Kratos y varios más en mi repisa.",
+  "autor": "miguel.discart",
+  "licencia": "CC BY-SA 2.0",
+  "pagina": "https://www.flickr.com/photos/69506664@N06/51430839011",
+  "url": "https://live.staticflickr.com/65535/51430839011_d1c6989ece_b.jpg"
+ },
+ {
+  "archivo": "juguetes-funko-pop-de-mulan.jpg",
+  "categoria": "juguetes",
+  "nombre": "Funko Pop de Mulan",
+  "descripcion": "Edición del año nuevo, con su caja roja.",
+  "autor": "miguel.discart",
+  "licencia": "CC BY-SA 2.0",
+  "pagina": "https://www.flickr.com/photos/69506664@N06/51430398795",
+  "url": "https://live.staticflickr.com/65535/51430398795_32fe2871ac_b.jpg"
+ },
+ {
+  "archivo": "juguetes-set-de-lego-star-wars.jpg",
+  "categoria": "juguetes",
+  "nombre": "Set de Lego Star Wars",
+  "descripcion": "Caja sellada, edición con minifiguras.",
+  "autor": "Sam Howzit",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/12508217@N08/51854769974",
+  "url": "https://live.staticflickr.com/65535/51854769974_f746c3e0a7_b.jpg"
+ },
+ {
+  "archivo": "juguetes-minifigura-de-lego-guerrero.jpg",
+  "categoria": "juguetes",
+  "nombre": "Minifigura de Lego guerrero",
+  "descripcion": "Guerrero con armadura y escudo sobre su base.",
+  "autor": "Barbarbrick",
+  "licencia": "CC0",
+  "pagina": "https://www.flickr.com/photos/163554572@N05/52499381080",
+  "url": "https://live.staticflickr.com/65535/52499381080_2662044dab_b.jpg"
+ },
+ {
+  "archivo": "juguetes-minifigura-de-lego-con-cetro.jpg",
+  "categoria": "juguetes",
+  "nombre": "Minifigura de Lego con cetro",
+  "descripcion": "De la serie de coleccionables, aún con su cetro.",
+  "autor": "Brian.Neudorff",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/14125773@N00/35315469486",
+  "url": "https://live.staticflickr.com/4223/35315469486_2a81a0939b_b.jpg"
+ },
+ {
+  "archivo": "juguetes-lego-dimensions-guitarrista.jpg",
+  "categoria": "juguetes",
+  "nombre": "Lego Dimensions guitarrista",
+  "descripcion": "Figura con gorro navideño y guitarra roja.",
+  "autor": "Spielbrick Films",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/17292824@N04/23854649712",
+  "url": "https://live.staticflickr.com/5690/23854649712_272823d386_b.jpg"
+ },
+ {
+  "archivo": "juguetes-aldea-de-invierno-de-lego.jpg",
+  "categoria": "juguetes",
+  "nombre": "Aldea de invierno de Lego",
+  "descripcion": "Set navideño armado con todas sus figuras.",
+  "autor": "Scarlet Sappho",
+  "licencia": "CC BY-SA 2.0",
+  "pagina": "https://www.flickr.com/photos/56619626@N05/8076922289",
+  "url": "https://live.staticflickr.com/8049/8076922289_5fbdc2b79e_b.jpg"
+ },
+ {
+  "archivo": "juguetes-minifigura-de-lego-en-el-desierto.jpg",
+  "categoria": "juguetes",
+  "nombre": "Minifigura de Lego en el desierto",
+  "descripcion": "Foto de mi minifigura favorita de paseo.",
+  "autor": "Barbarbrick",
+  "licencia": "CC0",
+  "pagina": "https://www.flickr.com/photos/163554572@N05/51973584133",
+  "url": "https://live.staticflickr.com/65535/51973584133_7f9b254b18_b.jpg"
+ },
+ {
+  "archivo": "juguetes-hot-wheels-en-caja-de-madera.jpg",
+  "categoria": "juguetes",
+  "nombre": "Hot Wheels en caja de madera",
+  "descripcion": "Edición de colección con su estuche de nogal.",
+  "autor": "orangechallenger",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/41518892@N03/52687611961",
+  "url": "https://live.staticflickr.com/65535/52687611961_26072f34c9_b.jpg"
+ },
+ {
+  "archivo": "juguetes-hot-wheels-clasico.jpg",
+  "categoria": "juguetes",
+  "nombre": "Hot Wheels clásico",
+  "descripcion": "Auto blanco de la serie vintage.",
+  "autor": "joieman",
+  "licencia": "CC BY-SA 2.0",
+  "pagina": "https://www.flickr.com/photos/198613036@N02/53968822764",
+  "url": "https://live.staticflickr.com/65535/53968822764_f0c4864210_b.jpg"
+ },
+ {
+  "archivo": "juguetes-transformers-bumblebee.jpg",
+  "categoria": "juguetes",
+  "nombre": "Transformers Bumblebee",
+  "descripcion": "Figura articulada con detalles dorados.",
+  "autor": "chris.rycroft",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/193316968@N06/52679671920",
+  "url": "https://live.staticflickr.com/65535/52679671920_70de309c38_b.jpg"
+ },
+ {
+  "archivo": "juguetes-bumblebee-de-coleccion.jpg",
+  "categoria": "juguetes",
+  "nombre": "Bumblebee de colección",
+  "descripcion": "Versión chibi con mucho detalle.",
+  "autor": "Joe Crawford (artlung)",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/37996599088@N01/51999514317",
+  "url": "https://live.staticflickr.com/65535/51999514317_8fc3609591_b.jpg"
+ },
+ {
+  "archivo": "juguetes-nendoroid-tomando-te.jpg",
+  "categoria": "juguetes",
+  "nombre": "Nendoroid tomando té",
+  "descripcion": "Dos figuras de anime en una mesita de té.",
+  "autor": "tarte777",
+  "licencia": "CC BY-SA 2.0",
+  "pagina": "https://www.flickr.com/photos/98816208@N05/15389012846",
+  "url": "https://live.staticflickr.com/3927/15389012846_9a253e4e23_b.jpg"
+ },
+ {
+  "archivo": "juguetes-danbo-con-luces.jpg",
+  "categoria": "juguetes",
+  "nombre": "Danbo con luces",
+  "descripcion": "El cartonero más famoso, iluminado.",
+  "autor": "Battory",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/53302359@N07/50654869213",
+  "url": "https://live.staticflickr.com/65535/50654869213_dea79da142_b.jpg"
+ },
+ {
+  "archivo": "juguetes-casa-de-playmobil.jpg",
+  "categoria": "juguetes",
+  "nombre": "Casa de Playmobil",
+  "descripcion": "Mansión de la colección con tormenta incluida.",
+  "autor": "zigazou76",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/38712296@N07/51652921521",
+  "url": "https://live.staticflickr.com/65535/51652921521_311fbe2855_b.jpg"
+ },
+ {
+  "archivo": "juguetes-triceratops-de-playmobil.jpg",
+  "categoria": "juguetes",
+  "nombre": "Triceratops de Playmobil",
+  "descripcion": "Dinosaurio de la serie de la selva.",
+  "autor": "zigazou76",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/38712296@N07/51652116372",
+  "url": "https://live.staticflickr.com/65535/51652116372_480691c8af_b.jpg"
+ },
+ {
+  "archivo": "juguetes-cubo-rubik-clasico.jpg",
+  "categoria": "juguetes",
+  "nombre": "Cubo Rubik clásico",
+  "descripcion": "Original de 3x3, sin pegatinas gastadas.",
+  "autor": "Desconocido",
+  "licencia": "CC0",
+  "pagina": "https://www.rawpixel.com/image/5927249/photo-image-public-domain-free",
+  "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxNTcxMC1pbWFnZS1rd3Z5Z2lnMS5qcGc.jpg"
+ },
+ {
+  "archivo": "juguetes-dos-cubos-rubik.jpg",
+  "categoria": "juguetes",
+  "nombre": "Dos cubos Rubik",
+  "descripcion": "Uno armado y otro revuelto.",
+  "autor": "Desconocido",
+  "licencia": "CC0",
+  "pagina": "https://www.rawpixel.com/image/5922003/photo-image-public-domain-free-game",
+  "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvcHg2NDY3NTUtaW1hZ2Uta3d2eGs5ZmQuanBn.jpg"
+ },
+ {
+  "archivo": "juguetes-rayo-mcqueen-de-cars.jpg",
+  "categoria": "juguetes",
+  "nombre": "Rayo McQueen de Cars",
+  "descripcion": "Auto de colección, Disney Pixar.",
+  "autor": "Axel Bührmann",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/9852972@N03/51860402582",
+  "url": "https://live.staticflickr.com/65535/51860402582_2daee3e5c4_b.jpg"
+ },
+ {
+  "archivo": "juguetes-sheriff-de-cars.jpg",
+  "categoria": "juguetes",
+  "nombre": "Sheriff de Cars",
+  "descripcion": "Auto negro de la serie de Radiador Springs.",
+  "autor": "Axel Bührmann",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/9852972@N03/51861445338",
+  "url": "https://live.staticflickr.com/65535/51861445338_be3d3dc07b_b.jpg"
+ },
+ {
+  "archivo": "juguetes-francesco-de-cars.jpg",
+  "categoria": "juguetes",
+  "nombre": "Francesco de Cars",
+  "descripcion": "El rival italiano de Rayo McQueen.",
+  "autor": "Axel Bührmann",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/9852972@N03/51861364296",
+  "url": "https://live.staticflickr.com/65535/51861364296_01b5c7f367_b.jpg"
+ },
+ {
+  "archivo": "juguetes-coleccion-de-autos-de-juguete.jpg",
+  "categoria": "juguetes",
+  "nombre": "Colección de autos de juguete",
+  "descripcion": "Autitos de metal ordenados por color.",
+  "autor": "theslowlane",
+  "licencia": "CC BY 2.0",
+  "pagina": "https://www.flickr.com/photos/90536753@N00/52358095196",
+  "url": "https://live.staticflickr.com/65535/52358095196_b6d7e4441a_b.jpg"
+ },
+ {
+  "archivo": "juguetes-auto-de-juguete-mercedes.jpg",
+  "categoria": "juguetes",
+  "nombre": "Auto de juguete Mercedes",
+  "descripcion": "Miniatura a escala con detalles originales.",
+  "autor": "joieman",
+  "licencia": "CC BY-SA 2.0",
+  "pagina": "https://www.flickr.com/photos/198613036@N02/53889758888",
+  "url": "https://live.staticflickr.com/65535/53889758888_c1416c0200_b.jpg"
+ },
+ {
+  "archivo": "juguetes-barbie-con-vestido-azul.jpg",
+  "categoria": "juguetes",
+  "nombre": "Barbie con vestido azul",
+  "descripcion": "Edición moderna, con su peinado original.",
+  "autor": "Desconocido",
+  "licencia": "CC0",
+  "pagina": "https://www.rawpixel.com/image/6113632/photo-image-face-public-domain-beauty",
+  "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL3B4NjQ1MTQzLWltYWdlLWt6MmU5ZXIxLmpwZw.jpg"
+ }
+]

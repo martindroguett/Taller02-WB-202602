@@ -40,13 +40,14 @@ Esto levanta PostgreSQL, aplica las migraciones y deja la API en http://localhos
 
 ### 2. Datos de prueba (opcional)
 
-En otra terminal, con la API en marcha:
+Las fotos vienen de Wikimedia Commons y Flickr con licencia libre (dominio público, CC0 o CC BY) y no se suben al repositorio; los autores están en `backend/fotos_demo.json`. Con la API en marcha, desde la raíz:
 
 ```bash
+python3 backend/descargar_fotos_demo.py
 docker compose exec api python seed.py
 ```
 
-Crea 5 usuarios con piezas, seguidores y comentarios. Se puede ingresar con `camila@vitrina.app` y la clave `demo12345`.
+Crea 18 usuarios con más de 80 piezas, seguidores, me gusta, guardados y comentarios con respuestas. Se puede repetir: vuelve a crear los datos de prueba desde cero. Se ingresa con `camila@vitrina.app` (o `diego@`, `sofia@`, `mateo@`, etc.) y la clave `demo12345`.
 
 ### 3. Frontend
 
