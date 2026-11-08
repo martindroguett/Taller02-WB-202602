@@ -2,6 +2,7 @@ import { Component, inject, input, output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { RouterLink } from '@angular/router';
 import { compacto } from '../models/format';
+import { Pantalla } from '../services/pantalla';
 import { PiezaPublica } from '../services/catalogo-publico.service';
 import { UsuarioPublico } from '../services/usuarios-publicos.service';
 import { Avatar } from './avatar';
@@ -18,7 +19,7 @@ import { abrirListaUsuarios } from './user-list-dialog';
         <span
           class="carta vt-c-{{ p.categoria }}"
           [style.--giro.deg]="giros[i]"
-          [style.--x.px]="i * 46"
+          [style.--x.px]="i * (pantalla.escritorio() ? 78 : 46)"
         >
           @if (p.imagen_url) {
             <img [src]="p.imagen_url" alt="" />
@@ -30,7 +31,7 @@ import { abrirListaUsuarios } from './user-list-dialog';
     </div>
     <div class="vitrina vt-showcase"></div>
     <div class="cuerpo">
-      <vt-avatar class="avatar" [nombre]="usuario().username" [tam]="88" anillo="brand" />
+      <vt-avatar class="avatar" [nombre]="usuario().username" [tam]="pantalla.escritorio() ? 120 : 88" anillo="brand" />
       <div class="acciones">
         <a vt-button variant="accent" size="sm" icon="add" routerLink="/coleccion/nueva"
           >Agregar pieza</a
@@ -151,6 +152,54 @@ import { abrirListaUsuarios } from './user-list-dialog';
     .cifras button + button {
       border-left: 1px solid var(--line);
     }
+    @media (min-width: 1000px) {
+      :host {
+        margin-top: 44px;
+      }
+      .vitrina {
+        height: 150px;
+      }
+      .abanico {
+        top: -44px;
+        right: var(--space-8);
+        width: 260px;
+        height: 150px;
+      }
+      .carta {
+        width: 84px;
+        height: 112px;
+      }
+      .cuerpo {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: start;
+        gap: var(--space-6);
+        padding: 0 var(--space-8) var(--space-6);
+      }
+      .avatar {
+        margin-top: -60px;
+      }
+      .quien {
+        grid-column: 2;
+        grid-row: 1;
+        padding-top: var(--space-4);
+      }
+      .bio {
+        max-width: 56ch;
+        color: var(--ink-muted);
+      }
+      .acciones {
+        grid-column: 3;
+        grid-row: 1;
+        align-self: start;
+        padding-top: var(--space-4);
+      }
+      .cifras {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        grid-template-columns: repeat(3, minmax(0, 200px));
+        padding-top: var(--space-4);
+      }
+    }
   `,
 })
 export class ProfileHeader {
@@ -163,6 +212,7 @@ export class ProfileHeader {
   /** Se pulsa «Piezas»: la página lleva a la colección. */
   readonly verPiezas = output<void>();
 
+  protected readonly pantalla = inject(Pantalla);
   private readonly dialogo = inject(MatDialog);
 
   protected verLista(tipo: 'seguidores' | 'seguidos'): void {
