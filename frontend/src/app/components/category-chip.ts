@@ -3,12 +3,11 @@ import { categoriaDe, Filtro } from '../models/vitrina';
 import { Icon } from './icon';
 
 @Component({
-  selector: 'button[vt-category-chip]',
+  selector: 'vt-category-chip',
   imports: [Icon],
   host: {
     '[class]': '"vt-c-" + slug()',
     '[class.on]': 'active()',
-    '[attr.aria-pressed]': 'active()',
   },
   template: `<span class="disco"
       ><vt-icon [name]="categoria().icono" [size]="20" [filled]="active()"

@@ -38,10 +38,15 @@ export class UsuariosPublicosService {
     });
   }
   /** Las personas que sigue el usuario (la fila de avatares del Feed). */
-  seguidos(username: () => string) {
+  seguidos(username: () => string, desplazamiento: () => number = () => 0) {
     return httpResource<Pagina<Pick<UsuarioPublico, 'id' | 'username'>>>(() => {
       const nombre = username();
-      return nombre ? { url: `${this.url(nombre)}/seguidos`, params: { limite: 20 } } : undefined;
+      return nombre
+        ? {
+            url: `${this.url(nombre)}/seguidos`,
+            params: { limite: 20, desplazamiento: desplazamiento() },
+          }
+        : undefined;
     });
   }
   seguir(username: string, siguiendo: boolean) {

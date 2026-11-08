@@ -1,9 +1,10 @@
-import { Component, computed, inject, input, linkedSignal } from '@angular/core';
+import { Component, computed, ElementRef, inject, input, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CatalogoService } from '../services/catalogo.service';
 import { InteraccionesService } from '../services/interacciones.service';
 import { compacto, relativo } from '../models/format';
 import { Pieza } from '../models/vitrina';
+import { DetalleDialogo } from '../services/detalle-dialogo';
 import { PiezaPublica } from '../services/catalogo-publico.service';
 import { IconButton } from './icon-button';
 import { Icon } from './icon';
@@ -17,6 +18,7 @@ import { CatalogTag } from './catalog-tag';
   host: {
     '[class]': '"vt-c-" + pieza().categoria',
     '[attr.data-variante]': 'variante()',
+    '[attr.data-pieza]': 'pieza().id',
   },
   template: `
     <article class="tarjeta" [class.destacada]="destacada() && variante() === 'grid'">
@@ -60,14 +62,16 @@ import { CatalogTag } from './catalog-tag';
         <a class="nombre" [routerLink]="detalleLink()">{{ pieza().nombre }}</a>
         <p class="meta caption">
           @if (esPublica()) {
-            <span class="dueno publico" title="Perfil pendiente de conectar">
+            <a class="dueno publico" [routerLink]="['/coleccionistas', dueno().username]">
               <vt-avatar [nombre]="dueno().username" [tam]="24" />
               <span>&#64;{{ dueno().username }}</span>
-            </span>
-            <span class="dato" [class.gustado]="gustada()"
-              ><vt-icon name="favorite" [size]="16" [filled]="gustada()" />{{ megusta() }}</span
-            >
-            <span>{{ cuando() }}</span>
+            </a>
+            @if (megusta() !== '0') {
+              <span class="dato" [class.gustado]="gustada()"
+                ><vt-icon name="favorite" [size]="16" [filled]="gustada()" />{{ megusta() }}</span
+              >
+            }
+            <span class="fecha">{{ cuando() }}</span>
           } @else {
             <a class="dueno" [routerLink]="['/perfil', dueno().username]">
               @if (variante() === 'grid') {
@@ -75,13 +79,15 @@ import { CatalogTag } from './catalog-tag';
               }
               <span>&#64;{{ dueno().username }}</span>
             </a>
-            <span class="dato" [class.gustado]="catalogo.gustadas().has(pieza().id)"
-              ><vt-icon
-                name="favorite"
-                [size]="16"
-                [filled]="catalogo.gustadas().has(pieza().id)"
-              />{{ megusta() }}</span
-            >
+            @if (megusta() !== '0') {
+              <span class="dato" [class.gustado]="catalogo.gustadas().has(pieza().id)"
+                ><vt-icon
+                  name="favorite"
+                  [size]="16"
+                  [filled]="catalogo.gustadas().has(pieza().id)"
+                />{{ megusta() }}</span
+              >
+            }
           }
           @if (variante() === 'row' && !esPublica()) {
             <span>{{ cuando() }}</span>
@@ -189,13 +195,21 @@ import { CatalogTag } from './catalog-tag';
       color: var(--like);
     }
     @media (max-width: 420px) {
+      /* En la grilla de dos columnas la ficha pasa abajo, para no chocar con el marcador. */
       .catalogo {
+        top: auto;
+        bottom: 8px;
+        left: 8px;
+        max-width: calc(100% - 16px);
+      }
+      /* En la grilla la meta queda en una sola fila: usuario y me gusta. La fecha se ve en el detalle. */
+      :host(:not([data-variante='row'])) .fecha {
         display: none;
       }
-      .meta {
+      :host([data-variante='row']) .meta {
         flex-wrap: wrap;
       }
-      .meta > .dueno.publico {
+      :host([data-variante='row']) .meta > .dueno.publico {
         flex-basis: 100%;
       }
     }
@@ -247,12 +261,30 @@ import { CatalogTag } from './catalog-tag';
 })
 export class PieceCard {
   protected readonly catalogo = inject(CatalogoService);
+  constructor() {
+    // En escritorio la pieza se abre en una ventana sobre la lista. Se escucha en la fase de captura
+    // para frenar el enlace antes de que el router navegue; con Ctrl o Cmd sigue el enlace normal.
+    inject<ElementRef<HTMLElement>>(ElementRef, { optional: true })?.nativeElement.addEventListener(
+      'click',
+      (evento) => {
+        const enlace = (evento.target as Element).closest('a.enlace, a.nombre');
+        if (!enlace || !this.esPublica()) return;
+        if (evento.button !== 0 || evento.ctrlKey || evento.metaKey || evento.shiftKey) return;
+        if (this.detalle.abrir(this.pieza().id)) {
+          evento.preventDefault();
+          evento.stopPropagation();
+        }
+      },
+      true,
+    );
+  }
   readonly pieza = input.required<Pieza | PiezaPublica>();
   readonly variante = input<'grid' | 'row'>('grid');
   protected readonly fallo = linkedSignal(() => {
     this.pieza().imagen_url;
     return false;
   });
+  private readonly detalle = inject(DetalleDialogo);
   private readonly interacciones = inject(InteraccionesService);
   // Las piezas de la API ('dueno' in p) se guardan con InteraccionesService; las de muestra, en memoria.
   protected readonly guardada = computed(() => {

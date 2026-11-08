@@ -1,19 +1,24 @@
-import { Component, ElementRef, afterRenderEffect, input, output, viewChild } from '@angular/core';
+import {
+  Component,
+  TemplateRef,
+  effect,
+  inject,
+  input,
+  output,
+  untracked,
+  viewChild,
+} from '@angular/core';
+import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { Button } from './button';
 import { PieceArt } from './piece-art';
 import { CategoriaSlug } from '../models/vitrina';
 
+/** Confirmación en una hoja inferior, con el MatDialog de Angular Material. */
 @Component({
   selector: 'vt-confirm-sheet',
-  imports: [Button, PieceArt],
+  imports: [Button, MatDialogModule, PieceArt],
   template: `
-    <dialog
-      #dialogo
-      aria-labelledby="confirm-titulo"
-      aria-describedby="confirm-texto"
-      (cancel)="$event.preventDefault(); !pendiente() && cancelado.emit()"
-      (click)="$event.target === dialogo && !pendiente() && cancelado.emit()"
-    >
+    <ng-template #plantilla>
       <vt-piece-art class="pieza" [categoria]="categoria()" [bare]="true" />
       <section class="contenido">
         <h2 class="title" id="confirm-titulo">{{ titulo() }}</h2>
@@ -26,7 +31,7 @@ import { CategoriaSlug } from '../models/vitrina';
             type="button"
             vt-button
             variant="secondary"
-            autofocus
+            cdkFocusInitial
             [disabled]="pendiente()"
             (click)="cancelado.emit()"
           >
@@ -44,25 +49,11 @@ import { CategoriaSlug } from '../models/vitrina';
           </button>
         </div>
       </section>
-    </dialog>
+    </ng-template>
   `,
   styles: `
-    dialog {
-      padding: 0;
-      margin: auto auto 0;
-      inset: auto 0 0;
-      overflow: visible;
-      width: min(100%, 480px);
-      max-height: calc(100dvh - 32px);
-      border: 1px solid transparent;
-      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-      background: var(--surface);
-      color: var(--ink);
-      box-shadow: var(--shadow-float);
-      overscroll-behavior: contain;
-    }
-    dialog::backdrop {
-      background: rgb(21 23 43 / 55%);
+    :host {
+      display: none;
     }
     .contenido {
       display: flex;
@@ -102,14 +93,37 @@ export class ConfirmSheet {
   readonly texto = input.required<string>();
   readonly confirmado = output<void>();
   readonly cancelado = output<void>();
-  private readonly dialogo = viewChild.required<ElementRef<HTMLDialogElement>>('dialogo');
+  private readonly plantilla = viewChild.required<TemplateRef<unknown>>('plantilla');
+  private readonly dialogo = inject(MatDialog);
+  private ref?: MatDialogRef<unknown>;
 
   constructor() {
-    // El diálogo nativo mantiene el foco dentro y bloquea la interacción con el fondo.
-    afterRenderEffect(() => {
-      const dialogo = this.dialogo().nativeElement;
-      if (this.abierto() && !dialogo.open) dialogo.showModal();
-      else if (!this.abierto() && dialogo.open) dialogo.close();
+    effect(() => {
+      if (this.abierto()) untracked(() => this.abrir());
+      else this.ref?.close();
+    });
+    // Mientras se elimina no se puede cerrar con Escape ni tocando fuera.
+    effect(() => {
+      if (this.ref) this.ref.disableClose = this.pendiente();
+    });
+  }
+
+  private abrir(): void {
+    if (this.ref) return;
+    const ref = this.dialogo.open(this.plantilla(), {
+      panelClass: 'vt-dialogo',
+      position: { bottom: '0' },
+      width: 'min(100%, 480px)',
+      maxWidth: '100vw',
+      ariaLabelledBy: 'confirm-titulo',
+      ariaDescribedBy: 'confirm-texto',
+      disableClose: this.pendiente(),
+    });
+    this.ref = ref;
+    ref.afterClosed().subscribe(() => {
+      this.ref = undefined;
+      // Si se cerró con Escape o tocando fuera, se le avisa a quien lo abrió.
+      if (this.abierto()) this.cancelado.emit();
     });
   }
 }

@@ -38,9 +38,9 @@ class InteraccionesHTTP(unittest.TestCase):
             self.assertEqual(codigo, 201, cuerpo)
             self.tokens[rol] = cuerpo["access_token"]
 
-    def crear_pieza(self, nombre, token=None):
+    def crear_pieza(self, nombre, token=None, categoria="vinilos"):
         codigo, pieza = pedir("POST", "/piezas", {
-            "nombre": f"{nombre} {self.sufijo}", "descripcion": "Prueba", "categoria": "vinilos",
+            "nombre": f"{nombre} {self.sufijo}", "descripcion": "Prueba", "categoria": categoria,
             "imagen_url": "/fotos/prueba.jpg",
         }, token or self.tokens["autor"])
         self.assertEqual(codigo, 201, pieza)
@@ -90,6 +90,14 @@ class InteraccionesHTTP(unittest.TestCase):
         codigo, pagina = pedir("GET", "/favoritos?limite=1&desplazamiento=1", token=self.tokens["fan"])
         self.assertEqual((codigo, pagina["total"], [p["id"] for p in pagina["items"]]), (200, 3, [ids[0]]))
         self.assertEqual(pedir("GET", "/favoritos?limite=0", token=self.tokens["fan"])[0], 422)
+
+        carta = self.crear_pieza("Carta", categoria="cartas")
+        self.assertEqual(pedir("POST", f"/piezas/{carta}/guardar", token=self.tokens["fan"])[0], 200)
+        codigo, cartas = pedir("GET", "/favoritos?categoria=cartas", token=self.tokens["fan"])
+        self.assertEqual((codigo, cartas["total"], [p["id"] for p in cartas["items"]]), (200, 1, [carta]))
+        codigo, vinilos = pedir("GET", "/favoritos?categoria=vinilos&limite=1&desplazamiento=1", token=self.tokens["fan"])
+        self.assertEqual((codigo, vinilos["total"], [p["id"] for p in vinilos["items"]]), (200, 3, [ids[0]]))
+        self.assertEqual(pedir("DELETE", f"/piezas/{carta}/guardar", token=self.tokens["fan"])[0], 200)
 
         # Los favoritos son de cada usuario.
         self.assertEqual(pedir("GET", "/favoritos", token=self.tokens["otro"])[1]["total"], 0)

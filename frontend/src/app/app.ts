@@ -3,26 +3,31 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { TabBar } from './components/tab-bar';
-import { ToastHost } from './components/toast-host';
 
-const SIN_NAV = ['/ingresar', '/pieza', '/coleccion'];
+const SIN_NAV = ['/ingresar'];
+// En el teléfono estas pantallas tienen su propia barra de acciones; el riel solo aparece desde 600 px.
+const NAV_SOLO_ESCRITORIO = ['/pieza', '/coleccion'];
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, TabBar, ToastHost],
+  imports: [RouterOutlet, TabBar],
   template: `
     <div class="shell" [class.con-nav]="conNav()">
       <router-outlet />
     </div>
     @if (conNav()) {
-      <vt-tab-bar />
+      <vt-tab-bar [class.solo-escritorio]="soloEscritorio()" />
     }
-    <vt-toast-host />
   `,
   styles: `
     .shell {
       min-height: 100dvh;
       overflow-x: clip;
+    }
+    @media (max-width: 599px) {
+      vt-tab-bar.solo-escritorio {
+        display: none;
+      }
     }
     /* Reserva 72 px para la navegación y 16 px de margen a cada lado. */
     @media (min-width: 600px) {
@@ -44,5 +49,9 @@ export class App {
   protected readonly conNav = computed(() => {
     const path = this.url().split(/[?#]/, 1)[0];
     return !SIN_NAV.some((r) => path === r || path.startsWith(`${r}/`));
+  });
+  protected readonly soloEscritorio = computed(() => {
+    const path = this.url().split(/[?#]/, 1)[0];
+    return NAV_SOLO_ESCRITORIO.some((r) => path === r || path.startsWith(`${r}/`));
   });
 }

@@ -28,7 +28,11 @@ import { PieceArt } from './piece-art';
       </header>
       <p class="texto">{{ pieza().descripcion }}</p>
       <div class="media">
-        <div class="foto">
+        <a
+          class="foto"
+          [routerLink]="['/pieza', pieza().id]"
+          [attr.aria-label]="'Ver ' + pieza().nombre"
+        >
           @if (pieza().imagen_url && !fallo()) {
             <img [src]="pieza().imagen_url" alt="" loading="lazy" (error)="fallo.set(true)" />
           } @else {
@@ -38,7 +42,7 @@ import { PieceArt } from './piece-art';
             <vt-catalog-tag [categoria]="pieza().categoria" [numero]="numero()" />
             <span class="nombre">{{ pieza().nombre }}</span>
           </span>
-        </div>
+        </a>
       </div>
       <footer>
         <vt-like-button [pieza]="pieza()" />
@@ -161,6 +165,12 @@ import { PieceArt } from './piece-art';
     .accion.guardada {
       color: var(--brand);
       background: var(--brand-soft);
+    }
+    /* En escritorio la foto es más baja para que se vea más de una publicación a la vez. */
+    @media (min-width: 1000px) {
+      .foto {
+        aspect-ratio: 5 / 4;
+      }
     }
     @media (max-width: 360px) {
       article {
