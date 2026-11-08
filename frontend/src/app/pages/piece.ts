@@ -1,22 +1,36 @@
 import { Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  input,
+  linkedSignal,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { switchMap, of, catchError, map, startWith, Subject } from 'rxjs';
+import { Router, RouterLink } from '@angular/router';
 import { Avatar } from '../components/avatar';
 import { Button } from '../components/button';
+import { ConfirmSheet } from '../components/confirm-sheet';
+import { AuthService } from '../services/auth.service';
 import { CatalogTag } from '../components/catalog-tag';
+import { Comments } from '../components/comments';
 import { EmptyState } from '../components/empty-state';
 import { LikeButton } from '../components/like-button';
-import { FollowButton } from '../components/follow-button';
+import { LikeBurst } from '../components/like-burst';
 import { IconButton } from '../components/icon-button';
 import { Icon } from '../components/icon';
 import { PieceArt } from '../components/piece-art';
 import { compacto, relativo } from '../models/format';
 import { categoriaDe } from '../models/vitrina';
-import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publico.service';
+import { CatalogoPublicoService } from '../services/catalogo-publico.service';
+import { ComentariosService } from '../services/comentarios.service';
+import { Pantalla } from '../services/pantalla';
+import { PieceDetail } from '../components/piece-detail';
 import { ToastService } from '../services/toast.service';
+import { InteraccionesService } from '../services/interacciones.service';
 
 @Component({
   selector: 'vt-piece-page',
@@ -24,126 +38,163 @@ import { ToastService } from '../services/toast.service';
     Avatar,
     Button,
     CatalogTag,
+    Comments,
+    ConfirmSheet,
     EmptyState,
-    FollowButton,
     Icon,
     IconButton,
     LikeButton,
+    LikeBurst,
     PieceArt,
+    PieceDetail,
     RouterLink,
   ],
   template: `
-    @if (pieza(); as p) {
-      <div class="detalle vt-c-{{ p.categoria }}">
-        <div class="foto">
-          @if (p.imagen_url && !fallo()) {
-            <img [src]="p.imagen_url" alt="" (error)="fallo.set(true)" />
-          } @else {
-            <vt-piece-art [categoria]="p.categoria" />
-          }
-          <div class="barra">
+    @if (pieza.hasValue()) {
+      @let p = pieza.value();
+      @if (pantalla.escritorio()) {
+        <div class="escritorio"><vt-piece-detail [pieza]="p" modo="pagina" /></div>
+      } @else {
+        <div class="detalle vt-c-{{ p.categoria }}">
+          <div class="foto">
+            <vt-like-burst class="foto-contenido" [pieza]="p">
+              @if (p.imagen_url && !fallo()) {
+                <img [src]="p.imagen_url" alt="" (error)="fallo.set(true)" />
+              } @else {
+                <vt-piece-art [categoria]="p.categoria" />
+              }
+            </vt-like-burst>
+            <div class="barra">
+              <button
+                type="button"
+                vt-icon-button
+                tone="glass"
+                icon="arrow_back"
+                label="Volver"
+                (click)="volver()"
+              ></button>
+              <button
+                type="button"
+                vt-icon-button
+                tone="glass"
+                icon="bookmark"
+                [label]="
+                  interacciones.estado(p).guardada ? 'Quitar de favoritos' : 'Guardar en favoritos'
+                "
+                [active]="interacciones.estado(p).guardada"
+                [pressed]="interacciones.estado(p).guardada"
+                (click)="interacciones.alternarGuardado(p)"
+              ></button>
+            </div>
+          </div>
+          <article class="hoja">
+            <vt-catalog-tag class="ficha" [categoria]="p.categoria" [numero]="p.id" />
+            <h1 class="display-lg nombre">{{ p.nombre }}</h1>
+            <p class="categoria caption">
+              <vt-icon [name]="categoriaDe(p.categoria).icono" [size]="16" />{{
+                categoriaDe(p.categoria).nombre
+              }}
+              · {{ cuando(p.creado_en) }}
+            </p>
+            <p class="body">{{ p.descripcion }}</p>
+            @if (interacciones.estado(p).megusta || interacciones.estado(p).guardados) {
+              <dl class="cifras">
+                <div>
+                  <dd class="stat">{{ compacto(interacciones.estado(p).megusta) }}</dd>
+                  <dt class="caption vt-muted">Me gusta</dt>
+                </div>
+                <div>
+                  <dd class="stat">{{ compacto(interacciones.estado(p).guardados) }}</dd>
+                  <dt class="caption vt-muted">Favoritos</dt>
+                </div>
+              </dl>
+            }
+            <div class="dueno">
+              <a class="persona" [routerLink]="['/coleccionistas', p.dueno.username]">
+                <vt-avatar [nombre]="p.dueno.username" [tam]="52" />
+                <span class="body-strong">&#64;{{ p.dueno.username }}</span>
+              </a>
+              <a vt-button variant="secondary" [routerLink]="['/coleccionistas', p.dueno.username]"
+                >Ver perfil</a
+              >
+            </div>
+            <vt-comments #comentarios [piezaId]="p.id" [duenoId]="p.dueno.id" />
+            @if (auth.usuario()?.id === p.dueno.id) {
+              <div class="gestion">
+                <a
+                  vt-button
+                  variant="secondary"
+                  icon="edit"
+                  [routerLink]="['/coleccion', p.id, 'editar']"
+                  >Editar pieza</a
+                >
+                <button
+                  type="button"
+                  vt-button
+                  variant="danger"
+                  icon="delete"
+                  [disabled]="eliminando()"
+                  (click)="errorEliminar.set(''); confirmando.set(true)"
+                >
+                  Eliminar
+                </button>
+              </div>
+              @if (errorEliminar()) {
+                <p role="alert">{{ errorEliminar() }}</p>
+              }
+              <vt-confirm-sheet
+                [categoria]="p.categoria"
+                [abierto]="confirmando()"
+                [pendiente]="eliminando()"
+                [error]="errorEliminar()"
+                titulo="¿Eliminar esta pieza?"
+                [texto]="'Vas a quitar «' + p.nombre + '» de tu colección. No se puede deshacer.'"
+                (cancelado)="confirmando.set(false)"
+                (confirmado)="eliminar()"
+              />
+            }
+          </article>
+          <div class="accion-fija">
+            <vt-like-button [pieza]="p" />
             <button
               type="button"
-              vt-icon-button
-              tone="glass"
-              icon="arrow_back"
-              label="Volver"
-              (click)="volver()"
-            ></button>
+              vt-button
+              variant="secondary"
+              icon="chat_bubble"
+              [attr.aria-label]="'Comentarios: ' + comentariosTotal()"
+              (click)="comentarios.abrir()"
+            >
+              {{ comentariosTotal() }}
+            </button>
             <button
               type="button"
-              vt-icon-button
-              tone="glass"
-              icon="bookmark"
-              [label]="
-                (p.guardada ? 'Quitar de favoritos' : 'Guardar en favoritos') +
-                ': pendiente de conectar'
-              "
-              [active]="p.guardada"
-              [pressed]="p.guardada"
-              title="Pendiente de conectar"
-              (click)="pendiente('Favoritos')"
-            ></button>
+              vt-button
+              class="compartir"
+              variant="secondary"
+              icon="link"
+              (click)="compartir()"
+            >
+              Compartir
+            </button>
           </div>
         </div>
-        <article class="hoja">
-          <vt-catalog-tag class="ficha" [categoria]="p.categoria" [numero]="p.id" />
-          <h1 class="display-lg nombre">{{ p.nombre }}</h1>
-          <p class="categoria caption">
-            <vt-icon [name]="categoriaDe(p.categoria).icono" [size]="16" />{{
-              categoriaDe(p.categoria).nombre
-            }}
-            · {{ cuando(p.creado_en) }}
-          </p>
-          <p class="body">{{ p.descripcion }}</p>
-          <dl class="cifras">
-            <div>
-              <dd class="stat">{{ compacto(p.megusta) }}</dd>
-              <dt class="caption vt-muted">Me gusta</dt>
-            </div>
-            <div>
-              <dd class="stat">{{ compacto(p.guardados) }}</dd>
-              <dt class="caption vt-muted">Favoritos</dt>
-            </div>
-          </dl>
-          <div class="dueno">
-            <span class="persona" title="Perfil pendiente de conectar">
-              <vt-avatar [nombre]="p.dueno.username" [tam]="52" />
-              <span class="body-strong">&#64;{{ p.dueno.username }}</span>
-            </span>
-            <vt-follow-button [usuarioId]="p.dueno.id" [pendiente]="true" />
-          </div>
-          <p class="caption vt-muted">
-            El perfil y las acciones sociales están pendientes de conexión.
-          </p>
-          <div>
-            <p class="caption vt-muted">Gestión de pieza: vista previa, pendiente de sesión</p>
-            <div class="gestion">
-              <button
-                type="button"
-                vt-button
-                variant="secondary"
-                icon="edit"
-                disabled
-                title="Pendiente de conectar la sesión"
-              >
-                Editar pieza
-              </button>
-              <button
-                type="button"
-                vt-button
-                variant="danger"
-                icon="delete"
-                disabled
-                title="Pendiente de conectar la sesión"
-              >
-                Eliminar
-              </button>
-            </div>
-          </div>
-        </article>
-        <div class="accion-fija">
-          <vt-like-button [pieza]="p" />
-          <button
-            type="button"
-            vt-button
-            class="compartir"
-            variant="secondary"
-            icon="link"
-            (click)="compartir()"
-          >
-            Compartir enlace
-          </button>
+      }
+    } @else if (pieza.isLoading()) {
+      <div class="detalle" aria-hidden="true">
+        <div class="vt-esqueleto cuadrado"></div>
+        <div class="cargando-texto">
+          <div class="vt-esqueleto linea titulo"></div>
+          <div class="vt-esqueleto linea"></div>
+          <div class="vt-esqueleto linea corta"></div>
         </div>
       </div>
-    } @else if (estado() === 'cargando') {
-      <div class="vt-screen"><p role="status">Cargando pieza…</p></div>
-    } @else if (estado() === 'error') {
+      <p class="vt-sr-only" role="status">Cargando pieza…</p>
+    } @else if (falloCarga()) {
       <div class="vt-screen">
         <vt-empty-state
           titulo="No pudimos cargar la pieza"
           texto="Comprueba tu conexión e inténtalo de nuevo."
-          ><button type="button" vt-button (click)="reintentar.next()">
+          ><button type="button" vt-button (click)="pieza.reload()">
             Reintentar
           </button></vt-empty-state
         >
@@ -159,16 +210,39 @@ import { ToastService } from '../services/toast.service';
     }
   `,
   styles: `
+    /* Desde 1000 px la página ocupa toda la pantalla: foto a un lado y comentarios al otro. */
+    .escritorio {
+      height: 100dvh;
+      padding: var(--space-4);
+    }
     .detalle {
       max-width: 720px;
       margin-inline: auto;
       padding-bottom: 110px;
+    }
+    .cargando-texto {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      padding: var(--space-6) var(--space-5);
+    }
+    .cargando-texto .titulo {
+      height: 32px;
+      width: 70%;
+    }
+    .cargando-texto .corta {
+      width: 45%;
     }
     .foto {
       position: relative;
       aspect-ratio: 1;
       background: var(--c-soft);
       overflow: hidden;
+    }
+    .foto-contenido {
+      width: 100%;
+      height: 100%;
+      touch-action: manipulation;
     }
     .foto img,
     .foto vt-piece-art {
@@ -293,48 +367,54 @@ import { ToastService } from '../services/toast.service';
 })
 export class PiecePage {
   private readonly api = inject(CatalogoPublicoService);
-  private readonly route = inject(ActivatedRoute);
+  protected readonly auth = inject(AuthService);
+  protected readonly pantalla = inject(Pantalla);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly toast = inject(ToastService);
+  protected readonly interacciones = inject(InteraccionesService);
   private readonly destroy = inject(DestroyRef);
-  protected readonly pieza = signal<PiezaPublica | null>(null);
-  protected readonly estado = signal<'cargando' | 'error' | 'no-encontrada'>('cargando');
-  protected readonly fallo = signal(false);
-  protected readonly reintentar = new Subject<void>();
+  readonly id = input<string>();
+  protected readonly pieza = this.api.detalle(this.id);
+  protected readonly falloCarga = computed(
+    () => !!this.pieza.error() && (this.pieza.error() as HttpErrorResponse).status !== 404,
+  );
+  protected readonly fallo = linkedSignal(() => {
+    this.id();
+    return false;
+  });
+  protected readonly confirmando = signal(false);
+  protected readonly eliminando = signal(false);
+  protected readonly errorEliminar = signal('');
+  protected readonly comentariosTotal = inject(ComentariosService).total;
   protected readonly categoriaDe = categoriaDe;
   protected readonly compacto = compacto;
-  protected pendiente(accion: string): void {
-    this.toast.show(`${accion} está pendiente de conectar`);
-  }
 
-  constructor() {
-    this.route.paramMap
-      .pipe(
-        switchMap((params) =>
-          this.reintentar.pipe(
-            startWith(undefined),
-            switchMap(() => {
-              this.pieza.set(null);
-              this.fallo.set(false);
-              this.estado.set('cargando');
-              const valor = params.get('id') ?? '';
-              if (!/^[1-9]\d*$/.test(valor) || !Number.isSafeInteger(Number(valor)))
-                return of({ tipo: 'no-encontrada' as const });
-              return this.api.obtener(Number(valor)).pipe(
-                map((pieza) => ({ tipo: 'pieza' as const, pieza })),
-                catchError((e: HttpErrorResponse) =>
-                  of({ tipo: e.status === 404 ? ('no-encontrada' as const) : ('error' as const) }),
-                ),
-              );
-            }),
-          ),
-        ),
-        takeUntilDestroyed(this.destroy),
-      )
-      .subscribe((resultado) => {
-        if (resultado.tipo === 'pieza') this.pieza.set(resultado.pieza);
-        else this.estado.set(resultado.tipo);
+  protected eliminar(): void {
+    if (!this.pieza.hasValue() || this.eliminando()) return;
+    const p = this.pieza.value();
+    this.eliminando.set(true);
+    this.errorEliminar.set('');
+    this.api
+      .eliminar(p.id)
+      .pipe(takeUntilDestroyed(this.destroy))
+      .subscribe({
+        next: () => {
+          this.eliminando.set(false);
+          this.confirmando.set(false);
+          this.toast.show('Pieza eliminada', 'success');
+          void this.router.navigate(['/coleccionistas', p.dueno.username]);
+        },
+        error: (e: HttpErrorResponse) => {
+          this.eliminando.set(false);
+          this.errorEliminar.set(
+            e.status === 403
+              ? 'Solo el dueño puede eliminar esta pieza.'
+              : e.status === 404
+                ? 'Esta pieza ya no está disponible.'
+                : 'No pudimos eliminar la pieza. Inténtalo de nuevo.',
+          );
+        },
       });
   }
   protected cuando(fecha: string): string {
@@ -345,6 +425,15 @@ export class PiecePage {
     else void this.router.navigateByUrl('/');
   }
   protected async compartir(): Promise<void> {
+    // En el teléfono se abre el menú de compartir del sistema; si no existe o se falla, se copia el enlace.
+    if (typeof navigator.share === 'function' && this.pieza.hasValue()) {
+      try {
+        await navigator.share({ title: this.pieza.value().nombre, url: window.location.href });
+        return;
+      } catch (error) {
+        if ((error as DOMException).name === 'AbortError') return;
+      }
+    }
     try {
       await navigator.clipboard.writeText(window.location.href);
       this.toast.show('Enlace copiado', 'success');

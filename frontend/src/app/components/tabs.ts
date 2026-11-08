@@ -1,58 +1,53 @@
 import { Component, input, model } from '@angular/core';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 export interface OpcionTab {
   id: string;
   texto: string;
 }
 
+/** Selector de sección con el MatButtonToggleGroup de Angular Material. */
 @Component({
   selector: 'vt-tabs',
+  imports: [MatButtonToggleModule],
   template: `
-    <div role="group" [attr.aria-label]="etiqueta()">
+    <mat-button-toggle-group
+      [value]="valor()"
+      (change)="valor.set($event.value)"
+      [aria-label]="etiqueta()"
+      hideSingleSelectionIndicator
+    >
       @for (o of opciones(); track o.id) {
-        <button
-          type="button"
-          [attr.aria-pressed]="valor() === o.id"
-          [class.on]="valor() === o.id"
-          (click)="valor.set(o.id)"
-        >
-          {{ o.texto }}
-        </button>
+        <mat-button-toggle [value]="o.id">{{ o.texto }}</mat-button-toggle>
       }
-    </div>
+    </mat-button-toggle-group>
   `,
   styles: `
     :host {
       display: block;
     }
-    [role='group'] {
+    mat-button-toggle-group {
       display: flex;
-      gap: var(--space-1);
       padding: var(--space-1);
-      border-radius: var(--radius-pill);
-      background: var(--surface-sunken);
-    }
-    button {
-      flex: 1;
-      min-height: 44px;
-      padding: 0 var(--space-4);
+      gap: var(--space-1);
       border: 0;
       border-radius: var(--radius-pill);
-      background: transparent;
-      color: var(--ink-muted);
-      font: var(--text-body-strong);
-      cursor: pointer;
-      transition:
-        background-color 160ms ease,
-        color 160ms ease,
-        transform 120ms ease;
+      background: var(--surface-sunken);
+      --mat-button-toggle-shape: var(--radius-pill);
+      --mat-button-toggle-height: 44px;
+      --mat-button-toggle-text-color: var(--ink-muted);
+      --mat-button-toggle-background-color: transparent;
+      --mat-button-toggle-selected-state-text-color: var(--on-ink);
+      --mat-button-toggle-selected-state-background-color: var(--ink);
+      --mat-button-toggle-divider-color: transparent;
+      --mat-button-toggle-label-text-font: var(--font-sans);
+      --mat-button-toggle-label-text-weight: 700;
+      --mat-button-toggle-label-text-size: 15px;
     }
-    button:active {
-      transform: scale(0.96);
-    }
-    button.on {
-      background: var(--ink);
-      color: var(--on-ink);
+    mat-button-toggle {
+      flex: 1;
+      border: 0;
+      border-radius: var(--radius-pill);
     }
   `,
 })

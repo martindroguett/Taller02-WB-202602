@@ -39,6 +39,152 @@ img {
   max-width: 100%;
 }
 
+/* Angular Material usa estas variables: así sus componentes toman la paleta y la tipografía de Vitrina. */
+:root {
+  --mat-sys-primary: var(--brand);
+  --mat-sys-on-primary: var(--on-brand);
+  --mat-sys-primary-container: var(--brand-soft);
+  --mat-sys-on-primary-container: var(--brand);
+  --mat-sys-error: var(--danger);
+  --mat-sys-on-error: var(--on-danger);
+  --mat-sys-surface: var(--surface);
+  --mat-sys-on-surface: var(--ink);
+  --mat-sys-on-surface-variant: var(--ink-muted);
+  --mat-sys-outline: var(--line-strong);
+  --mat-sys-outline-variant: var(--line);
+  --mat-sys-label-large-font: var(--font-sans);
+  --mat-sys-body-large-font: var(--font-sans);
+  --mat-sys-body-medium-font: var(--font-sans);
+}
+
+:root {
+  --mat-tooltip-container-color: var(--night);
+  --mat-tooltip-supporting-text-color: var(--on-night);
+  --mat-tooltip-container-shape: 8px;
+  --mat-tooltip-supporting-text-font: var(--font-sans);
+  --mat-tooltip-supporting-text-size: 13px;
+  --mat-tooltip-supporting-text-weight: 700;
+}
+
+.vt-aviso {
+  --mat-snack-bar-container-color: var(--night);
+  --mat-snack-bar-supporting-text-color: var(--on-night);
+  --mat-snack-bar-button-color: var(--on-night);
+  --mat-snack-bar-container-shape: var(--radius-pill);
+  margin-bottom: 96px !important;
+}
+.vt-aviso-danger {
+  --mat-snack-bar-container-color: var(--danger);
+  --mat-snack-bar-supporting-text-color: var(--on-danger);
+  --mat-snack-bar-button-color: var(--on-danger);
+}
+.vt-aviso-success {
+  --mat-snack-bar-container-color: var(--success);
+  --mat-snack-bar-supporting-text-color: #fff;
+  --mat-snack-bar-button-color: #fff;
+}
+
+.vt-esqueleto {
+  background: var(--line);
+  border-radius: var(--radius-md);
+}
+.vt-esqueleto.tarjeta {
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-lg);
+}
+.vt-esqueleto.cuadrado {
+  aspect-ratio: 1;
+  border-radius: 0;
+}
+.vt-esqueleto.linea {
+  height: 20px;
+  border-radius: var(--radius-pill);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .vt-esqueleto {
+    animation: vt-pulso 1.4s ease-in-out infinite;
+  }
+  @keyframes vt-pulso {
+    50% {
+      opacity: 0.5;
+    }
+  }
+}
+
+.vt-dialogo {
+  --mat-dialog-container-shape: var(--radius-xl) var(--radius-xl) 0 0;
+  --mat-dialog-container-color: var(--surface);
+  --mat-dialog-container-max-width: 480px;
+  --mat-dialog-container-min-width: 0;
+}
+.vt-dialogo .mat-mdc-dialog-surface {
+  overflow: visible !important;
+}
+/* La confirmación sube desde abajo igual que la hoja de comentarios, en vez de crecer desde el centro. */
+.vt-dialogo .mat-mdc-dialog-inner-container {
+  opacity: 1;
+  transition: none;
+}
+.vt-dialogo .mat-mdc-dialog-surface {
+  transform: translateY(100%);
+  transition: transform 280ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.vt-dialogo .mdc-dialog--open:not(.mdc-dialog--closing) .mat-mdc-dialog-surface {
+  transform: none;
+}
+.vt-dialogo .mdc-dialog--closing .mat-mdc-dialog-surface {
+  transform: translateY(100%);
+  transition: transform 160ms cubic-bezier(0.4, 0, 1, 1);
+}
+/* En pantallas anchas la navegación va al costado, no abajo. */
+@media (min-width: 600px) {
+  .vt-aviso {
+    margin-bottom: 24px !important;
+  }
+}
+
+/* Material guarda el fondo y las esquinas en el contenedor, que es lo que se desliza: se estiliza ahí y no en el panel. */
+.vt-hoja {
+  --mat-bottom-sheet-container-background-color: var(--surface);
+  --mat-bottom-sheet-container-text-color: var(--ink);
+}
+.vt-hoja .mat-bottom-sheet-container {
+  padding: 0;
+  max-height: none;
+  height: min(82dvh, 680px);
+  overflow: hidden;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+/* Entra con una curva suave y sale más rápido de lo que entró. */
+.vt-hoja .mat-bottom-sheet-container-animations-enabled.mat-bottom-sheet-container-enter {
+  animation-duration: 280ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+.vt-hoja .mat-bottom-sheet-container-animations-enabled.mat-bottom-sheet-container-exit {
+  animation-duration: 160ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
+}
+.vt-pieza-dialogo {
+  --mat-dialog-container-color: transparent;
+  --mat-dialog-container-shape: var(--radius-xl);
+  --mat-dialog-container-max-width: none;
+  --mat-dialog-container-min-width: 0;
+}
+.vt-pieza-dialogo .mat-mdc-dialog-surface {
+  overflow: visible !important;
+  box-shadow: none;
+  background: transparent;
+}
+.vt-pieza-dialogo .mat-mdc-dialog-container {
+  --mat-dialog-container-small-max-width: none;
+}
+.vt-pieza-fondo {
+  background: rgba(21, 23, 43, 0.58);
+}
+.cdk-overlay-backdrop {
+  transition-duration: 200ms !important;
+}
+
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
@@ -111,6 +257,24 @@ img {
 }
 .vt-rail > * {
   flex: none;
+}
+
+/* Material maneja selección, foco y teclado; Vitrina conserva el riel y su presentación. */
+.vt-category-list .mdc-evolution-chip-set__chips {
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+  margin: 0;
+}
+.vt-category-list .mat-mdc-chip {
+  margin: 0;
+}
+.vt-category-list .mat-mdc-chip-disabled {
+  opacity: 0.5;
+}
+@media (min-width: 1000px) {
+  .vt-category-list.form-categorias .mdc-evolution-chip-set__chips {
+    flex-wrap: wrap;
+  }
 }
 
 /* El espacio inferior deja libre la navegación flotante en móvil. */

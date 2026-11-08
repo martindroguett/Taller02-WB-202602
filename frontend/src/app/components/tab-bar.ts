@@ -1,19 +1,34 @@
-import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { MatTooltip } from '@angular/material/tooltip';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../services/auth.service';
+import { ToastService } from '../services/toast.service';
 import { Icon } from './icon';
 import { Logo } from './logo';
 
 @Component({
   selector: 'vt-tab-bar',
-  imports: [RouterLink, RouterLinkActive, Icon, Logo],
+  imports: [RouterLink, RouterLinkActive, Icon, Logo, MatTooltip],
   template: `
     <nav aria-label="Principal">
-      <a class="logo" routerLink="/" aria-label="Vitrina, ir a Explorar"
+      <a
+        class="logo"
+        routerLink="/"
+        aria-label="Vitrina, ir a Explorar"
+        matTooltip="Explorar"
+        matTooltipPosition="right"
+        matTooltipTouchGestures="off"
         ><vt-logo [soloMarca]="true" [tam]="40"
       /></a>
       @for (it of items; track it.ruta; let i = $index) {
         @if (i === 2) {
-          <a class="agregar" routerLink="/coleccion/nueva" aria-label="Agregar pieza"
+          <a
+            class="agregar"
+            routerLink="/coleccion/nueva"
+            aria-label="Agregar pieza"
+            matTooltip="Agregar pieza"
+            matTooltipPosition="right"
+            matTooltipTouchGestures="off"
             ><vt-icon name="add" [size]="28"
           /></a>
         }
@@ -30,9 +45,36 @@ import { Logo } from './logo';
           }"
           #rla="routerLinkActive"
           [attr.aria-label]="it.nombre"
+          [matTooltip]="it.nombre"
+          matTooltipPosition="right"
+          matTooltipTouchGestures="off"
         >
           <vt-icon [name]="it.icono" [filled]="rla.isActive" [size]="24" />
           <span class="txt">{{ it.nombre }}</span>
+        </a>
+      }
+      @if (auth.autenticado()) {
+        <button
+          type="button"
+          class="item sesion"
+          aria-label="Cerrar sesión"
+          matTooltip="Cerrar sesión"
+          matTooltipPosition="right"
+          matTooltipTouchGestures="off"
+          (click)="cerrarSesion()"
+        >
+          <vt-icon name="logout" [size]="24" />
+        </button>
+      } @else {
+        <a
+          class="item sesion"
+          routerLink="/ingresar"
+          aria-label="Ingresar"
+          matTooltip="Ingresar"
+          matTooltipPosition="right"
+          matTooltipTouchGestures="off"
+        >
+          <vt-icon name="login" [size]="24" />
         </a>
       }
     </nav>
@@ -75,6 +117,16 @@ import { Logo } from './logo';
       transform: scale(0.96);
     }
     .txt {
+      display: none;
+    }
+    button.item {
+      border: 0;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+    }
+    /* Cerrar sesión vive solo en el riel; en el teléfono sigue en el perfil. */
+    .sesion {
       display: none;
     }
     .item.activo {
@@ -175,10 +227,24 @@ import { Logo } from './logo';
         width: 48px;
         height: 48px;
       }
+      .sesion {
+        display: inline-flex;
+        order: 2;
+      }
     }
   `,
 })
 export class TabBar {
+  protected readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
+
+  protected cerrarSesion(): void {
+    this.auth.cerrarSesion();
+    this.toast.show('Cerraste sesión.');
+    void this.router.navigateByUrl('/');
+  }
+
   protected readonly items = [
     { ruta: '/', icono: 'explore', nombre: 'Explorar', exacto: true },
     { ruta: '/feed', icono: 'dynamic_feed', nombre: 'Feed', exacto: false },

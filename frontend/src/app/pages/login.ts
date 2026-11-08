@@ -237,6 +237,32 @@ function mensajeError(error: HttpErrorResponse): string {
       font-weight: 700;
       cursor: pointer;
     }
+    /* En el teléfono el botón principal debe quedar a la vista sin bajar la pantalla. */
+    @media (max-width: 599px) {
+      .hero {
+        gap: var(--space-2);
+        padding-bottom: 40px;
+      }
+      h1 {
+        font-size: clamp(26px, 7vw, 32px);
+      }
+      .sub {
+        display: none;
+      }
+      .piezas {
+        height: 124px;
+        margin-block: 4px 8px;
+      }
+      .pieza {
+        height: 102px;
+        border-width: 2px;
+        border-radius: 16px;
+      }
+      .etiqueta {
+        bottom: 0;
+        padding: 6px 12px;
+      }
+    }
     @media (min-width: 1000px) {
       .ingreso {
         display: grid;

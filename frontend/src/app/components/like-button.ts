@@ -1,7 +1,7 @@
-import { Component, computed, inject, input } from '@angular/core';
-import { ToastService } from '../services/toast.service';
+import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { PiezaPublica } from '../services/catalogo-publico.service';
 import { CatalogoService } from '../services/catalogo.service';
+import { InteraccionesService } from '../services/interacciones.service';
 import { compacto } from '../models/format';
 import { Pieza } from '../models/vitrina';
 import { Icon } from './icon';
@@ -13,12 +13,10 @@ import { Icon } from './icon';
     <button
       type="button"
       [class.on]="activo()"
+      [class.latido]="latido()"
       [attr.aria-pressed]="activo()"
-      [attr.aria-label]="
-        ('dueno' in pieza() ? 'Pendiente de conectar: ' : '') +
-        (activo() ? 'Quitar me gusta' : 'Dar me gusta')
-      "
-      [title]="'dueno' in pieza() ? 'Pendiente de conectar' : ''"
+      [attr.aria-label]="activo() ? 'Quitar me gusta' : 'Dar me gusta'"
+      [attr.aria-busy]="ocupado()"
       (click)="alternar()"
     >
       <span class="corazon"><vt-icon name="favorite" [filled]="activo()" [size]="24" /></span>
@@ -49,6 +47,16 @@ import { Icon } from './icon';
     button.on .corazon {
       color: var(--like);
     }
+    @media (prefers-reduced-motion: no-preference) {
+      button.latido .corazon {
+        animation: latido 380ms ease-out;
+      }
+      @keyframes latido {
+        40% {
+          transform: scale(1.35);
+        }
+      }
+    }
     .corazon {
       display: inline-flex;
     }
@@ -59,19 +67,35 @@ import { Icon } from './icon';
 })
 export class LikeButton {
   protected readonly catalogo = inject(CatalogoService);
+  private readonly interacciones = inject(InteraccionesService);
   readonly pieza = input.required<Pieza | PiezaPublica>();
-  private readonly toast = inject(ToastService);
+  // Las piezas de la API ('dueno' in p) se guardan con InteraccionesService; las de muestra, en memoria.
   protected readonly activo = computed(() => {
     const p = this.pieza();
-    return 'dueno' in p ? p.gustada : this.catalogo.gustadas().has(p.id);
+    return 'dueno' in p ? this.interacciones.estado(p).gustada : this.catalogo.gustadas().has(p.id);
   });
+  protected readonly latido = signal(false);
+  private previo = false;
   protected readonly cuenta = computed(() => {
     const p = this.pieza();
-    return compacto('dueno' in p ? p.megusta : this.catalogo.megusta(p));
+    return compacto('dueno' in p ? this.interacciones.estado(p).megusta : this.catalogo.megusta(p));
   });
+  constructor() {
+    // El corazón late solo cuando pasa de apagado a encendido, no al cargar la pieza ya gustada.
+    effect(() => {
+      const ahora = this.activo();
+      if (ahora && !untracked(() => this.previo)) {
+        this.latido.set(true);
+        setTimeout(() => this.latido.set(false), 400);
+      }
+      this.previo = ahora;
+    });
+  }
+
+  protected readonly ocupado = computed(() => this.interacciones.ocupada(this.pieza().id));
   protected alternar(): void {
     const p = this.pieza();
-    if ('dueno' in p) this.toast.show('Me gusta está pendiente de conectar');
+    if ('dueno' in p) this.interacciones.alternarMeGusta(p);
     else this.catalogo.toggleMeGusta(p.id);
   }
 }

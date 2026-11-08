@@ -2,7 +2,17 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { transpileModule, ModuleKind, ScriptTarget } from 'typescript';
 import '@angular/compiler';
-import { createEnvironmentInjector, PendingTasks, ɵSIGNAL } from '@angular/core';
+import {
+  computed,
+  createEnvironmentInjector,
+  runInInjectionContext,
+  PendingTasks,
+  signal,
+  ErrorHandler,
+  ɵEffectScheduler,
+  ɵChangeDetectionScheduler,
+  ɵSIGNAL,
+} from '@angular/core';
 import { provideHttpClient, withNoXsrfProtection } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
@@ -34,15 +44,27 @@ async function preparar(path = '') {
   }
 }
 await preparar();
-const environmentSource = await readFile(new URL('../src/environments/environment.ts', import.meta.url), 'utf8');
+const environmentSource = await readFile(
+  new URL('../src/environments/environment.ts', import.meta.url),
+  'utf8',
+);
 const environmentDest = new URL('../.angular/environments/', import.meta.url);
 await mkdir(environmentDest, { recursive: true });
-await writeFile(new URL('environment.mjs', environmentDest), transpileModule(environmentSource, {
-  compilerOptions: { module: ModuleKind.ESNext, target: ScriptTarget.ES2022 },
-}).outputText);
+await writeFile(
+  new URL('environment.mjs', environmentDest),
+  transpileModule(environmentSource, {
+    compilerOptions: { module: ModuleKind.ESNext, target: ScriptTarget.ES2022 },
+  }).outputText,
+);
 const { environment } = await import(new URL('environment.mjs', environmentDest));
 const { ExplorePage } = await import(new URL('pages/explore.mjs', dest));
 const { PiecePage } = await import(new URL('pages/piece.mjs', dest));
+const { DetalleDialogo } = await import(new URL('services/detalle-dialogo.mjs', dest));
+const { Pantalla } = await import(new URL('services/pantalla.mjs', dest));
+const { PieceFormPage } = await import(new URL('pages/piece-form.mjs', dest));
+const { ImageDrop } = await import(new URL('components/image-drop.mjs', dest));
+const { PublicProfilePage } = await import(new URL('pages/public-profile.mjs', dest));
+const { AuthService } = await import(new URL('services/auth.service.mjs', dest));
 const { PieceCard } = await import(new URL('components/piece-card.mjs', dest));
 const { LikeButton } = await import(new URL('components/like-button.mjs', dest));
 const { FollowButton } = await import(new URL('components/follow-button.mjs', dest));
@@ -51,12 +73,42 @@ const { CatalogoPublicoService } = await import(
   new URL('services/catalogo-publico.service.mjs', dest)
 );
 const { ToastService } = await import(new URL('services/toast.service.mjs', dest));
+const { ComentariosService } = await import(new URL('services/comentarios.service.mjs', dest));
+const { InteraccionesService } = await import(new URL('services/interacciones.service.mjs', dest));
+const { UsuariosPublicosService } = await import(
+  new URL('services/usuarios-publicos.service.mjs', dest)
+);
 const { Location } = await import('@angular/common');
+// Ejecuta los recursos y la página reales con el backend HTTP de pruebas.
+const effects = {
+  queue: new Set(),
+  add(e) {
+    this.queue.add(e);
+  },
+  schedule(e) {
+    this.queue.add(e);
+  },
+  remove(e) {
+    this.queue.delete(e);
+  },
+  flush() {
+    while ([...this.queue].some((e) => e.dirty)) for (const e of this.queue) if (e.dirty) e.run();
+  },
+};
+const settle = async () => {
+  effects.flush();
+  await Promise.resolve();
+  await Promise.resolve();
+  effects.flush();
+};
 const query = new BehaviorSubject(convertToParamMap({}));
-const params = new BehaviorSubject(convertToParamMap({ id: '7' }));
-const route = { queryParamMap: query, paramMap: params, snapshot: { queryParamMap: query.value } };
+const route = { queryParamMap: query, snapshot: { queryParamMap: query.value } };
+const navegaciones = [];
+const avisos = [];
 const router = {
-  navigate: async (_, options) => {
+  navigate: async (destino, options) => {
+    navegaciones.push(destino);
+    if (!options?.queryParams) return true;
     const values = Object.fromEntries(
       Object.entries(options.queryParams).filter(([, v]) => v != null),
     );
@@ -66,21 +118,46 @@ const router = {
   },
   navigateByUrl: async () => true,
 };
+const currentUser = signal({ id: 1, username: 'ana' });
 const injector = createEnvironmentInjector([
   provideHttpClient(withNoXsrfProtection()),
   provideHttpClientTesting(),
   CatalogoPublicoService,
+  UsuariosPublicosService,
   CatalogoService,
+  InteraccionesService,
   PieceCard,
   LikeButton,
   FollowButton,
   ExplorePage,
-  PiecePage,
+  ImageDrop,
+  {
+    provide: DetalleDialogo,
+    useValue: { lista: signal([]), abrir: () => false, restaurar: () => {} },
+  },
+  { provide: Pantalla, useValue: { escritorio: signal(false) } },
+  {
+    provide: AuthService,
+    useValue: {
+      usuario: currentUser,
+      token: computed(() => currentUser()?.username ?? null),
+      autenticado: computed(() => currentUser() !== null),
+    },
+  },
   { provide: PendingTasks, useValue: { add: () => () => {} } },
+  { provide: ɵEffectScheduler, useValue: effects },
+  { provide: ɵChangeDetectionScheduler, useValue: { notify() {} } },
   { provide: ActivatedRoute, useValue: route },
   { provide: Router, useValue: router },
   { provide: Location, useValue: { back() {} } },
-  { provide: ToastService, useValue: { show() {} } },
+  {
+    provide: ToastService,
+    useValue: {
+      show(...args) {
+        avisos.push(args);
+      },
+    },
+  },
 ]);
 const http = injector.get(HttpTestingController);
 const fixture = (id) => ({
@@ -109,6 +186,17 @@ const request = (offset, q = null, categoria = null) =>
   );
 try {
   const explore = injector.get(ExplorePage);
+  await settle();
+  const populares = http.expectOne(
+    (r) => r.url === `${environment.apiUrl}/piezas` && r.params.get('orden') === 'populares',
+  );
+  assert.equal(populares.request.params.get('limite'), '6');
+  populares.flush(page([fixture(40), fixture(41)], 2));
+  await settle();
+  assert.deepEqual(
+    explore.piezasDestacadas().map((p) => p.id),
+    [40, 41],
+  );
   const first = request(0);
   first.flush(
     page(
@@ -153,10 +241,19 @@ try {
   assert.deepEqual(card.detalleLink(), ['/pieza', 1]);
   assert.equal(card.guardada(), false);
   assert.equal(card.megusta(), '8');
+  // Las piezas públicas se guardan y reciben me gusta en la API, y muestran lo que ella responde.
   card.alternarGuardar();
+  http
+    .expectOne({ method: 'POST', url: `${environment.apiUrl}/piezas/1/guardar` })
+    .flush({ guardada: true, guardados: 1 });
+  assert.equal(card.guardada(), true);
   const like = injector.get(LikeButton);
   setInput(like.pieza, publicPiece);
   like.alternar();
+  http
+    .expectOne({ method: 'POST', url: `${environment.apiUrl}/piezas/1/megusta` })
+    .flush({ gustada: true, megusta: 9 });
+  assert.equal(card.megusta(), '9', 'La tarjeta debe ver el me gusta dado desde otro componente');
   const follow = injector.get(FollowButton);
   setInput(follow.usuarioId, 2);
   setInput(follow.pendiente, true);
@@ -166,21 +263,434 @@ try {
   assert.deepEqual([...mock.siguiendo()], follows);
   setInput(card.pieza, mock.pieza(1));
   assert.equal(card.detalleLink(), null, 'Una pieza de muestra no debe abrir el detalle público');
-  const detail = injector.get(PiecePage);
-  http.expectOne(`${environment.apiUrl}/piezas/7`).flush('error', { status: 500, statusText: 'Error' });
-  assert.equal(detail.estado(), 'error');
-  detail.reintentar.next();
-  http.expectOne(`${environment.apiUrl}/piezas/7`).flush(fixture(7));
-  assert.equal(detail.pieza().id, 7);
-  detail.fallo.set(true);
-  params.next(convertToParamMap({ id: '8' }));
-  assert.equal(detail.fallo(), false);
-  http.expectOne(`${environment.apiUrl}/piezas/8`).flush('no', { status: 404, statusText: 'Not Found' });
-  assert.equal(detail.estado(), 'no-encontrada');
-  params.next(convertToParamMap({ id: 'abc' }));
-  assert.equal(detail.estado(), 'no-encontrada');
+  const imagen = injector.get(ImageDrop);
+  let lectura = null;
+  imagen.lectura.subscribe((value) => (lectura = value));
+  const originalReader = globalThis.FileReader;
+  let lector;
+  globalThis.FileReader = class {
+    constructor() {
+      lector = this;
+    }
+    readAsDataURL() {}
+    abort() {}
+  };
+  imagen.elegir({ target: { files: [{ type: 'image/gif', size: 20 }] } });
+  assert.equal(lector, undefined, 'Un GIF no se lee');
+  imagen.elegir({ target: { files: [{ type: 'image/png', size: 2 * 1024 * 1024 + 1 }] } });
+  assert.equal(lector, undefined, 'Una imagen mayor de 2 MiB no se lee');
+  imagen.elegir({ target: { files: [{ type: 'image/png', size: 20 }] } });
+  assert.equal(lectura, true);
+  lector.result = 'data:image/png;base64,AA==';
+  lector.onload();
+  lector.onloadend();
+  assert.equal(lectura, false);
+  assert.equal(imagen.imagen(), 'data:image/png;base64,AA==');
+  imagen.elegir({ target: { files: [{ type: 'image/png', size: 20 }] } });
+  lector.onerror();
+  lector.onloadend();
+  assert.equal(lectura, false);
+  globalThis.FileReader = originalReader;
+  const usuarios = injector.get(UsuariosPublicosService);
+  let resultado;
+  usuarios.seguir('ana', false).subscribe((value) => (resultado = value));
+  const followRequest = http.expectOne(`${environment.apiUrl}/usuarios/ana/seguir`);
+  assert.equal(followRequest.request.method, 'POST');
+  followRequest.flush({ lo_sigo: true, seguidores: 4 });
+  assert.deepEqual(resultado, { lo_sigo: true, seguidores: 4 });
+  usuarios.seguir('ana', true).subscribe();
+  const unfollowRequest = http.expectOne(`${environment.apiUrl}/usuarios/ana/seguir`);
+  assert.equal(unfollowRequest.request.method, 'DELETE');
+  unfollowRequest.flush({ lo_sigo: false, seguidores: 3 });
+  const interacciones = injector.get(InteraccionesService);
+  const guardar = { ...fixture(88) };
+  avisos.length = 0;
+  interacciones.alternarGuardado(guardar);
+  const save = http.expectOne({ method: 'POST', url: `${environment.apiUrl}/piezas/88/guardar` });
+  assert.equal(interacciones.estado(guardar).guardada, true);
+  assert.equal(avisos.length, 0, 'Deshacer solo se ofrece después de confirmar');
+  save.flush({ guardada: true, guardados: 1 });
+  assert.equal(avisos.at(-1)[2].texto, 'Deshacer');
+  avisos.at(-1)[2].fn();
+  http
+    .expectOne({ method: 'DELETE', url: `${environment.apiUrl}/piezas/88/guardar` })
+    .flush({ guardada: false, guardados: 0 });
+  assert.equal(interacciones.estado(guardar).guardada, false);
+  interacciones.alternarGuardado(guardar);
+  http
+    .expectOne({ method: 'POST', url: `${environment.apiUrl}/piezas/88/guardar` })
+    .flush('error', { status: 500, statusText: 'Error' });
+  assert.equal(interacciones.estado(guardar).guardada, false, 'Un error revierte el guardado');
+
+  const dobleToque = { ...fixture(91) };
+  interacciones.darMeGusta(dobleToque);
+  const primero = http.expectOne({
+    method: 'POST',
+    url: `${environment.apiUrl}/piezas/91/megusta`,
+  });
+  interacciones.darMeGusta(dobleToque);
+  primero.flush({ gustada: true, megusta: 1 });
+  interacciones.darMeGusta(dobleToque);
+  http.expectNone((r) => r.url === `${environment.apiUrl}/piezas/91/megusta`);
+  assert.equal(
+    interacciones.estado(dobleToque).gustada,
+    true,
+    'Repetir el gesto conserva el me gusta',
+  );
+
+  const antigua = { ...fixture(89) };
+  interacciones.alternarMeGusta(antigua);
+  const solicitudAnterior = http.expectOne(`${environment.apiUrl}/piezas/89/megusta`);
+  currentUser.set({ id: 2, username: 'beto' });
+  await settle();
+  solicitudAnterior.flush({ gustada: true, megusta: 1 });
+  assert.equal(
+    interacciones.estado(antigua).gustada,
+    false,
+    'La respuesta vieja no contamina otra cuenta',
+  );
+  interacciones.alternarMeGusta(antigua);
+  http.expectOne(`${environment.apiUrl}/piezas/89/megusta`).flush({ gustada: true, megusta: 1 });
+
+  const offset = signal(20);
+  const categoria = signal('vinilos');
+  const favoritos = runInInjectionContext(injector, () =>
+    interacciones.favoritos(offset, categoria),
+  );
+  await settle();
+  const filtered = http.expectOne((r) => r.url === `${environment.apiUrl}/favoritos`);
+  assert.equal(filtered.request.params.get('categoria'), 'vinilos');
+  assert.equal(filtered.request.params.get('desplazamiento'), '20');
+  filtered.flush(page([fixture(90)], 21, 20));
+  await settle();
+  assert.equal(favoritos.value().total, 21);
   http.verify();
-  console.log('Catálogo público: filtros, cancelación, paginación, errores y detalle verificados.');
+  console.log('Catálogo e interacciones: filtros, sesiones, errores y deshacer verificados.');
 } finally {
   injector.destroy();
+}
+
+const profileParams = new BehaviorSubject(convertToParamMap({ usuario: 'ana' }));
+const token = signal(null);
+const user = signal(null);
+const auth = { token, usuario: user, autenticado: () => user() !== null };
+const navigations = [];
+const notifications = [];
+const profileInjector = createEnvironmentInjector([
+  provideHttpClient(withNoXsrfProtection()),
+  provideHttpClientTesting(),
+  UsuariosPublicosService,
+  PublicProfilePage,
+  {
+    provide: DetalleDialogo,
+    useValue: { lista: signal([]), abrir: () => false, restaurar: () => {} },
+  },
+  { provide: Pantalla, useValue: { escritorio: signal(false) } },
+  { provide: PendingTasks, useValue: { add: () => () => {} } },
+  { provide: ɵEffectScheduler, useValue: effects },
+  { provide: ɵChangeDetectionScheduler, useValue: { notify() {} } },
+  {
+    provide: ErrorHandler,
+    useValue: {
+      handleError(e) {
+        throw e;
+      },
+    },
+  },
+  { provide: ActivatedRoute, useValue: { paramMap: profileParams } },
+  {
+    provide: Router,
+    useValue: {
+      url: '/coleccionistas/ana',
+      navigate: (...args) => {
+        navigations.push(args);
+        return Promise.resolve(true);
+      },
+    },
+  },
+  { provide: AuthService, useValue: auth },
+  { provide: ToastService, useValue: { show: (...args) => notifications.push(args) } },
+]);
+const profileHttp = profileInjector.get(HttpTestingController);
+const profileFixture = (username, id = 1) => ({
+  id,
+  username,
+  bio: '',
+  seguidores: 3,
+  siguiendo: 2,
+  lo_sigo: false,
+});
+const getProfile = (name) => profileHttp.expectOne(`${environment.apiUrl}/usuarios/${name}`);
+const getPieces = (name, offset = 0) =>
+  profileHttp.expectOne(
+    (r) =>
+      r.url === `${environment.apiUrl}/usuarios/${name}/piezas` &&
+      r.params.get('limite') === '20' &&
+      r.params.get('desplazamiento') === String(offset),
+  );
+try {
+  const profile = profileInjector.get(PublicProfilePage);
+  await settle();
+  getProfile('ana').flush(profileFixture('ana'));
+  getPieces('ana').flush(page([fixture(1)], 21));
+  await settle();
+  assert.equal(profile.perfil.value().username, 'ana');
+  profile.alternar();
+  assert.equal(navigations[0][1].queryParams.returnUrl, '/coleccionistas/ana');
+  token.set('token');
+  user.set({ id: 2, username: 'beto' });
+  await settle();
+  getProfile('ana').flush(profileFixture('ana'));
+  getPieces('ana').flush(page([fixture(1)], 21));
+  await settle();
+  profile.alternar();
+  profile.alternar();
+  const follow = profileHttp.expectOne(`${environment.apiUrl}/usuarios/ana/seguir`);
+  follow.flush({ lo_sigo: true, seguidores: 4 });
+  assert.equal(profile.perfil.value().seguidores, 4);
+  profile.alternar();
+  profileHttp
+    .expectOne(`${environment.apiUrl}/usuarios/ana/seguir`)
+    .flush('error', { status: 500, statusText: 'Error' });
+  assert.equal(profile.perfil.value().seguidores, 4);
+  profile.desplazamiento.set(20);
+  await settle();
+  getPieces('ana', 20).flush(page([fixture(21)], 21, 20));
+  await settle();
+  assert.equal(profile.piezas.value().desplazamiento, 20);
+  profile.alternar();
+  const stale = profileHttp.expectOne(`${environment.apiUrl}/usuarios/ana/seguir`);
+  profileParams.next(convertToParamMap({ usuario: 'carla' }));
+  profileParams.next(convertToParamMap({ usuario: 'ana' }));
+  stale.flush({ lo_sigo: false, seguidores: 99 });
+  await settle();
+  assert.equal(profile.perfil.value().seguidores, 4);
+  profileParams.next(convertToParamMap({ usuario: 'carla' }));
+  await settle();
+  assert.equal(profile.desplazamiento(), 0);
+  getProfile('carla').flush(profileFixture('carla', 3));
+  getPieces('carla').flush(page([], 0));
+  await settle();
+  assert.equal(profile.perfil.value().username, 'carla');
+  assert.equal(profile.perfil.value().seguidores, 3);
+  profile.alternar();
+  const oldSession = profileHttp.expectOne(`${environment.apiUrl}/usuarios/carla/seguir`);
+  token.set('otro-token');
+  user.set({ id: 4, username: 'dani' });
+  oldSession.flush({ lo_sigo: true, seguidores: 99 });
+  await settle();
+  getProfile('carla').flush(profileFixture('carla', 3));
+  getPieces('carla').flush(page([], 0));
+  await settle();
+  assert.equal(profile.perfil.value().seguidores, 3);
+  profileParams.next(convertToParamMap({ usuario: 'desconocida' }));
+  await settle();
+  getProfile('desconocida').flush('no', { status: 404, statusText: 'Not Found' });
+  getPieces('desconocida').flush('no', { status: 404, statusText: 'Not Found' });
+  await settle();
+  assert.equal(profile.noEncontrado(), true);
+  profile.perfil.reload();
+  profile.piezas.reload();
+  await settle();
+  getProfile('desconocida').flush(profileFixture('desconocida', 5));
+  getPieces('desconocida').flush(page([], 0));
+  await settle();
+  assert.equal(profile.perfil.value().username, 'desconocida');
+  profileHttp.verify();
+  console.log('Perfil público: sesión, seguimiento, navegación y paginación verificados.');
+} finally {
+  profileInjector.destroy();
+}
+
+// Detalle y formulario de piezas: ejecutan sus recursos con el backend HTTP de pruebas.
+const setInput = (input, value) => input[ɵSIGNAL].applyValueToInputSignal(input[ɵSIGNAL], value);
+const pieceUser = signal({ id: 1, username: 'ana' });
+const pieceNavigations = [];
+const pieceToasts = [];
+const pieceInjector = createEnvironmentInjector([
+  provideHttpClient(withNoXsrfProtection()),
+  provideHttpClientTesting(),
+  CatalogoPublicoService,
+  PiecePage,
+  PieceFormPage,
+  { provide: InteraccionesService, useValue: {} },
+  { provide: Pantalla, useValue: { escritorio: signal(false) } },
+  { provide: PendingTasks, useValue: { add: () => () => {} } },
+  { provide: ɵEffectScheduler, useValue: effects },
+  { provide: ɵChangeDetectionScheduler, useValue: { notify() {} } },
+  {
+    provide: ErrorHandler,
+    useValue: {
+      handleError(e) {
+        throw e;
+      },
+    },
+  },
+  {
+    provide: Router,
+    useValue: {
+      navigate: async (destino) => {
+        pieceNavigations.push(destino);
+        return true;
+      },
+      navigateByUrl: async () => true,
+    },
+  },
+  { provide: Location, useValue: { back() {} } },
+  { provide: AuthService, useValue: { usuario: pieceUser } },
+  { provide: ToastService, useValue: { show: (...args) => pieceToasts.push(args) } },
+  { provide: ComentariosService, useValue: { total: () => 0 } },
+]);
+const pieceHttp = pieceInjector.get(HttpTestingController);
+const getPiece = (id) => pieceHttp.expectOne(`${environment.apiUrl}/piezas/${id}`);
+const mutation = (method, id = null) =>
+  pieceHttp.expectOne(
+    (r) => r.method === method && r.url === `${environment.apiUrl}/piezas${id ? `/${id}` : ''}`,
+  );
+const noRequests = () => pieceHttp.expectNone((r) => r.method !== 'GET');
+const clearLog = () => {
+  pieceNavigations.length = 0;
+  pieceToasts.length = 0;
+};
+try {
+  // Detalle: carga, error con reintento, borrado y cambio de pieza.
+  const detail = pieceInjector.get(PiecePage);
+  setInput(detail.id, '7');
+  await settle();
+  assert.equal(detail.pieza.isLoading(), true);
+  getPiece(7).flush('error', { status: 500, statusText: 'Error' });
+  await settle();
+  assert.equal(detail.falloCarga(), true);
+  detail.pieza.reload();
+  await settle();
+  getPiece(7).flush(fixture(7));
+  await settle();
+  assert.equal(detail.pieza.value().id, 7);
+  assert.equal(detail.falloCarga(), false);
+  clearLog();
+  detail.confirmando.set(true);
+  detail.eliminar();
+  detail.eliminar();
+  mutation('DELETE', 7).flush('error', { status: 500, statusText: 'Error' });
+  assert.equal(detail.confirmando(), true);
+  assert.match(detail.errorEliminar(), /eliminar/);
+  assert.equal(pieceNavigations.length + pieceToasts.length, 0);
+  detail.eliminar();
+  mutation('DELETE', 7).flush(null, { status: 204, statusText: 'No Content' });
+  assert.equal(detail.confirmando(), false);
+  assert.deepEqual(pieceNavigations.pop(), ['/coleccionistas', 'ana']);
+  assert.equal(pieceToasts.pop()[1], 'success');
+  detail.fallo.set(true);
+  setInput(detail.id, '8');
+  await settle();
+  assert.equal(detail.fallo(), false);
+  getPiece(8).flush('no', { status: 404, statusText: 'Not Found' });
+  await settle();
+  assert.equal(detail.falloCarga(), false);
+  assert.equal(detail.pieza.hasValue(), false);
+  setInput(detail.id, 'abc');
+  await settle();
+  assert.equal(detail.pieza.hasValue(), false);
+
+  // Formulario: validación, creación, edición, borrado y piezas ajenas.
+  const form = pieceInjector.get(PieceFormPage);
+  assert.equal(form.estado(), 'lista');
+  form.guardar();
+  assert.equal(form.formulario.invalid, true);
+  form.formulario.setValue({
+    nombre: '  ' + '😀'.repeat(100) + '  ',
+    descripcion: ' descripción ',
+    categoria: 'cartas',
+    imagen_url: '/foto.jpg',
+  });
+  assert.equal(form.formulario.valid, true, 'Los límites cuentan puntos Unicode recortados');
+  form.formulario.controls.nombre.setValue('😀'.repeat(101));
+  assert.equal(form.formulario.invalid, true);
+  form.formulario.controls.nombre.setValue(' Pieza ');
+  form.formulario.controls.descripcion.setValue(' ' + 'a'.repeat(2000) + ' ');
+  assert.equal(form.formulario.valid, true);
+  form.formulario.controls.descripcion.setValue('a'.repeat(2001));
+  assert.equal(form.formulario.invalid, true);
+  form.formulario.controls.descripcion.setValue(' descripción ');
+  form.formulario.controls.categoria.setValue(null);
+  assert.equal(form.formulario.invalid, true);
+  form.formulario.controls.categoria.setValue('cartas');
+  clearLog();
+  form.guardar();
+  form.guardar();
+  const crear = mutation('POST');
+  assert.deepEqual(crear.request.body, {
+    nombre: 'Pieza',
+    descripcion: 'descripción',
+    categoria: 'cartas',
+    imagen_url: '/foto.jpg',
+  });
+  crear.flush({ detail: 'error imagen' }, { status: 400, statusText: 'Bad Request' });
+  assert.equal(form.errorAccion(), 'error imagen');
+  assert.equal(form.formulario.controls.nombre.value, ' Pieza ');
+  assert.equal(pieceNavigations.length + pieceToasts.length, 0);
+  form.guardar();
+  mutation('POST').flush(fixture(9));
+  assert.deepEqual(pieceNavigations.pop(), ['/pieza', 9]);
+  assert.equal(pieceToasts.pop()[1], 'success');
+
+  form.formulario.enable();
+  setInput(form.id, '11');
+  await settle();
+  assert.equal(form.estado(), 'cargando');
+  getPiece(11).flush({ ...fixture(11), imagen_url: '/api/piezas/11/imagen?v=12' });
+  await settle();
+  assert.equal(form.estado(), 'lista');
+  assert.equal(form.formulario.controls.nombre.value, 'Pieza 11');
+  form.formulario.controls.nombre.setValue(' Editada ');
+  form.guardar();
+  const editar = mutation('PUT', 11);
+  assert.equal(editar.request.body.imagen_url, '/api/piezas/11/imagen?v=12');
+  editar.flush('error', { status: 500, statusText: 'Error' });
+  assert.equal(form.formulario.controls.nombre.value, ' Editada ');
+  assert.equal(pieceNavigations.length + pieceToasts.length, 0);
+  form.guardar();
+  mutation('PUT', 11).flush(fixture(11));
+  assert.deepEqual(pieceNavigations.pop(), ['/pieza', 11]);
+  assert.equal(pieceToasts.pop()[1], 'success');
+
+  form.formulario.enable();
+  form.confirmando.set(true);
+  form.eliminar();
+  form.eliminar();
+  mutation('DELETE', 11).flush('error', { status: 403, statusText: 'Forbidden' });
+  assert.equal(form.confirmando(), true);
+  assert.match(form.errorAccion(), /dueño/);
+  assert.equal(pieceNavigations.length + pieceToasts.length, 0);
+  form.eliminar();
+  mutation('DELETE', 11).flush(null, { status: 204, statusText: 'No Content' });
+  assert.equal(form.confirmando(), false);
+  assert.deepEqual(pieceNavigations.pop(), ['/coleccionistas', 'ana']);
+  assert.equal(pieceToasts.pop()[1], 'success');
+
+  setInput(form.id, '12');
+  await settle();
+  getPiece(12).flush({ ...fixture(12), dueno: { id: 2, username: 'otra' } });
+  await settle();
+  assert.equal(form.estado(), 'ajena');
+  form.guardar();
+  form.eliminar();
+  noRequests();
+  setInput(form.id, '13');
+  await settle();
+  getPiece(13).flush('error', { status: 500, statusText: 'Error' });
+  await settle();
+  assert.equal(form.estado(), 'error');
+  form.pieza.reload();
+  await settle();
+  getPiece(13).flush('no', { status: 404, statusText: 'Not Found' });
+  await settle();
+  assert.equal(form.estado(), 'no-encontrada');
+  setInput(form.id, 'abc');
+  await settle();
+  assert.equal(form.estado(), 'no-encontrada');
+  pieceHttp.verify();
+  console.log('Piezas: detalle, formulario, creación, edición y borrado verificados.');
+} finally {
+  pieceInjector.destroy();
 }

@@ -9,7 +9,8 @@ Los nombres de los campos siguen el modelo del frontend (`frontend/src/app/model
 | Parte | Estado |
 | --- | --- |
 | Autenticación: registro, login y usuario actual | Listo |
-| Usuarios: perfil, editar perfil, seguir y dejar de seguir | Pendiente (la tabla `seguimientos` ya existe) |
+| Usuarios: perfil público, colección, seguir y dejar de seguir | Listo |
+| Usuarios: editar perfil | Pendiente |
 | Categorías | Listo |
 | Piezas: CRUD, Explorar e imágenes | Listo |
 | Me gusta, guardados (favoritos) y feed | Listo |
@@ -160,13 +161,15 @@ Router `routers/usuarios.py`, prefijo `/api/usuarios`.
 
 | Método y ruta | Acceso | Envía | Responde | Errores | Estado |
 | --- | --- | --- | --- | --- | --- |
-| `GET /usuarios/{username}` | Opcional | — | `200` + `Usuario` | `404` | Pendiente |
+| `GET /usuarios/{username}` | Opcional | — | `200` + `Usuario` | `404` | Listo |
 | `PATCH /usuarios/yo` | Token | `{bio?, nombre_visible?, avatar_url?}` | `200` + `UsuarioPrivado` | `401`, `422` | Pendiente |
-| `GET /usuarios/{username}/piezas` | Opcional | `?limite&desplazamiento` | `200` + página de `Pieza` | `404` | Pendiente |
-| `POST /usuarios/{username}/seguir` | Token | — | `200` + `{lo_sigo: true, seguidores}` | `400` si es uno mismo, `401`, `404` | Pendiente |
-| `DELETE /usuarios/{username}/seguir` | Token | — | `200` + `{lo_sigo: false, seguidores}` | `401`, `404` | Pendiente |
+| `GET /usuarios/{username}/piezas` | Opcional | `?limite&desplazamiento` | `200` + página de `Pieza` | `404`, `422` | Listo |
+| `POST /usuarios/{username}/seguir` | Token | — | `200` + `{lo_sigo: true, seguidores}` | `400` si es uno mismo, `401`, `404` | Listo |
+| `DELETE /usuarios/{username}/seguir` | Token | — | `200` + `{lo_sigo: false, seguidores}` | `401`, `404` | Listo |
+| `GET /usuarios/{username}/seguidos` | Pública | `?limite&desplazamiento` | `200` + página de `{id, username}` | `404` | Listo |
 
-- `GET /usuarios/{username}/piezas` sirve para el perfil propio (Mi colección) y para el de otros. En el propio, Angular muestra los botones de editar y eliminar.
+- `GET /usuarios/{username}/piezas` lista las piezas del usuario, de más reciente a más antigua (por fecha e ID), con páginas de 20 por defecto. Angular lo consume en `/coleccionistas/:usuario`; el CRUD usa esta colección real y el detalle de cada pieza.
+- El perfil público no incluye email, contraseña ni otros datos privados. Sin sesión, `lo_sigo` es `false`.
 - Seguir dos veces, o dejar de seguir a quien no sigues, no es error: responde el estado actual.
 - Seguir responde el total actualizado de seguidores, para que el botón y el contador cambien sin otra consulta.
 
@@ -203,7 +206,7 @@ Router `routers/piezas.py`, prefijo `/api/piezas`.
 | `limite`, `desplazamiento` | Ver paginación | `20`, `0` |
 
 - Los destacados de Explorar son `GET /piezas?orden=populares&limite=8`; no hay una ruta aparte.
-- En Angular, el `httpResource` de Explorar arma la URL con los signals de búsqueda, categoría y orden, y se recarga solo cuando cambia uno.
+- En Angular, Explorar usa `HttpClient` y Signals. Los perfiles públicos usan `httpResource` para recargar el perfil y la colección cuando cambia el usuario de la ruta o la sesión.
 - Editar usa `PUT` con el formulario completo. El backend vuelve a comprobar que el usuario sea el dueño, aunque Angular ya oculte el botón.
 - Al eliminar una pieza se borran también sus me gusta y guardados.
 
@@ -217,13 +220,30 @@ Router `routers/interacciones.py`, prefijo `/api`.
 | `DELETE /piezas/{id}/megusta` | Token | — | `200` + `{gustada: false, megusta}` | `401`, `404` | Listo |
 | `POST /piezas/{id}/guardar` | Token | — | `200` + `{guardada: true, guardados}` | `401`, `404` | Listo |
 | `DELETE /piezas/{id}/guardar` | Token | — | `200` + `{guardada: false, guardados}` | `401`, `404` | Listo |
-| `GET /favoritos` | Token | `?limite&desplazamiento` | `200` + página de `Pieza` | `401` | Listo |
+| `GET /favoritos` | Token | `?limite&desplazamiento&categoria` | `200` + página de `Pieza` | `401` | Listo |
 | `GET /feed` | Token | `?limite&desplazamiento` | `200` + página de `Pieza` | `401` | Listo |
 
 - Igual que seguir: repetir la acción no es error, y la respuesta trae el total actualizado para el contador.
 - Se puede dar me gusta y guardar las piezas propias.
-- `GET /favoritos` ordena por la fecha en que se guardó cada pieza, la más reciente primero.
+- `GET /favoritos` filtra opcionalmente por `categoria` y ordena por la fecha en que se guardó cada pieza, la más reciente primero. La paginación y el total corresponden a la categoría filtrada.
 - `GET /feed` trae las piezas de las personas que sigue el usuario, de la más nueva a la más antigua. Si no sigue a nadie, `items` viene vacío y Angular muestra el estado vacío.
+
+## Comentarios
+
+| Endpoint | Acceso | Entrada | Éxito | Errores | Estado |
+| --- | --- | --- | --- | --- | --- |
+| `GET /piezas/{id}/comentarios` | Público | `?limite&desplazamiento` | `200` + página de `Comentario` | `404` | Listo |
+| `POST /piezas/{id}/comentarios` | Token | `{ texto }` | `201` + `Comentario` | `401`, `404`, `422` | Listo |
+| `DELETE /comentarios/{id}` | Token | — | `204` | `401`, `403`, `404` | Listo |
+| `POST /comentarios/{id}/megusta` | Token | — | `200` + `{ gustado, megusta }` | `401`, `404` | Listo |
+| `DELETE /comentarios/{id}/megusta` | Token | — | `200` + `{ gustado, megusta }` | `401`, `404` | Listo |
+
+- `Comentario`: `{ id, texto, autor: { id, username }, padre_id, megusta, gustado, creado_en }`. `gustado` es verdadero si quien consulta (con token) le dio me gusta.
+- `POST` acepta `padre_id` para responder. Las respuestas son de un solo nivel: responder a una respuesta cuelga del comentario original. Debe ser de la misma pieza (`400` si no).
+- Van del más antiguo al más nuevo, como una conversación.
+- `texto`: 1 a 300 caracteres, sin contar los espacios de los extremos.
+- Elimina el comentario quien lo escribió o el dueño de la pieza; sus respuestas se borran con él.
+- Igual que los me gusta de piezas: repetir la acción no es error y la respuesta trae el total actualizado.
 
 ## Reglas de validación
 
@@ -235,16 +255,17 @@ La regla del backend es la que manda; la del formulario de Angular evita enviar 
 | `email` | Formato de email. Se guarda en minúsculas. |
 | `password` | 8 a 72 caracteres y **como máximo 72 bytes**: bcrypt no acepta más, y una letra con tilde ocupa 2 bytes. En Angular: `new TextEncoder().encode(clave).length <= 72`. |
 | `nombre` (pieza) | 1 a 100 caracteres, sin contar los espacios de los extremos (igual que el formulario). |
-| `descripcion` | 1 a 2.000 caracteres, sin contar los espacios de los extremos. Al formulario le falta el máximo de 2.000. |
+| `descripcion` | 1 a 2.000 caracteres, sin contar los espacios de los extremos. El formulario valida el máximo de 2.000. |
 | `categoria` | Uno de los cuatro slugs. Obligatoria. |
 | `imagen_url` | Obligatoria. Imagen `data:` JPEG, PNG o WebP de hasta 2 MB, o una dirección `http(s)://` o que empiece con `/`. |
+| `texto` (comentario) | 1 a 300 caracteres, sin contar los espacios de los extremos. |
 | `bio` | Hasta 300 caracteres. |
 | `nombre_visible` | Hasta 60 caracteres. |
 | `avatar_url` | Dirección `http(s)://`, hasta 500 caracteres. |
 
 ## Modelo de datos
 
-Seis tablas en PostgreSQL, creadas con migraciones de Alembic (`backend/migrations/versions/`).
+Ocho tablas en PostgreSQL, creadas con migraciones de Alembic (`backend/migrations/versions/`).
 
 | Tabla | Columnas principales | Estado |
 | --- | --- | --- |
@@ -254,6 +275,8 @@ Seis tablas en PostgreSQL, creadas con migraciones de Alembic (`backend/migratio
 | `piezas` | `id`, `usuario_id`, `categoria_id`, `nombre`, `descripcion`, `imagen_url` o la imagen guardada (`imagen_datos`, `imagen_tipo`), `creado_en`, `actualizado_en` | Listo (migración `0003`) |
 | `megusta` | `usuario_id` y `pieza_id` (juntos forman la clave primaria), `creado_en` | Listo (migración `0004`) |
 | `guardados` | `usuario_id` y `pieza_id` (juntos forman la clave primaria), `creado_en` | Listo (migración `0004`) |
+| `comentarios` | `id`, `pieza_id`, `usuario_id`, `texto` (hasta 300), `padre_id` (si es respuesta), `creado_en` | Listo (migraciones `0005` y `0006`) |
+| `comentario_megusta` | `usuario_id` y `comentario_id` (juntos forman la clave primaria), `creado_en` | Listo (migración `0006`) |
 
 - Los totales (`seguidores`, `siguiendo`, `megusta`, `guardados`) se calculan con `COUNT` al consultar; no se guardan en columnas, así nunca quedan desfasados.
 - Al borrar un usuario o una pieza, sus filas en las tablas de unión se borran solas (`ON DELETE CASCADE`).

@@ -11,6 +11,7 @@ export const routes: Routes = [
     path: 'feed',
     title: 'Feed · Vitrina',
     loadComponent: () => import('./pages/feed').then((m) => m.FeedPage),
+    canActivate: [authGuard],
   },
   {
     path: 'favoritos',
@@ -28,6 +29,11 @@ export const routes: Routes = [
     path: 'perfil/:usuario',
     title: 'Perfil · Vitrina',
     loadComponent: () => import('./pages/profile').then((m) => m.ProfilePage),
+  },
+  {
+    path: 'coleccionistas/:usuario',
+    title: 'Coleccionista · Vitrina',
+    loadComponent: () => import('./pages/public-profile').then((m) => m.PublicProfilePage),
   },
   {
     path: 'pieza/:id',
