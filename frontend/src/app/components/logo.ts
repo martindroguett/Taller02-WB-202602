@@ -5,11 +5,11 @@ import { Component, input } from '@angular/core';
   host: { '[attr.data-tono]': 'tono()', role: 'img', 'aria-label': 'Vitrina' },
   template: `
     <svg [attr.width]="tam()" [attr.height]="tam()" viewBox="0 0 40 40" aria-hidden="true">
-      <g transform="rotate(-8 20 20)">
-        <rect class="cuadro" x="3" y="3" width="34" height="34" rx="11" />
-        <path class="v" d="M12 12.5 20 28l8-15.5" />
-        <circle class="punto" cx="30" cy="10" r="3.2" />
-      </g>
+      <rect class="cuadro" x="4" y="4" width="32" height="32" rx="9" />
+      <rect class="vidrio" x="8" y="8" width="24" height="24" rx="5" />
+      <path class="repisa" d="M8 27h24" />
+      <circle class="punto" cx="20" cy="21.5" r="4.5" />
+      <path class="brillo" d="M11.5 16.5l7-5" />
     </svg>
     @if (!soloMarca()) {
       <span class="nombre">Vitrina</span>
@@ -24,12 +24,23 @@ import { Component, input } from '@angular/core';
     .cuadro {
       fill: var(--brand);
     }
-    .v {
+    .vidrio {
+      fill: var(--on-brand);
+      fill-opacity: 0.22;
+    }
+    .repisa,
+    .brillo {
       fill: none;
-      stroke: var(--on-brand);
-      stroke-width: 5;
       stroke-linecap: round;
-      stroke-linejoin: round;
+    }
+    .repisa {
+      stroke: var(--on-brand);
+      stroke-width: 3;
+    }
+    .brillo {
+      stroke: var(--on-brand);
+      stroke-opacity: 0.8;
+      stroke-width: 2;
     }
     .punto {
       fill: var(--spark);
@@ -44,8 +55,16 @@ import { Component, input } from '@angular/core';
     :host([data-tono='invert']) .cuadro {
       fill: var(--on-brand);
     }
-    :host([data-tono='invert']) .v {
+    :host([data-tono='invert']) .vidrio {
+      fill: var(--brand);
+      fill-opacity: 0.16;
+    }
+    :host([data-tono='invert']) .repisa {
       stroke: var(--brand);
+    }
+    :host([data-tono='invert']) .brillo {
+      stroke: var(--brand);
+      stroke-opacity: 0.7;
     }
     :host([data-tono='invert']) .nombre {
       color: var(--on-brand);
