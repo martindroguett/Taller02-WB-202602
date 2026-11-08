@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { PiezaPublica } from '../services/catalogo-publico.service';
 import { CatalogoService } from '../services/catalogo.service';
 import { InteraccionesService } from '../services/interacciones.service';
@@ -13,6 +13,7 @@ import { Icon } from './icon';
     <button
       type="button"
       [class.on]="activo()"
+      [class.latido]="latido()"
       [attr.aria-pressed]="activo()"
       [attr.aria-label]="activo() ? 'Quitar me gusta' : 'Dar me gusta'"
       [attr.aria-busy]="ocupado()"
@@ -46,6 +47,16 @@ import { Icon } from './icon';
     button.on .corazon {
       color: var(--like);
     }
+    @media (prefers-reduced-motion: no-preference) {
+      button.latido .corazon {
+        animation: latido 380ms ease-out;
+      }
+      @keyframes latido {
+        40% {
+          transform: scale(1.35);
+        }
+      }
+    }
     .corazon {
       display: inline-flex;
     }
@@ -63,10 +74,24 @@ export class LikeButton {
     const p = this.pieza();
     return 'dueno' in p ? this.interacciones.estado(p).gustada : this.catalogo.gustadas().has(p.id);
   });
+  protected readonly latido = signal(false);
+  private previo = false;
   protected readonly cuenta = computed(() => {
     const p = this.pieza();
     return compacto('dueno' in p ? this.interacciones.estado(p).megusta : this.catalogo.megusta(p));
   });
+  constructor() {
+    // El corazón late solo cuando pasa de apagado a encendido, no al cargar la pieza ya gustada.
+    effect(() => {
+      const ahora = this.activo();
+      if (ahora && !untracked(() => this.previo)) {
+        this.latido.set(true);
+        setTimeout(() => this.latido.set(false), 400);
+      }
+      this.previo = ahora;
+    });
+  }
+
   protected readonly ocupado = computed(() => this.interacciones.ocupada(this.pieza().id));
   protected alternar(): void {
     const p = this.pieza();

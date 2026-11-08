@@ -34,12 +34,16 @@ export class InteraccionesService {
   private readonly cambios = signal<ReadonlyMap<number, Partial<Interaccion>>>(new Map());
   // Piezas con una solicitud en curso: un segundo clic se ignora hasta que la API responda.
   private readonly enCurso = signal<ReadonlySet<number>>(new Set());
+  private readonly versionFavoritos = signal(0);
 
   constructor() {
     // Los me gusta y guardados son de cada usuario: al cerrar sesión o cambiar de cuenta se olvidan.
     effect(() => {
-      this.auth.usuario()?.id;
-      untracked(() => this.cambios.set(new Map()));
+      this.auth.token();
+      untracked(() => {
+        this.cambios.set(new Map());
+        this.enCurso.set(new Set());
+      });
     });
   }
 
@@ -58,11 +62,17 @@ export class InteraccionesService {
     return this.enCurso().has(id);
   }
 
-  alternarMeGusta(pieza: PiezaPublica): void {
+  /** El gesto de doble toque solo agrega el me gusta, no lo quita si ya estaba. */
+  darMeGusta(pieza: PiezaPublica): boolean {
+    if (this.estado(pieza).gustada) return this.auth.autenticado();
+    return this.alternarMeGusta(pieza);
+  }
+
+  alternarMeGusta(pieza: PiezaPublica): boolean {
     const antes = this.estado(pieza);
     const gustada = !antes.gustada;
     const url = `${environment.apiUrl}/piezas/${pieza.id}/megusta`;
-    this.enviar(
+    return this.enviar(
       pieza.id,
       { gustada, megusta: antes.megusta + (gustada ? 1 : -1) },
       { gustada: antes.gustada, megusta: antes.megusta },
@@ -75,19 +85,20 @@ export class InteraccionesService {
     const antes = this.estado(pieza);
     const guardada = !antes.guardada;
     const url = `${environment.apiUrl}/piezas/${pieza.id}/guardar`;
-    const enviado = this.enviar(
+    this.enviar(
       pieza.id,
       { guardada, guardados: antes.guardados + (guardada ? 1 : -1) },
       { guardada: antes.guardada, guardados: antes.guardados },
       guardada ? this.http.post<EstadoGuardado>(url, {}) : this.http.delete<EstadoGuardado>(url),
       'No se pudo actualizar tus favoritos. Inténtalo de nuevo.',
+      () => {
+        this.versionFavoritos.update((n) => n + 1);
+        this.toast.show(guardada ? 'Guardada en favoritos' : 'Quitada de favoritos', 'success', {
+          texto: 'Deshacer',
+          fn: () => this.alternarGuardado(pieza),
+        });
+      },
     );
-    if (enviado) {
-      this.toast.show(guardada ? 'Guardada en favoritos' : 'Quitada de favoritos', 'success', {
-        texto: 'Deshacer',
-        fn: () => this.alternarGuardado(pieza),
-      });
-    }
   }
 
   /** Las piezas que sigue el usuario, la más nueva primero. Se recarga al cambiar de sesión o de página. */
@@ -96,20 +107,35 @@ export class InteraccionesService {
   }
 
   /** Las piezas guardadas, la guardada más recientemente primero. */
-  favoritos(desplazamiento: () => number) {
-    return this.pagina('favoritos', desplazamiento);
+  favoritos(
+    desplazamiento: () => number,
+    categoria: () => string = () => 'todas',
+    limite = LIMITE,
+  ) {
+    return this.pagina('favoritos', desplazamiento, categoria, limite);
   }
 
-  private pagina(ruta: 'feed' | 'favoritos', desplazamiento: () => number) {
-    return httpResource<Pagina<PiezaPublica>>(() =>
-      // Leer el id hace que la lista se vuelva a pedir si cambia el usuario; sin sesión no se pide.
-      this.auth.usuario()?.id
+  private pagina(
+    ruta: 'feed' | 'favoritos',
+    desplazamiento: () => number,
+    categoria: () => string = () => 'todas',
+    limite = LIMITE,
+  ) {
+    return httpResource<Pagina<PiezaPublica>>(() => {
+      if (ruta === 'favoritos') this.versionFavoritos();
+      const filtro = categoria();
+      // Sin sesión no se pide la lista.
+      return this.auth.usuario()?.id
         ? {
             url: `${environment.apiUrl}/${ruta}`,
-            params: { limite: LIMITE, desplazamiento: desplazamiento() },
+            params: {
+              limite,
+              desplazamiento: desplazamiento(),
+              ...(filtro !== 'todas' ? { categoria: filtro } : {}),
+            },
           }
-        : undefined,
-    );
+        : undefined;
+    });
   }
 
   /**
@@ -123,20 +149,30 @@ export class InteraccionesService {
     anterior: T,
     solicitud: Observable<T>,
     mensajeError: string,
+    alConfirmar?: () => void,
   ): boolean {
     if (!this.exigirSesion() || this.ocupada(id)) return false;
 
+    const sesion = this.auth.token();
     this.anotar(id, optimista);
     this.enCurso.update((s) => new Set(s).add(id));
     solicitud.subscribe({
-      next: (respuesta) => this.anotar(id, respuesta),
+      next: (respuesta) => {
+        if (this.auth.token() !== sesion) return;
+        this.anotar(id, respuesta);
+        this.terminar(id);
+        alConfirmar?.();
+      },
       error: (error) => {
+        if (this.auth.token() !== sesion) return;
         this.anotar(id, anterior);
         // El 401 ya lo maneja el interceptor: cierra la sesión y lleva a ingresar.
         if (error.status !== 401) this.toast.show(mensajeError, 'danger');
         this.terminar(id);
       },
-      complete: () => this.terminar(id),
+      complete: () => {
+        if (this.auth.token() === sesion) this.terminar(id);
+      },
     });
     return true;
   }

@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from database import Sesion
-from models import Guardado, MeGusta, Pieza, Seguimiento, Usuario
+from models import Categoria, Guardado, MeGusta, Pieza, Seguimiento, Usuario
 from routers.piezas import Desplazamiento, Limite, paginar, pieza_o_404
 from schemas import EstadoGuardado, EstadoMeGusta, Pagina, PiezaRespuesta
 from seguridad import UsuarioActual
@@ -79,6 +79,7 @@ def favoritos(
     db: Sesion,
     limite: Limite = 20,
     desplazamiento: Desplazamiento = 0,
+    categoria: str | None = None,
 ):
     """Las piezas que guardó el usuario, la guardada más recientemente primero."""
     consulta = (
@@ -87,6 +88,8 @@ def favoritos(
         .where(Guardado.usuario_id == usuario.id)
         .order_by(Guardado.creado_en.desc(), Pieza.id.desc())
     )
+    if categoria:
+        consulta = consulta.join(Pieza.categoria).where(Categoria.slug == categoria)
     return paginar(db, consulta, request, usuario, limite, desplazamiento)
 
 

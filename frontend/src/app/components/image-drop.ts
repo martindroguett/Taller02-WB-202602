@@ -51,7 +51,7 @@ const MAX_MB = 2;
       align-items: center;
       justify-content: center;
       gap: var(--space-1);
-      min-height: 200px;
+      min-height: var(--drop-alto, 200px);
       padding: var(--space-5);
       border: 2px dashed var(--line-strong);
       border-radius: var(--radius-lg);
@@ -77,6 +77,7 @@ const MAX_MB = 2;
     .vista {
       position: relative;
       aspect-ratio: 5 / 4;
+      height: var(--drop-alto, auto);
       overflow: hidden;
       border: 6px solid var(--surface);
       border-radius: var(--radius-lg);
