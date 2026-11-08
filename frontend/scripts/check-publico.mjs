@@ -3,6 +3,7 @@ import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { transpileModule, ModuleKind, ScriptTarget } from 'typescript';
 import '@angular/compiler';
 import {
+  computed,
   createEnvironmentInjector,
   PendingTasks,
   signal,
@@ -69,6 +70,7 @@ const { CatalogoPublicoService } = await import(
   new URL('services/catalogo-publico.service.mjs', dest)
 );
 const { ToastService } = await import(new URL('services/toast.service.mjs', dest));
+const { InteraccionesService } = await import(new URL('services/interacciones.service.mjs', dest));
 const { UsuariosPublicosService } = await import(
   new URL('services/usuarios-publicos.service.mjs', dest)
 );
@@ -119,12 +121,16 @@ const injector = createEnvironmentInjector([
   CatalogoPublicoService,
   UsuariosPublicosService,
   CatalogoService,
+  InteraccionesService,
   PieceCard,
   LikeButton,
   FollowButton,
   ExplorePage,
   ImageDrop,
-  { provide: AuthService, useValue: { usuario: currentUser } },
+  {
+    provide: AuthService,
+    useValue: { usuario: currentUser, autenticado: computed(() => currentUser() !== null) },
+  },
   { provide: PendingTasks, useValue: { add: () => () => {} } },
   { provide: ɵEffectScheduler, useValue: effects },
   { provide: ɵChangeDetectionScheduler, useValue: { notify() {} } },
@@ -222,10 +228,19 @@ try {
   assert.deepEqual(card.detalleLink(), ['/pieza', 1]);
   assert.equal(card.guardada(), false);
   assert.equal(card.megusta(), '8');
+  // Las piezas públicas se guardan y reciben me gusta en la API, y muestran lo que ella responde.
   card.alternarGuardar();
+  http
+    .expectOne({ method: 'POST', url: `${environment.apiUrl}/piezas/1/guardar` })
+    .flush({ guardada: true, guardados: 1 });
+  assert.equal(card.guardada(), true);
   const like = injector.get(LikeButton);
   setInput(like.pieza, publicPiece);
   like.alternar();
+  http
+    .expectOne({ method: 'POST', url: `${environment.apiUrl}/piezas/1/megusta` })
+    .flush({ gustada: true, megusta: 9 });
+  assert.equal(card.megusta(), '9', 'La tarjeta debe ver el me gusta dado desde otro componente');
   const follow = injector.get(FollowButton);
   setInput(follow.usuarioId, 2);
   setInput(follow.pendiente, true);
