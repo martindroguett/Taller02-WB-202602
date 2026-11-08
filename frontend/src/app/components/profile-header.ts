@@ -1,4 +1,5 @@
-import { Component, input } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { RouterLink } from '@angular/router';
 import { compacto } from '../models/format';
 import { PiezaPublica } from '../services/catalogo-publico.service';
@@ -6,6 +7,7 @@ import { UsuarioPublico } from '../services/usuarios-publicos.service';
 import { Avatar } from './avatar';
 import { Button } from './button';
 import { PieceArt } from './piece-art';
+import { abrirListaUsuarios } from './user-list-dialog';
 
 @Component({
   selector: 'vt-profile-header',
@@ -40,20 +42,20 @@ import { PieceArt } from './piece-art';
           <p class="body bio">{{ usuario().bio }}</p>
         }
       </div>
-      <dl class="cifras">
-        <div>
-          <dt class="caption vt-muted">Piezas</dt>
-          <dd class="stat">{{ piezas() === null ? '—' : compacto(piezas()!) }}</dd>
-        </div>
-        <div>
-          <dt class="caption vt-muted">Seguidores</dt>
-          <dd class="stat">{{ compacto(usuario().seguidores) }}</dd>
-        </div>
-        <div>
-          <dt class="caption vt-muted">Siguiendo</dt>
-          <dd class="stat">{{ compacto(usuario().siguiendo) }}</dd>
-        </div>
-      </dl>
+      <div class="cifras">
+        <button type="button" (click)="verPiezas.emit()">
+          <span class="stat">{{ piezas() === null ? '—' : compacto(piezas()!) }}</span>
+          <span class="caption vt-muted">Piezas</span>
+        </button>
+        <button type="button" (click)="verLista('seguidores')">
+          <span class="stat">{{ compacto(usuario().seguidores) }}</span>
+          <span class="caption vt-muted">Seguidores</span>
+        </button>
+        <button type="button" (click)="verLista('seguidos')">
+          <span class="stat">{{ compacto(usuario().siguiendo) }}</span>
+          <span class="caption vt-muted">Siguiendo</span>
+        </button>
+      </div>
     </div>
   `,
   styles: `
@@ -132,24 +134,22 @@ import { PieceArt } from './piece-art';
       grid-column: 1 / -1;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      margin: 0;
       padding: var(--space-3) 0 0;
       border-top: 1px solid var(--line);
     }
-    .cifras div {
+    .cifras button {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 2px;
+      min-height: var(--tap-target);
+      border: 0;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
     }
-    .cifras div + div {
+    .cifras button + button {
       border-left: 1px solid var(--line);
-    }
-    dt {
-      order: 2;
-    }
-    dd {
-      margin: 0;
     }
   `,
 })
@@ -160,4 +160,12 @@ export class ProfileHeader {
   readonly usuario = input.required<UsuarioPublico>();
   readonly piezas = input<number | null>(null);
   readonly abanico = input<PiezaPublica[]>([]);
+  /** Se pulsa «Piezas»: la página lleva a la colección. */
+  readonly verPiezas = output<void>();
+
+  private readonly dialogo = inject(MatDialog);
+
+  protected verLista(tipo: 'seguidores' | 'seguidos'): void {
+    abrirListaUsuarios(this.dialogo, this.usuario().username, tipo);
+  }
 }

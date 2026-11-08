@@ -27,6 +27,16 @@ docker compose exec api alembic revision --autogenerate -m "describe el cambio"
 docker compose exec api alembic upgrade head
 ```
 
+### Datos de prueba
+
+Con la API en marcha, se cargan 5 usuarios (`camila`, `diego`, `sofia`, `mateo` y `valentina`) con piezas, seguimientos, me gusta y comentarios. Se puede repetir sin duplicar datos:
+
+```bash
+docker compose exec api python seed.py
+```
+
+Se ingresa con `camila@vitrina.app` y la clave `demo12345` (también `diego@…`, `sofia@…`, etc.). Es solo para desarrollo.
+
 ### Frontend
 
 Se necesita **Node.js 24 LTS** con npm. Desde la raíz del repositorio:
@@ -37,7 +47,7 @@ npm ci
 npm start
 ```
 
-Abrir **http://localhost:4200/** en el navegador. Para detener el servidor, usar `Ctrl+C` en la terminal.
+Abrir **http://localhost:4200/** en el navegador. Para probar desde el celular, conectado a la misma red Wi-Fi, abrir `http://<IP-del-computador>:4200` (en Mac, la IP sale con `ipconfig getifaddr en0`). El servidor ya escucha en toda la red y redirige `/api` al backend, así que no hay nada más que configurar. Para detener el servidor, usar `Ctrl+C` en la terminal.
 
 Explorar, el detalle de piezas, los perfiles públicos, el ingreso y el registro consultan la API; requieren el backend y la base de datos en ejecución. El servidor de desarrollo redirige `/api` a `http://localhost:8000`. Desde el propietario de una pieza se abre su perfil en `/coleccionistas/:usuario`, con su colección y seguimientos persistentes. Feed, favoritos, me gusta y guardados de piezas reales también usan la API. El perfil propio en `/perfil` muestra la cuenta y la colección real.
 

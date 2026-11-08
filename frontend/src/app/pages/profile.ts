@@ -25,7 +25,7 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
           <button vt-button type="button" (click)="perfil.reload()">Reintentar</button>
         </vt-empty-state>
       } @else if (perfil.value(); as usuario) {
-        <vt-profile-header [usuario]="usuario" [piezas]="total()" [abanico]="abanico()" />
+        <vt-profile-header [usuario]="usuario" [piezas]="total()" [abanico]="abanico()" (verPiezas)="coleccion.scrollIntoView({ behavior: 'smooth' })" />
 
         <section class="cuenta">
           <p>{{ auth.usuario()?.email }}</p>
@@ -37,7 +37,7 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
           </div>
         </section>
 
-        <section class="vt-section" aria-labelledby="coleccion-titulo">
+        <section class="vt-section" aria-labelledby="coleccion-titulo" #coleccion>
           <h2 class="title" id="coleccion-titulo">Mi colección</h2>
           @if (piezas.isLoading()) {
             <div class="cargando" role="status"><mat-spinner diameter="28" /> Cargando piezas…</div>

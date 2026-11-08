@@ -178,7 +178,7 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
         </section>
       </main>
       <aside class="lateral" aria-label="Tu comunidad">
-        <vt-comunidad-lateral modo="novedades" />
+        <vt-comunidad-lateral />
       </aside>
     </div>
   `,

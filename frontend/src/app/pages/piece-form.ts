@@ -524,10 +524,11 @@ export class PieceFormPage {
     (id ? this.api.actualizar(Number(id), datos) : this.api.crear(datos))
       .pipe(takeUntilDestroyed(this.destroy))
       .subscribe({
-        next: (pieza) => {
+        next: () => {
           this.ocupado.set(false);
           this.toast.show(id ? 'Cambios guardados' : 'Pieza agregada', 'success');
-          void this.router.navigate(['/pieza', pieza.id]);
+          // Se vuelve a la colección (no al formulario con «atrás») y la pieza se ve en la ventana de siempre.
+          void this.router.navigate(this.coleccion(), { replaceUrl: true });
         },
         error: (e: HttpErrorResponse) => {
           this.ocupado.set(false);
@@ -549,7 +550,7 @@ export class PieceFormPage {
           this.ocupado.set(false);
           this.confirmando.set(false);
           this.toast.show('Pieza eliminada', 'success');
-          void this.router.navigate(this.coleccion());
+          void this.router.navigate(this.coleccion(), { replaceUrl: true });
         },
         error: (e: HttpErrorResponse) => {
           this.ocupado.set(false);
