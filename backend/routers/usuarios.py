@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from database import Sesion
 from models import Pieza, Seguimiento, Usuario
 from routers.piezas import Desplazamiento, Limite, paginar
-from schemas import EstadoSeguimiento, Pagina, PerfilPublico, PiezaRespuesta
+from schemas import Dueno, EstadoSeguimiento, Pagina, PerfilPublico, PiezaRespuesta
 from seguridad import UsuarioActual, UsuarioOpcional
 
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
@@ -41,6 +41,27 @@ def piezas_usuario(
     perfil = usuario_o_404(db, username)
     consulta = select(Pieza).where(Pieza.usuario_id == perfil.id).order_by(Pieza.creado_en.desc(), Pieza.id.desc())
     return paginar(db, consulta, request, usuario, limite, desplazamiento)
+
+
+@router.get("/{username}/seguidos", response_model=Pagina[Dueno])
+def seguidos(
+    username: str, db: Sesion, limite: Limite = 20, desplazamiento: Desplazamiento = 0,
+):
+    """Las personas que sigue el usuario, la seguida más recientemente primero (la fila del Feed)."""
+    perfil = usuario_o_404(db, username)
+    consulta = (
+        select(Usuario)
+        .join(Seguimiento, Seguimiento.seguido_id == Usuario.id)
+        .where(Seguimiento.seguidor_id == perfil.id)
+    )
+    total = db.scalar(select(func.count()).select_from(consulta.subquery()))
+    usuarios = db.scalars(
+        consulta.order_by(Seguimiento.creado_en.desc(), Usuario.id.desc()).limit(limite).offset(desplazamiento)
+    ).all()
+    return Pagina(
+        items=[Dueno.model_validate(u) for u in usuarios],
+        total=total, limite=limite, desplazamiento=desplazamiento,
+    )
 
 
 @router.post("/{username}/seguir", response_model=EstadoSeguimiento)

@@ -3,7 +3,9 @@ import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { transpileModule, ModuleKind, ScriptTarget } from 'typescript';
 import '@angular/compiler';
 import {
+  computed,
   createEnvironmentInjector,
+  runInInjectionContext,
   PendingTasks,
   signal,
   ErrorHandler,
@@ -72,6 +74,7 @@ const { CatalogoPublicoService } = await import(
 );
 const { ToastService } = await import(new URL('services/toast.service.mjs', dest));
 const { ComentariosService } = await import(new URL('services/comentarios.service.mjs', dest));
+const { InteraccionesService } = await import(new URL('services/interacciones.service.mjs', dest));
 const { UsuariosPublicosService } = await import(
   new URL('services/usuarios-publicos.service.mjs', dest)
 );
@@ -122,6 +125,7 @@ const injector = createEnvironmentInjector([
   CatalogoPublicoService,
   UsuariosPublicosService,
   CatalogoService,
+  InteraccionesService,
   PieceCard,
   LikeButton,
   FollowButton,
@@ -132,7 +136,14 @@ const injector = createEnvironmentInjector([
     useValue: { lista: signal([]), abrir: () => false, restaurar: () => {} },
   },
   { provide: Pantalla, useValue: { escritorio: signal(false) } },
-  { provide: AuthService, useValue: { usuario: currentUser } },
+  {
+    provide: AuthService,
+    useValue: {
+      usuario: currentUser,
+      token: computed(() => currentUser()?.username ?? null),
+      autenticado: computed(() => currentUser() !== null),
+    },
+  },
   { provide: PendingTasks, useValue: { add: () => () => {} } },
   { provide: ɵEffectScheduler, useValue: effects },
   { provide: ɵChangeDetectionScheduler, useValue: { notify() {} } },
@@ -230,10 +241,19 @@ try {
   assert.deepEqual(card.detalleLink(), ['/pieza', 1]);
   assert.equal(card.guardada(), false);
   assert.equal(card.megusta(), '8');
+  // Las piezas públicas se guardan y reciben me gusta en la API, y muestran lo que ella responde.
   card.alternarGuardar();
+  http
+    .expectOne({ method: 'POST', url: `${environment.apiUrl}/piezas/1/guardar` })
+    .flush({ guardada: true, guardados: 1 });
+  assert.equal(card.guardada(), true);
   const like = injector.get(LikeButton);
   setInput(like.pieza, publicPiece);
   like.alternar();
+  http
+    .expectOne({ method: 'POST', url: `${environment.apiUrl}/piezas/1/megusta` })
+    .flush({ gustada: true, megusta: 9 });
+  assert.equal(card.megusta(), '9', 'La tarjeta debe ver el me gusta dado desde otro componente');
   const follow = injector.get(FollowButton);
   setInput(follow.usuarioId, 2);
   setInput(follow.pendiente, true);
@@ -282,8 +302,54 @@ try {
   const unfollowRequest = http.expectOne(`${environment.apiUrl}/usuarios/ana/seguir`);
   assert.equal(unfollowRequest.request.method, 'DELETE');
   unfollowRequest.flush({ lo_sigo: false, seguidores: 3 });
+  const interacciones = injector.get(InteraccionesService);
+  const guardar = { ...fixture(88) };
+  avisos.length = 0;
+  interacciones.alternarGuardado(guardar);
+  const save = http.expectOne({ method: 'POST', url: `${environment.apiUrl}/piezas/88/guardar` });
+  assert.equal(interacciones.estado(guardar).guardada, true);
+  assert.equal(avisos.length, 0, 'Deshacer solo se ofrece después de confirmar');
+  save.flush({ guardada: true, guardados: 1 });
+  assert.equal(avisos.at(-1)[2].texto, 'Deshacer');
+  avisos.at(-1)[2].fn();
+  http
+    .expectOne({ method: 'DELETE', url: `${environment.apiUrl}/piezas/88/guardar` })
+    .flush({ guardada: false, guardados: 0 });
+  assert.equal(interacciones.estado(guardar).guardada, false);
+  interacciones.alternarGuardado(guardar);
+  http
+    .expectOne({ method: 'POST', url: `${environment.apiUrl}/piezas/88/guardar` })
+    .flush('error', { status: 500, statusText: 'Error' });
+  assert.equal(interacciones.estado(guardar).guardada, false, 'Un error revierte el guardado');
+
+  const antigua = { ...fixture(89) };
+  interacciones.alternarMeGusta(antigua);
+  const solicitudAnterior = http.expectOne(`${environment.apiUrl}/piezas/89/megusta`);
+  currentUser.set({ id: 2, username: 'beto' });
+  await settle();
+  solicitudAnterior.flush({ gustada: true, megusta: 1 });
+  assert.equal(
+    interacciones.estado(antigua).gustada,
+    false,
+    'La respuesta vieja no contamina otra cuenta',
+  );
+  interacciones.alternarMeGusta(antigua);
+  http.expectOne(`${environment.apiUrl}/piezas/89/megusta`).flush({ gustada: true, megusta: 1 });
+
+  const offset = signal(20);
+  const categoria = signal('vinilos');
+  const favoritos = runInInjectionContext(injector, () =>
+    interacciones.favoritos(offset, categoria),
+  );
+  await settle();
+  const filtered = http.expectOne((r) => r.url === `${environment.apiUrl}/favoritos`);
+  assert.equal(filtered.request.params.get('categoria'), 'vinilos');
+  assert.equal(filtered.request.params.get('desplazamiento'), '20');
+  filtered.flush(page([fixture(90)], 21, 20));
+  await settle();
+  assert.equal(favoritos.value().total, 21);
   http.verify();
-  console.log('Catálogo público: filtros, cancelación, paginación y errores verificados.');
+  console.log('Catálogo e interacciones: filtros, sesiones, errores y deshacer verificados.');
 } finally {
   injector.destroy();
 }
@@ -431,6 +497,7 @@ const pieceInjector = createEnvironmentInjector([
   CatalogoPublicoService,
   PiecePage,
   PieceFormPage,
+  { provide: InteraccionesService, useValue: {} },
   { provide: Pantalla, useValue: { escritorio: signal(false) } },
   { provide: PendingTasks, useValue: { add: () => () => {} } },
   { provide: ɵEffectScheduler, useValue: effects },

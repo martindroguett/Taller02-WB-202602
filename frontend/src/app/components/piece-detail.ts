@@ -18,6 +18,7 @@ import { AuthService } from '../services/auth.service';
 import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publico.service';
 import { ComentariosService } from '../services/comentarios.service';
 import { ToastService } from '../services/toast.service';
+import { InteraccionesService } from '../services/interacciones.service';
 import { Avatar } from './avatar';
 import { Button } from './button';
 import { CatalogTag } from './catalog-tag';
@@ -72,9 +73,10 @@ import { PieceArt } from './piece-art';
         class="guardar"
         tone="glass"
         icon="bookmark"
-        label="Guardar en favoritos: pendiente de conectar"
-        title="Pendiente de conectar"
-        (click)="pendiente('Favoritos')"
+        [label]="interacciones.estado(p).guardada ? 'Quitar de favoritos' : 'Guardar en favoritos'"
+        [active]="interacciones.estado(p).guardada"
+        [pressed]="interacciones.estado(p).guardada"
+        (click)="interacciones.alternarGuardado(p)"
       ></button>
       <vt-catalog-tag class="ficha" [categoria]="p.categoria" [numero]="p.id" />
     </section>
@@ -289,6 +291,7 @@ export class PieceDetail {
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly toast = inject(ToastService);
+  protected readonly interacciones = inject(InteraccionesService);
   private readonly destroy = inject(DestroyRef);
   private readonly comentarios = inject(ComentariosService);
 
@@ -315,10 +318,6 @@ export class PieceDetail {
 
   protected cuando(fecha: string): string {
     return relativo(Math.max(0, Math.floor((Date.now() - Date.parse(fecha)) / 60_000)));
-  }
-
-  protected pendiente(accion: string): void {
-    this.toast.show(`${accion} está pendiente de conectar`);
   }
 
   protected volver(): void {

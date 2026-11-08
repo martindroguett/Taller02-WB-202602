@@ -1,7 +1,7 @@
 import { Component, computed, ElementRef, inject, input, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ToastService } from '../services/toast.service';
 import { CatalogoService } from '../services/catalogo.service';
+import { InteraccionesService } from '../services/interacciones.service';
 import { compacto, relativo } from '../models/format';
 import { Pieza } from '../models/vitrina';
 import { DetalleDialogo } from '../services/detalle-dialogo';
@@ -48,11 +48,7 @@ import { CatalogTag } from './catalog-tag';
             tone="glass"
             size="sm"
             icon="bookmark"
-            [label]="
-              (esPublica() ? 'Pendiente de conectar: ' : '') +
-              (guardada() ? 'Quitar de favoritos' : 'Guardar en favoritos')
-            "
-            [title]="esPublica() ? 'Pendiente de conectar' : ''"
+            [label]="guardada() ? 'Quitar de favoritos' : 'Guardar en favoritos'"
             [active]="guardada()"
             [pressed]="guardada()"
             (click)="alternarGuardar()"
@@ -66,10 +62,10 @@ import { CatalogTag } from './catalog-tag';
         <a class="nombre" [routerLink]="detalleLink()">{{ pieza().nombre }}</a>
         <p class="meta caption">
           @if (esPublica()) {
-            <span class="dueno publico" title="Perfil pendiente de conectar">
+            <a class="dueno publico" [routerLink]="['/coleccionistas', dueno().username]">
               <vt-avatar [nombre]="dueno().username" [tam]="24" />
               <span>&#64;{{ dueno().username }}</span>
-            </span>
+            </a>
             @if (megusta() !== '0') {
               <span class="dato" [class.gustado]="gustada()"
                 ><vt-icon name="favorite" [size]="16" [filled]="gustada()" />{{ megusta() }}</span
@@ -288,19 +284,22 @@ export class PieceCard {
     this.pieza().imagen_url;
     return false;
   });
-  private readonly toast = inject(ToastService);
   private readonly detalle = inject(DetalleDialogo);
+  private readonly interacciones = inject(InteraccionesService);
+  // Las piezas de la API ('dueno' in p) se guardan con InteraccionesService; las de muestra, en memoria.
   protected readonly guardada = computed(() => {
     const p = this.pieza();
-    return 'dueno' in p ? p.guardada : this.catalogo.guardadas().has(p.id);
+    return 'dueno' in p
+      ? this.interacciones.estado(p).guardada
+      : this.catalogo.guardadas().has(p.id);
   });
   protected readonly gustada = computed(() => {
     const p = this.pieza();
-    return 'dueno' in p ? p.gustada : this.catalogo.gustadas().has(p.id);
+    return 'dueno' in p ? this.interacciones.estado(p).gustada : this.catalogo.gustadas().has(p.id);
   });
   protected alternarGuardar(): void {
     const p = this.pieza();
-    if ('dueno' in p) this.toast.show('Favoritos está pendiente de conectar');
+    if ('dueno' in p) this.interacciones.alternarGuardado(p);
     else this.catalogo.toggleGuardar(p.id);
   }
   protected readonly esPublica = computed(() => 'dueno' in this.pieza());
@@ -321,7 +320,7 @@ export class PieceCard {
   });
   protected readonly megusta = computed(() => {
     const p = this.pieza();
-    return compacto('dueno' in p ? p.megusta : this.catalogo.megusta(p));
+    return compacto('dueno' in p ? this.interacciones.estado(p).megusta : this.catalogo.megusta(p));
   });
   protected readonly cuando = computed(() => {
     const p = this.pieza();

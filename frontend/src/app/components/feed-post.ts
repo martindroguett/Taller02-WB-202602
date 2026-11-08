@@ -1,6 +1,8 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CatalogoService } from '../services/catalogo.service';
+import { PiezaPublica } from '../services/catalogo-publico.service';
+import { InteraccionesService } from '../services/interacciones.service';
 import { relativo } from '../models/format';
 import { Pieza } from '../models/vitrina';
 import { Avatar } from './avatar';
@@ -16,7 +18,7 @@ import { PieceArt } from './piece-art';
   template: `
     <article>
       <header>
-        <a class="autor" [routerLink]="['/perfil', autor().username]">
+        <a class="autor" [routerLink]="perfilLink()">
           <vt-avatar [nombre]="autor().username" [tam]="44" />
           <span class="quien">
             <span class="body-strong">&#64;{{ autor().username }}</span>
@@ -26,17 +28,21 @@ import { PieceArt } from './piece-art';
       </header>
       <p class="texto">{{ pieza().descripcion }}</p>
       <div class="media">
-        <div class="foto">
+        <a
+          class="foto"
+          [routerLink]="['/pieza', pieza().id]"
+          [attr.aria-label]="'Ver ' + pieza().nombre"
+        >
           @if (pieza().imagen_url && !fallo()) {
             <img [src]="pieza().imagen_url" alt="" loading="lazy" (error)="fallo.set(true)" />
           } @else {
             <vt-piece-art [categoria]="pieza().categoria" />
           }
           <span class="placa">
-            <vt-catalog-tag [categoria]="pieza().categoria" [numero]="pieza().numero" />
+            <vt-catalog-tag [categoria]="pieza().categoria" [numero]="numero()" />
             <span class="nombre">{{ pieza().nombre }}</span>
           </span>
-        </div>
+        </a>
       </div>
       <footer>
         <vt-like-button [pieza]="pieza()" />
@@ -46,7 +52,7 @@ import { PieceArt } from './piece-art';
           [class.guardada]="guardada()"
           [attr.aria-label]="guardada() ? 'Quitar de favoritos' : 'Guardar en favoritos'"
           [attr.aria-pressed]="guardada()"
-          (click)="catalogo.toggleGuardar(pieza().id)"
+          (click)="alternarGuardar()"
         >
           <vt-icon name="bookmark" [filled]="guardada()" [size]="20" />{{
             guardada() ? 'Guardada' : 'Guardar'
@@ -185,10 +191,41 @@ import { PieceArt } from './piece-art';
 })
 export class FeedPost {
   protected readonly catalogo = inject(CatalogoService);
+  private readonly interacciones = inject(InteraccionesService);
 
-  readonly pieza = input.required<Pieza>();
+  readonly pieza = input.required<Pieza | PiezaPublica>();
   protected readonly fallo = signal(false);
-  protected readonly autor = computed(() => this.catalogo.usuario(this.pieza().duenoId));
-  protected readonly guardada = computed(() => this.catalogo.guardadas().has(this.pieza().id));
-  protected readonly cuando = computed(() => relativo(this.pieza().hace));
+  // Las piezas de la API traen su dueño y su fecha; las de muestra, solo el id del dueño y los minutos.
+  protected readonly autor = computed(() => {
+    const p = this.pieza();
+    return 'dueno' in p ? p.dueno : this.catalogo.usuario(p.duenoId);
+  });
+  protected readonly perfilLink = computed(() =>
+    'dueno' in this.pieza()
+      ? ['/coleccionistas', this.autor().username]
+      : ['/perfil', this.autor().username],
+  );
+  protected readonly numero = computed(() => {
+    const p = this.pieza();
+    return 'dueno' in p ? p.id : p.numero;
+  });
+  protected readonly guardada = computed(() => {
+    const p = this.pieza();
+    return 'dueno' in p
+      ? this.interacciones.estado(p).guardada
+      : this.catalogo.guardadas().has(p.id);
+  });
+  protected readonly cuando = computed(() => {
+    const p = this.pieza();
+    return relativo(
+      'dueno' in p
+        ? Math.max(0, Math.floor((Date.now() - Date.parse(p.creado_en)) / 60_000))
+        : p.hace,
+    );
+  });
+  protected alternarGuardar(): void {
+    const p = this.pieza();
+    if ('dueno' in p) this.interacciones.alternarGuardado(p);
+    else this.catalogo.toggleGuardar(p.id);
+  }
 }

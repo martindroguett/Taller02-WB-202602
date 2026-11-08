@@ -166,6 +166,7 @@ Router `routers/usuarios.py`, prefijo `/api/usuarios`.
 | `GET /usuarios/{username}/piezas` | Opcional | `?limite&desplazamiento` | `200` + página de `Pieza` | `404`, `422` | Listo |
 | `POST /usuarios/{username}/seguir` | Token | — | `200` + `{lo_sigo: true, seguidores}` | `400` si es uno mismo, `401`, `404` | Listo |
 | `DELETE /usuarios/{username}/seguir` | Token | — | `200` + `{lo_sigo: false, seguidores}` | `401`, `404` | Listo |
+| `GET /usuarios/{username}/seguidos` | Pública | `?limite&desplazamiento` | `200` + página de `{id, username}` | `404` | Listo |
 
 - `GET /usuarios/{username}/piezas` lista las piezas del usuario, de más reciente a más antigua (por fecha e ID), con páginas de 20 por defecto. Angular lo consume en `/coleccionistas/:usuario`; el CRUD usa esta colección real y el detalle de cada pieza.
 - El perfil público no incluye email, contraseña ni otros datos privados. Sin sesión, `lo_sigo` es `false`.
@@ -219,12 +220,12 @@ Router `routers/interacciones.py`, prefijo `/api`.
 | `DELETE /piezas/{id}/megusta` | Token | — | `200` + `{gustada: false, megusta}` | `401`, `404` | Listo |
 | `POST /piezas/{id}/guardar` | Token | — | `200` + `{guardada: true, guardados}` | `401`, `404` | Listo |
 | `DELETE /piezas/{id}/guardar` | Token | — | `200` + `{guardada: false, guardados}` | `401`, `404` | Listo |
-| `GET /favoritos` | Token | `?limite&desplazamiento` | `200` + página de `Pieza` | `401` | Listo |
+| `GET /favoritos` | Token | `?limite&desplazamiento&categoria` | `200` + página de `Pieza` | `401` | Listo |
 | `GET /feed` | Token | `?limite&desplazamiento` | `200` + página de `Pieza` | `401` | Listo |
 
 - Igual que seguir: repetir la acción no es error, y la respuesta trae el total actualizado para el contador.
 - Se puede dar me gusta y guardar las piezas propias.
-- `GET /favoritos` ordena por la fecha en que se guardó cada pieza, la más reciente primero.
+- `GET /favoritos` filtra opcionalmente por `categoria` y ordena por la fecha en que se guardó cada pieza, la más reciente primero. La paginación y el total corresponden a la categoría filtrada.
 - `GET /feed` trae las piezas de las personas que sigue el usuario, de la más nueva a la más antigua. Si no sigue a nadie, `items` viene vacío y Angular muestra el estado vacío.
 
 ## Comentarios

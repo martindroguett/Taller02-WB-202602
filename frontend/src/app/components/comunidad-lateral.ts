@@ -1,69 +1,53 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { compacto } from '../models/format';
-import { CatalogoService } from '../services/catalogo.service';
-import { ActivityRow } from './activity-row';
+import { AuthService } from '../services/auth.service';
+import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
 import { Avatar } from './avatar';
 import { Button } from './button';
-import { FollowButton } from './follow-button';
 
 /** Columna lateral de escritorio: «Tu vitrina» y, debajo, novedades o sugerencias para seguir. */
 @Component({
   selector: 'vt-comunidad-lateral',
-  imports: [ActivityRow, Avatar, Button, FollowButton, RouterLink],
+  imports: [Avatar, Button, RouterLink],
   template: `
-    <a class="resumen panel" routerLink="/perfil" aria-label="Ver tu perfil y colección">
-      <vt-avatar [nombre]="catalogo.yo.username" anillo="brand" [tam]="64" />
-      <div>
-        <h2 class="title">Tu vitrina</h2>
-        <p class="caption vt-muted">&#64;{{ catalogo.yo.username }}</p>
-      </div>
-      <dl class="cifras">
+    @if (yo(); as usuario) {
+      <a
+        class="resumen panel"
+        [routerLink]="['/coleccionistas', usuario.username]"
+        aria-label="Ver tu perfil y colección"
+      >
+        <vt-avatar [nombre]="usuario.username" anillo="brand" [tam]="64" />
         <div>
-          <dd class="stat">{{ catalogo.piezasDe(catalogo.yo.id).length }}</dd>
-          <dt>Piezas</dt>
+          <h2 class="title">Tu vitrina</h2>
+          <p class="caption vt-muted">&#64;{{ usuario.username }}</p>
         </div>
-        <div>
-          <dd class="stat">{{ compacto(catalogo.seguidores(catalogo.yo)) }}</dd>
-          <dt>Seguidores</dt>
-        </div>
-        <div>
-          <dd class="stat">{{ catalogo.seguidos().length }}</dd>
-          <dt>Siguiendo</dt>
-        </div>
-      </dl>
-    </a>
-    <a vt-button variant="accent" icon="add" [block]="true" routerLink="/coleccion/nueva"
-      >Agregar pieza</a
-    >
-    @if (modo() === 'novedades') {
-      <section class="panel lista" aria-labelledby="novedades-titulo">
-        <h2 class="title" id="novedades-titulo">Novedades</h2>
-        @for (p of novedades(); track p.id) {
-          <vt-activity-row [pieza]="p" />
+        @if (perfil.value(); as datos) {
+          <dl class="cifras">
+            <div>
+              <dd class="stat">{{ piezas.value()?.total ?? '–' }}</dd>
+              <dt>Piezas</dt>
+            </div>
+            <div>
+              <dd class="stat">{{ compacto(datos.seguidores) }}</dd>
+              <dt>Seguidores</dt>
+            </div>
+            <div>
+              <dd class="stat">{{ compacto(datos.siguiendo) }}</dd>
+              <dt>Siguiendo</dt>
+            </div>
+          </dl>
         }
-      </section>
-    } @else {
-      <section class="panel lista" aria-labelledby="sugerencias-titulo">
-        <h2 class="title" id="sugerencias-titulo">Sugerencias</h2>
-        <p class="caption vt-muted">Coleccionan lo mismo que tú.</p>
-        @for (u of comunidad; track u.id) {
-          <div class="recomendacion">
-            <a class="persona" [routerLink]="['/perfil', u.username]">
-              <vt-avatar [nombre]="u.username" [tam]="40" />
-              <span class="persona-info"
-                ><strong>&#64;{{ u.username }}</strong
-                ><span class="caption vt-muted"
-                  >{{ catalogo.piezasDe(u.id).length }}
-                  {{ catalogo.piezasDe(u.id).length === 1 ? 'pieza' : 'piezas' }}</span
-                ></span
-              >
-            </a>
-            <vt-follow-button [usuarioId]="u.id" size="sm" />
-          </div>
-        }
-      </section>
+      </a>
+      <a vt-button variant="accent" icon="add" [block]="true" routerLink="/coleccion/nueva"
+        >Agregar pieza</a
+      >
     }
+    <section class="panel lista">
+      <h2 class="title">Descubre Vitrina</h2>
+      <p class="caption vt-muted">Explora piezas y conoce a otros coleccionistas.</p>
+      <a vt-button variant="secondary" routerLink="/">Explorar piezas</a>
+    </section>
   `,
   styles: `
     :host {
@@ -139,14 +123,18 @@ import { FollowButton } from './follow-button';
   `,
 })
 export class ComunidadLateral {
-  protected readonly catalogo = inject(CatalogoService);
+  private readonly auth = inject(AuthService);
+  private readonly usuarios = inject(UsuariosPublicosService);
+  protected readonly yo = this.auth.usuario;
+  protected readonly perfil = this.usuarios.perfil(
+    () => this.yo()?.username ?? '',
+    this.auth.token,
+  );
+  protected readonly piezas = this.usuarios.piezas(
+    () => this.yo()?.username ?? '',
+    () => 0,
+    this.auth.token,
+  );
   protected readonly compacto = compacto;
   readonly modo = input<'novedades' | 'sugerencias'>('sugerencias');
-  protected readonly comunidad = this.catalogo.usuarios.filter((u) => u.id !== this.catalogo.yo.id);
-  protected readonly novedades = computed(() =>
-    this.catalogo
-      .recientes()
-      .filter((p) => p.duenoId !== this.catalogo.yo.id)
-      .slice(0, 3),
-  );
 }

@@ -29,6 +29,7 @@ import { ComentariosService } from '../services/comentarios.service';
 import { Pantalla } from '../services/pantalla';
 import { PieceDetail } from '../components/piece-detail';
 import { ToastService } from '../services/toast.service';
+import { InteraccionesService } from '../services/interacciones.service';
 
 @Component({
   selector: 'vt-piece-page',
@@ -74,13 +75,11 @@ import { ToastService } from '../services/toast.service';
                 tone="glass"
                 icon="bookmark"
                 [label]="
-                  (p.guardada ? 'Quitar de favoritos' : 'Guardar en favoritos') +
-                  ': pendiente de conectar'
+                  interacciones.estado(p).guardada ? 'Quitar de favoritos' : 'Guardar en favoritos'
                 "
-                [active]="p.guardada"
-                [pressed]="p.guardada"
-                title="Pendiente de conectar"
-                (click)="pendiente('Favoritos')"
+                [active]="interacciones.estado(p).guardada"
+                [pressed]="interacciones.estado(p).guardada"
+                (click)="interacciones.alternarGuardado(p)"
               ></button>
             </div>
           </div>
@@ -94,14 +93,14 @@ import { ToastService } from '../services/toast.service';
               · {{ cuando(p.creado_en) }}
             </p>
             <p class="body">{{ p.descripcion }}</p>
-            @if (p.megusta || p.guardados) {
+            @if (interacciones.estado(p).megusta || interacciones.estado(p).guardados) {
               <dl class="cifras">
                 <div>
-                  <dd class="stat">{{ compacto(p.megusta) }}</dd>
+                  <dd class="stat">{{ compacto(interacciones.estado(p).megusta) }}</dd>
                   <dt class="caption vt-muted">Me gusta</dt>
                 </div>
                 <div>
-                  <dd class="stat">{{ compacto(p.guardados) }}</dd>
+                  <dd class="stat">{{ compacto(interacciones.estado(p).guardados) }}</dd>
                   <dt class="caption vt-muted">Favoritos</dt>
                 </div>
               </dl>
@@ -116,9 +115,6 @@ import { ToastService } from '../services/toast.service';
               >
             </div>
             <vt-comments #comentarios [piezaId]="p.id" [duenoId]="p.dueno.id" />
-            <p class="caption vt-muted">
-              Las acciones sociales de la pieza están pendientes de conexión.
-            </p>
             @if (auth.usuario()?.id === p.dueno.id) {
               <div class="gestion">
                 <a
@@ -367,6 +363,7 @@ export class PiecePage {
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly toast = inject(ToastService);
+  protected readonly interacciones = inject(InteraccionesService);
   private readonly destroy = inject(DestroyRef);
   readonly id = input<string>();
   protected readonly pieza = this.api.detalle(this.id);
@@ -383,9 +380,6 @@ export class PiecePage {
   protected readonly comentariosTotal = inject(ComentariosService).total;
   protected readonly categoriaDe = categoriaDe;
   protected readonly compacto = compacto;
-  protected pendiente(accion: string): void {
-    this.toast.show(`${accion} está pendiente de conectar`);
-  }
 
   protected eliminar(): void {
     if (!this.pieza.hasValue() || this.eliminando()) return;

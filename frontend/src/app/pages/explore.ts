@@ -14,7 +14,7 @@ import { Subscription } from 'rxjs';
 import { Avatar } from '../components/avatar';
 import { ComunidadLateral } from '../components/comunidad-lateral';
 import { RouterLink } from '@angular/router';
-import { CatalogoService } from '../services/catalogo.service';
+import { AuthService } from '../services/auth.service';
 import { Button } from '../components/button';
 import { CategoryChip } from '../components/category-chip';
 import { EmptyState } from '../components/empty-state';
@@ -48,8 +48,13 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
       <main class="principal">
         <div class="cabecera">
           <vt-top-bar titulo="Explorar" subtitulo="Descubre colecciones">
-            <a class="mi-avatar" routerLink="/perfil" aria-label="Ir al perfil de demostración"
-              ><vt-avatar [nombre]="catalogo.yo.username" anillo="brand" [tam]="40"
+            <a
+              class="mi-avatar"
+              [routerLink]="
+                auth.usuario() ? ['/coleccionistas', auth.usuario()?.username] : ['/ingresar']
+              "
+              [attr.aria-label]="auth.usuario() ? 'Ir a tu perfil' : 'Ingresar'"
+              ><vt-avatar [nombre]="auth.usuario()?.username ?? ''" anillo="brand" [tam]="40"
             /></a>
           </vt-top-bar>
           <vt-search-field
@@ -290,7 +295,7 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
   `,
 })
 export class ExplorePage {
-  protected readonly catalogo = inject(CatalogoService);
+  protected readonly auth = inject(AuthService);
   private readonly api = inject(CatalogoPublicoService);
   private readonly detalle = inject(DetalleDialogo);
   private readonly router = inject(Router);
