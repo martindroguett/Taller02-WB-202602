@@ -18,29 +18,9 @@ export const CATEGORIAS: Categoria[] = [
 export const categoriaDe = (slug: CategoriaSlug): Categoria =>
   CATEGORIAS.find((c) => c.slug === slug)!;
 
-export interface Usuario {
-  id: number;
-  /** Sin la @ */
-  username: string;
-  bio: string;
-  seguidores: number;
-  siguiendo: number;
-}
-
-export interface Pieza {
-  id: number;
+export interface DatosPieza {
   nombre: string;
   descripcion: string;
   categoria: CategoriaSlug;
   imagen_url: string;
-  duenoId: number;
-  /** Número de catálogo: CRT · #0231 */
-  numero: number;
-  megusta: number;
-  guardados: number;
-  /** Minutos desde que se agregó */
-  hace: number;
-  destacada?: boolean;
 }
-
-export type DatosPieza = Pick<Pieza, 'nombre' | 'descripcion' | 'categoria' | 'imagen_url'>;

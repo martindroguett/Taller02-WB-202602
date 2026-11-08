@@ -1,5 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Pagina } from './catalogo-publico.service';
 import { ToastService } from './toast.service';
@@ -50,16 +51,20 @@ export class ComentariosService {
 
   private piezaId = 0;
   private temporal = 0;
+  private desplazamiento = 0;
+  private solicitud?: Subscription;
 
   cargar(piezaId: number): void {
+    this.solicitud?.unsubscribe();
     this.piezaId = piezaId;
+    this.desplazamiento = 0;
     this.items.set([]);
     this.total.set(0);
     this.pedirPagina(0);
   }
 
   cargarMas(): void {
-    if (!this.cargando()) this.pedirPagina(this.items().filter((c) => !c.estado).length);
+    if (!this.cargando()) this.pedirPagina(this.desplazamiento);
   }
 
   get piezaActual(): number {
@@ -67,7 +72,7 @@ export class ComentariosService {
   }
 
   get quedanPorCargar(): boolean {
-    return this.items().filter((c) => !c.estado).length < this.total();
+    return this.desplazamiento < this.total();
   }
 
   enviar(texto: string, autor: Comentario['autor'], respondeA?: number): void {
@@ -98,13 +103,18 @@ export class ComentariosService {
       return;
     }
     // Al borrar un comentario se borran también sus respuestas.
+    const pieza = this.piezaId;
     const antes = this.items();
     const antesTotal = this.total();
     const quitados = antes.filter((c) => c.id === comentario.id || c.padre_id === comentario.id);
     this.items.set(antes.filter((c) => !quitados.includes(c)));
     this.total.update((n) => n - quitados.filter((c) => !c.estado).length);
     this.http.delete<void>(`${environment.apiUrl}/comentarios/${comentario.id}`).subscribe({
+      next: () => {
+        if (pieza === this.piezaId) this.cargar(pieza);
+      },
       error: () => {
+        if (pieza !== this.piezaId) return;
         this.items.set(antes);
         this.total.set(antesTotal);
         this.toast.show('No pudimos eliminar el comentario. Inténtalo de nuevo.', 'danger');
@@ -141,12 +151,18 @@ export class ComentariosService {
     this.cargando.set(true);
     this.error.set(false);
     const params = new HttpParams().set('limite', POR_PAGINA).set('desplazamiento', desplazamiento);
-    this.http
+    this.solicitud = this.http
       .get<Pagina<Comentario>>(`${environment.apiUrl}/piezas/${pieza}/comentarios`, { params })
       .subscribe({
         next: (pagina) => {
           if (pieza !== this.piezaId) return;
-          this.items.update((lista) => [...lista, ...pagina.items]);
+          this.desplazamiento = pagina.desplazamiento + pagina.items.length;
+          this.items.update((lista) => {
+            const ids = new Set(lista.map((c) => c.id));
+            return [...lista, ...pagina.items.filter((c) => !ids.has(c.id))].sort(
+              (a, b) => Date.parse(a.creado_en) - Date.parse(b.creado_en) || a.id - b.id,
+            );
+          });
           this.total.set(pagina.total);
           this.cargando.set(false);
         },

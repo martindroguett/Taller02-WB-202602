@@ -1,9 +1,7 @@
 import { Component, computed, ElementRef, inject, input, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CatalogoService } from '../services/catalogo.service';
 import { InteraccionesService } from '../services/interacciones.service';
 import { compacto, relativo } from '../models/format';
-import { Pieza } from '../models/vitrina';
 import { DetalleDialogo } from '../services/detalle-dialogo';
 import { PiezaPublica } from '../services/catalogo-publico.service';
 import { IconButton } from './icon-button';
@@ -17,16 +15,15 @@ import { CatalogTag } from './catalog-tag';
   imports: [RouterLink, IconButton, Icon, PieceArt, Avatar, CatalogTag],
   host: {
     '[class]': '"vt-c-" + pieza().categoria',
-    '[attr.data-variante]': 'variante()',
     '[attr.data-pieza]': 'pieza().id',
   },
   template: `
-    <article class="tarjeta" [class.destacada]="destacada() && variante() === 'grid'">
+    <article class="tarjeta">
       <div class="imagen">
         <a
           class="enlace"
           [routerLink]="detalleLink()"
-          [attr.aria-label]="esPublica() ? 'Ver ' + pieza().nombre : null"
+          [attr.aria-label]="'Ver ' + pieza().nombre"
         >
           @if (pieza().imagen_url && !fallo()) {
             <img [src]="pieza().imagen_url" alt="" loading="lazy" (error)="fallo.set(true)" />
@@ -34,67 +31,40 @@ import { CatalogTag } from './catalog-tag';
             <vt-piece-art [categoria]="pieza().categoria" />
           }
         </a>
-        @if (variante() === 'grid') {
-          <vt-catalog-tag
-            class="catalogo"
-            [categoria]="pieza().categoria"
-            [numero]="numero()"
-            [compacta]="true"
-          />
-          <button
-            type="button"
-            vt-icon-button
-            class="guardar"
-            tone="glass"
-            size="sm"
-            icon="bookmark"
-            [label]="guardada() ? 'Quitar de favoritos' : 'Guardar en favoritos'"
-            [active]="guardada()"
-            [pressed]="guardada()"
-            (click)="alternarGuardar()"
-          ></button>
-        }
+        <vt-catalog-tag
+          class="catalogo"
+          [categoria]="pieza().categoria"
+          [numero]="numero()"
+          [compacta]="true"
+        />
+        <button
+          type="button"
+          vt-icon-button
+          class="guardar"
+          tone="glass"
+          size="sm"
+          icon="bookmark"
+          [label]="guardada() ? 'Quitar de favoritos' : 'Guardar en favoritos'"
+          [active]="guardada()"
+          [pressed]="guardada()"
+          (click)="alternarGuardar()"
+        ></button>
       </div>
       <div class="info">
-        @if (destacada() && variante() === 'grid') {
-          <span class="insignia"><vt-icon name="star" [filled]="true" [size]="14" />Destacada</span>
-        }
         <a class="nombre" [routerLink]="detalleLink()">{{ pieza().nombre }}</a>
         <p class="meta caption">
-          @if (esPublica()) {
-            <a class="dueno publico" [routerLink]="['/coleccionistas', dueno().username]">
-              <vt-avatar [nombre]="dueno().username" [tam]="24" />
-              <span>&#64;{{ dueno().username }}</span>
-            </a>
-            @if (megusta() !== '0') {
-              <span class="dato" [class.gustado]="gustada()"
-                ><vt-icon name="favorite" [size]="16" [filled]="gustada()" />{{ megusta() }}</span
-              >
-            }
-            <span class="fecha">{{ cuando() }}</span>
-          } @else {
-            <a class="dueno" [routerLink]="['/perfil', dueno().username]">
-              @if (variante() === 'grid') {
-                <vt-avatar [nombre]="dueno().username" [tam]="24" />
-              }
-              <span>&#64;{{ dueno().username }}</span>
-            </a>
-            @if (megusta() !== '0') {
-              <span class="dato" [class.gustado]="catalogo.gustadas().has(pieza().id)"
-                ><vt-icon
-                  name="favorite"
-                  [size]="16"
-                  [filled]="catalogo.gustadas().has(pieza().id)"
-                />{{ megusta() }}</span
-              >
-            }
+          <a class="dueno publico" [routerLink]="['/coleccionistas', dueno().username]">
+            <vt-avatar [nombre]="dueno().username" [tam]="24" />
+            <span>&#64;{{ dueno().username }}</span>
+          </a>
+          @if (megusta() !== '0') {
+            <span class="dato" [class.gustado]="gustada()"
+              ><vt-icon name="favorite" [size]="16" [filled]="gustada()" />{{ megusta() }}</span
+            >
           }
-          @if (variante() === 'row' && !esPublica()) {
-            <span>{{ cuando() }}</span>
-          }
+          <span class="fecha">{{ cuando() }}</span>
         </p>
       </div>
-      <div class="acciones"><ng-content /></div>
     </article>
   `,
   styles: `
@@ -112,12 +82,6 @@ import { CatalogTag } from './catalog-tag';
       border-radius: var(--radius-lg);
       background: var(--surface);
       box-shadow: var(--shadow-card);
-    }
-    .tarjeta.destacada {
-      border-color: var(--spark);
-      box-shadow:
-        0 0 0 1px var(--spark),
-        0 8px 24px rgb(255 90 60 / 12%);
     }
     .imagen {
       position: relative;
@@ -203,64 +167,13 @@ import { CatalogTag } from './catalog-tag';
         max-width: calc(100% - 16px);
       }
       /* En la grilla la meta queda en una sola fila: usuario y me gusta. La fecha se ve en el detalle. */
-      :host(:not([data-variante='row'])) .fecha {
+      .fecha {
         display: none;
-      }
-      :host([data-variante='row']) .meta {
-        flex-wrap: wrap;
-      }
-      :host([data-variante='row']) .meta > .dueno.publico {
-        flex-basis: 100%;
-      }
-    }
-    .insignia {
-      width: fit-content;
-      padding: 2px 6px;
-      border-radius: var(--radius-pill);
-      background: var(--spark);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font: var(--text-caption);
-      color: var(--ink);
-    }
-    .insignia vt-icon {
-      color: var(--ink);
-    }
-    .acciones:empty {
-      display: none;
-    }
-    :host([data-variante='row']) .tarjeta {
-      flex-direction: row;
-      align-items: center;
-      border-radius: var(--radius-md);
-      padding: 6px;
-    }
-    :host([data-variante='row']) .imagen {
-      padding: 4px;
-      width: 76px;
-      flex: none;
-    }
-    :host([data-variante='row']) .enlace {
-      border-radius: var(--radius-sm);
-    }
-    :host([data-variante='row']) .acciones {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-1);
-      width: 44px;
-      flex: none;
-    }
-    @media (min-width: 400px) {
-      :host([data-variante='row']) .acciones {
-        width: auto;
-        flex-wrap: nowrap;
       }
     }
   `,
 })
 export class PieceCard {
-  protected readonly catalogo = inject(CatalogoService);
   constructor() {
     // En escritorio la pieza se abre en una ventana sobre la lista. Se escucha en la fase de captura
     // para frenar el enlace antes de que el router navegue; con Ctrl o Cmd sigue el enlace normal.
@@ -268,9 +181,9 @@ export class PieceCard {
       'click',
       (evento) => {
         const enlace = (evento.target as Element).closest('a.enlace, a.nombre');
-        if (!enlace || !this.esPublica()) return;
+        if (!enlace) return;
         if (evento.button !== 0 || evento.ctrlKey || evento.metaKey || evento.shiftKey) return;
-        if (this.detalle.abrir(this.pieza().id)) {
+        if (this.detalle.abrir(this.pieza().id, this.ids())) {
           evento.preventDefault();
           evento.stopPropagation();
         }
@@ -278,56 +191,24 @@ export class PieceCard {
       true,
     );
   }
-  readonly pieza = input.required<Pieza | PiezaPublica>();
-  readonly variante = input<'grid' | 'row'>('grid');
+  readonly pieza = input.required<PiezaPublica>();
+  readonly ids = input<number[]>();
   protected readonly fallo = linkedSignal(() => {
     this.pieza().imagen_url;
     return false;
   });
   private readonly detalle = inject(DetalleDialogo);
   private readonly interacciones = inject(InteraccionesService);
-  // Las piezas de la API ('dueno' in p) se guardan con InteraccionesService; las de muestra, en memoria.
-  protected readonly guardada = computed(() => {
-    const p = this.pieza();
-    return 'dueno' in p
-      ? this.interacciones.estado(p).guardada
-      : this.catalogo.guardadas().has(p.id);
-  });
-  protected readonly gustada = computed(() => {
-    const p = this.pieza();
-    return 'dueno' in p ? this.interacciones.estado(p).gustada : this.catalogo.gustadas().has(p.id);
-  });
+  protected readonly guardada = computed(() => this.interacciones.estado(this.pieza()).guardada);
+  protected readonly gustada = computed(() => this.interacciones.estado(this.pieza()).gustada);
   protected alternarGuardar(): void {
-    const p = this.pieza();
-    if ('dueno' in p) this.interacciones.alternarGuardado(p);
-    else this.catalogo.toggleGuardar(p.id);
+    this.interacciones.alternarGuardado(this.pieza());
   }
-  protected readonly esPublica = computed(() => 'dueno' in this.pieza());
-  protected readonly detalleLink = computed(() =>
-    this.esPublica() ? ['/pieza', this.pieza().id] : null,
+  protected readonly detalleLink = computed(() => ['/pieza', this.pieza().id]);
+  protected readonly dueno = computed(() => this.pieza().dueno);
+  protected readonly numero = computed(() => this.pieza().id);
+  protected readonly megusta = computed(() => compacto(this.interacciones.estado(this.pieza()).megusta));
+  protected readonly cuando = computed(() =>
+    relativo(Math.max(0, Math.floor((Date.now() - Date.parse(this.pieza().creado_en)) / 60_000))),
   );
-  protected readonly dueno = computed(() => {
-    const p = this.pieza();
-    return 'dueno' in p ? p.dueno : this.catalogo.usuario(p.duenoId);
-  });
-  protected readonly destacada = computed(() => {
-    const p = this.pieza();
-    return 'dueno' in p ? false : !!p.destacada;
-  });
-  protected readonly numero = computed(() => {
-    const p = this.pieza();
-    return 'dueno' in p ? p.id : p.numero;
-  });
-  protected readonly megusta = computed(() => {
-    const p = this.pieza();
-    return compacto('dueno' in p ? this.interacciones.estado(p).megusta : this.catalogo.megusta(p));
-  });
-  protected readonly cuando = computed(() => {
-    const p = this.pieza();
-    return relativo(
-      'dueno' in p
-        ? Math.max(0, Math.floor((Date.now() - Date.parse(p.creado_en)) / 60_000))
-        : p.hace,
-    );
-  });
 }

@@ -1,35 +1,56 @@
-# Vitrina · Taller 2 Web / Móvil
+# Vitrina · Taller 2 Web Móvil
 
-Plataforma para organizar y mostrar coleccionables, descubrir piezas de otros usuarios y conectarse con personas con intereses similares. Las categorías iniciales son cartas, videojuegos, juguetes y discos/vinilos, con una interfaz adaptable a computador y celular.
+Aplicación web para organizar y mostrar colecciones (cartas, videojuegos, juguetes y discos), descubrir piezas de otros usuarios y seguirlos.
+
+| Parte | Tecnología |
+| --- | --- |
+| Frontend | Angular + Angular Material |
+| Backend | FastAPI (API REST con JSON) |
+| Base de datos | PostgreSQL con SQLAlchemy y Alembic |
+| Autenticación | JWT, contraseñas con hash bcrypt |
+
+## Requisitos
+
+- Docker Desktop (abierto)
+- Node.js 24 con npm
 
 ## Cómo ejecutar
 
-### Backend y base de datos
+### 1. Backend y base de datos
 
-Se necesita **Docker Desktop** abierto. Desde la raíz del repositorio, la primera vez se crea el archivo de variables a partir del ejemplo:
+Desde la raíz del repositorio:
 
 ```bash
 cp .env.example .env
 ```
 
-Luego se cambia `JWT_SECRET` en `.env` por un texto largo y aleatorio. Se puede generar con `python -c "import secrets; print(secrets.token_urlsafe(48))"`. El archivo `.env` no se sube al repositorio.
+Abrir `.env` y cambiar `JWT_SECRET` por un texto largo y aleatorio. Se puede generar con:
+
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+Luego:
 
 ```bash
 docker compose up --build
 ```
 
-Esto levanta PostgreSQL y la API, aplica las migraciones de Alembic y deja la API en **http://localhost:8000**. La documentación interactiva de los endpoints está en **http://localhost:8000/docs**. Los cambios en `backend/` se recargan solos. Para detener todo, usar `Ctrl+C`, y para borrar también los datos, `docker compose down -v`.
+Esto levanta PostgreSQL, aplica las migraciones y deja la API en http://localhost:8000. La documentación de los endpoints está en http://localhost:8000/docs.
 
-Después de cambiar un modelo, se genera y aplica una migración nueva:
+### 2. Datos de prueba (opcional)
+
+En otra terminal, con la API en marcha:
 
 ```bash
-docker compose exec api alembic revision --autogenerate -m "describe el cambio"
-docker compose exec api alembic upgrade head
+docker compose exec api python seed.py
 ```
 
-### Frontend
+Crea 5 usuarios con piezas, seguidores y comentarios. Se puede ingresar con `camila@vitrina.app` y la clave `demo12345`.
 
-Se necesita **Node.js 24 LTS** con npm. Desde la raíz del repositorio:
+### 3. Frontend
+
+En otra terminal:
 
 ```bash
 cd frontend
@@ -37,42 +58,33 @@ npm ci
 npm start
 ```
 
-Abrir **http://localhost:4200/** en el navegador. Para detener el servidor, usar `Ctrl+C` en la terminal.
+Abrir http://localhost:4200.
 
-Explorar, el detalle de piezas, los perfiles públicos, el ingreso y el registro consultan la API; requieren el backend y la base de datos en ejecución. El servidor de desarrollo redirige `/api` a `http://localhost:8000`. Desde el propietario de una pieza se abre su perfil en `/coleccionistas/:usuario`, con su colección y seguimientos persistentes. Feed, favoritos, me gusta y guardados de piezas reales también usan la API. El perfil propio en `/perfil` muestra la cuenta y la colección real.
+## Qué incluye
 
-## Funciones
+- Registro, inicio y cierre de sesión con JWT.
+- CRUD de piezas: crear, listar, ver, editar y eliminar (solo el dueño puede modificar).
+- Explorar con búsqueda y filtro por categoría, Feed, Favoritos y perfiles.
+- Me gusta, guardados, comentarios y seguir usuarios.
+- Diseño adaptable a computador y celular.
 
-- Explorar piezas reales, buscar, filtrar por categoría y cargar más resultados. El detalle consulta la API por ID.
-- Consultar perfiles públicos y su colección paginada; seguir y dejar de seguir con la sesión real.
-- Ver el perfil propio con los datos de la cuenta, sus contadores y su colección paginada.
-- Ver el Feed, perfiles y colecciones.
-- Dar likes, seguir coleccionistas y guardar favoritos.
-- Agregar, editar y eliminar piezas propias.
-- Comentar las piezas desde una hoja inferior en el detalle, responder (un solo nivel) y dar me gusta a los comentarios; el autor y el dueño de la pieza pueden eliminarlos.
-- Crear una cuenta, ingresar y cerrar sesión. La sesión se mantiene al recargar la página.
+## Estructura
 
-El perfil propio en `/perfil` usa datos reales de la API. Los perfiles de otros coleccionistas y los seguimientos están en `/coleccionistas/:usuario`; las direcciones antiguas `/perfil/:usuario` redirigen ahí. El Feed y Favoritos muestran datos reales y las interacciones persisten en la API.
-
-## Tecnologías
-
-El frontend usa **Angular**, con Angular Material para iconos, campos de formulario, selector de secciones, barra superior, avisos, la confirmación de eliminar, la hoja de comentarios y el botón y la carga del perfil público (con la paleta de Vitrina en `styles.css`). Sus lecturas usan `httpResource`, con Signals y el interceptor de autenticación. El backend usa **FastAPI** con una API REST en JSON, **PostgreSQL** como base de datos, **SQLAlchemy** como ORM, **Alembic** para las migraciones y autenticación con **JWT**. Las contraseñas se guardan como hash con bcrypt.
-
-## Comprobaciones
-
-Desde la carpeta `frontend`:
-
-```bash
-npm test        # Comprueba los catálogos y el perfil público, sin backend
-npm run build  # Genera la versión de producción en dist/frontend/browser
+```
+backend/    API FastAPI (routers, models, schemas, database, migrations)
+frontend/   Aplicación Angular (pages, components, services, guards, interceptors)
+docs/       Contrato de la API
 ```
 
-Los detalles técnicos del frontend están en [frontend/README.md](frontend/README.md).
+## Pruebas del backend
 
-Para comprobar perfiles, seguimientos, CRUD de piezas, me gusta, favoritos y feed contra PostgreSQL, ejecutar lo siguiente desde la raíz, con una API migrada conectada a una **base desechable de pruebas**. La comprobación crea cuentas y piezas; no usar la base personal ni una de producción.
+Con la API en marcha y una base de datos de prueba (las pruebas crean usuarios y piezas):
 
 ```bash
-TEST_API_URL=http://127.0.0.1:8000/api python3 backend/tests/test_perfiles_http.py
 TEST_API_URL=http://127.0.0.1:8000/api python3 backend/tests/test_piezas_http.py
-TEST_API_URL=http://127.0.0.1:8000/api python3 backend/tests/test_interacciones_http.py
+TEST_API_URL=http://127.0.0.1:8000/api python3 backend/tests/test_comentarios_http.py
 ```
+
+## Detener
+
+`Ctrl+C` en cada terminal. Para borrar también los datos: `docker compose down -v`.

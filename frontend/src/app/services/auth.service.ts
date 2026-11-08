@@ -2,6 +2,7 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, of, tap, catchError } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { ToastService } from './toast.service';
 import {
   UsuarioPrivadoApi,
   TokenRespuestaApi,
@@ -15,6 +16,7 @@ const CLAVE_TOKEN = 'vitrina.token';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  private readonly toast = inject(ToastService);
 
   // Esto puede cambiar la sesión
   private readonly tokenActual = signal<string | null>(localStorage.getItem(CLAVE_TOKEN));
@@ -44,6 +46,10 @@ export class AuthService {
       tap((usuario) => this.usuarioActual.set(usuario)),
       catchError((error: HttpErrorResponse) => {
         if (error.status === 401) this.cerrarSesion();
+        else this.toast.show('No pudimos recuperar tu sesión. Revisa la conexión.', 'danger', {
+          texto: 'Reintentar',
+          fn: () => window.location.reload(),
+        });
         return of(null);
       }),
     );

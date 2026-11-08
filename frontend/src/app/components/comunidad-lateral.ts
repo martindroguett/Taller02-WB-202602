@@ -1,12 +1,13 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { compacto } from '../models/format';
 import { AuthService } from '../services/auth.service';
+import { ToastService } from '../services/toast.service';
 import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
 import { Avatar } from './avatar';
 import { Button } from './button';
 
-/** Columna lateral de escritorio: «Tu vitrina» y, debajo, novedades o sugerencias para seguir. */
+/** Columna lateral de escritorio: «Tu vitrina» y, debajo, coleccionistas sugeridos para seguir. */
 @Component({
   selector: 'vt-comunidad-lateral',
   imports: [Avatar, Button, RouterLink],
@@ -44,9 +45,36 @@ import { Button } from './button';
       >
     }
     <section class="panel lista">
-      <h2 class="title">Descubre Vitrina</h2>
-      <p class="caption vt-muted">Explora piezas y conoce a otros coleccionistas.</p>
-      <a vt-button variant="secondary" routerLink="/">Explorar piezas</a>
+      <h2 class="title">Conoce coleccionistas</h2>
+      @for (u of sugeridos.value() ?? []; track u.id) {
+        <div class="recomendacion">
+          <a class="persona" [routerLink]="['/coleccionistas', u.username]">
+            <vt-avatar [nombre]="u.username" [tam]="40" />
+            <span class="persona-info"
+              ><strong>&#64;{{ u.username }}</strong></span
+            >
+          </a>
+          @if (yo()) {
+            <button
+              vt-button
+              variant="secondary"
+              size="sm"
+              type="button"
+              (click)="seguir(u.username)"
+            >
+              Seguir
+            </button>
+          }
+        </div>
+      } @empty {
+        <p class="caption vt-muted">
+          {{
+            sugeridos.error()
+              ? 'No pudimos cargar las sugerencias.'
+              : 'Ya sigues a todos los coleccionistas.'
+          }}
+        </p>
+      }
     </section>
   `,
   styles: `
@@ -136,5 +164,18 @@ export class ComunidadLateral {
     this.auth.token,
   );
   protected readonly compacto = compacto;
-  readonly modo = input<'novedades' | 'sugerencias'>('sugerencias');
+  private readonly toast = inject(ToastService);
+  // Se vuelve a pedir si inicia o cierra sesión alguien (cambia el token).
+  protected readonly sugeridos = this.usuarios.sugeridos(this.auth.token);
+
+  protected seguir(username: string): void {
+    this.usuarios.seguir(username, false).subscribe({
+      next: () => {
+        this.toast.show(`Ahora sigues a @${username}.`, 'success');
+        this.sugeridos.reload();
+        this.perfil.reload();
+      },
+      error: () => this.toast.show('No pudimos seguir a este coleccionista.', 'danger'),
+    });
+  }
 }

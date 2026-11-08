@@ -13,9 +13,6 @@ class Configuracion(BaseSettings):
     postgres_db: str
     postgres_host: str = "localhost"
     postgres_port: int = 5432
-    # Si existe (por ejemplo, la conexión de Neon), reemplaza a las variables POSTGRES_*.
-    database_url: str | None = None
-
     jwt_secret: str
     jwt_algoritmo: str = "HS256"
     jwt_expira_minutos: int = 60 * 24
@@ -23,9 +20,7 @@ class Configuracion(BaseSettings):
     cors_origenes: list[str] = ["http://localhost:4200"]
 
     @property
-    def url_base_datos(self) -> str | URL:
-        if self.database_url:
-            return self.database_url
+    def url_base_datos(self) -> URL:
         # URL.create escapa la contraseña aunque tenga caracteres como @ o /.
         return URL.create(
             "postgresql+psycopg",

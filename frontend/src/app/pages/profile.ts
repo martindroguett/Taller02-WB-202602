@@ -25,7 +25,7 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
           <button vt-button type="button" (click)="perfil.reload()">Reintentar</button>
         </vt-empty-state>
       } @else if (perfil.value(); as usuario) {
-        <vt-profile-header [usuario]="usuario" [piezas]="total()" [abanico]="abanico()" />
+        <vt-profile-header [usuario]="usuario" [piezas]="total()" [abanico]="abanico()" (verPiezas)="coleccion.scrollIntoView({ behavior: 'smooth' })" />
 
         <section class="cuenta">
           <p>{{ auth.usuario()?.email }}</p>
@@ -34,13 +34,10 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
             <a vt-button variant="secondary" [routerLink]="['/coleccionistas', usuario.username]"
               >Ver mi perfil público</a
             >
-            <button type="button" class="salir caption vt-muted" (click)="cerrarSesion()">
-              Cerrar sesión
-            </button>
           </div>
         </section>
 
-        <section class="vt-section" aria-labelledby="coleccion-titulo">
+        <section class="vt-section" aria-labelledby="coleccion-titulo" #coleccion>
           <h2 class="title" id="coleccion-titulo">Mi colección</h2>
           @if (piezas.isLoading()) {
             <div class="cargando" role="status"><mat-spinner diameter="28" /> Cargando piezas…</div>
@@ -92,6 +89,9 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
           }
         </section>
       }
+      <button type="button" class="salir caption vt-muted" (click)="cerrarSesion()">
+        Cerrar sesión
+      </button>
     </div>
   `,
   styles: `
@@ -102,6 +102,25 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
       display: flex;
       flex-direction: column;
       gap: var(--space-1);
+    }
+    @media (min-width: 1000px) {
+      .perfil {
+        max-width: var(--content-max);
+        padding-top: var(--space-6);
+      }
+      .cuenta {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-4);
+      }
+      .enlaces {
+        margin: 0 0 0 auto;
+      }
+      .vt-grid {
+        grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
+        gap: var(--space-4);
+      }
     }
     .cuenta p {
       margin: 0;
@@ -148,7 +167,7 @@ export class ProfilePage {
   protected readonly piezas = this.api.piezas(this.username, this.desplazamiento, this.auth.token);
 
   protected readonly total = computed(() =>
-    this.piezas.hasValue() ? this.piezas.value().total : 0,
+    this.piezas.hasValue() ? this.piezas.value().total : null,
   );
   protected readonly abanico = computed(() =>
     (this.piezas.hasValue() ? this.piezas.value().items : []).slice(0, 3),

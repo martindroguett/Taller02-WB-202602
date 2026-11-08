@@ -87,7 +87,7 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
             <div class="carrusel">
               <div #riel class="vt-rail destacadas" (scroll)="medirRiel()">
                 @for (p of piezasDestacadas(); track p.id) {
-                  <vt-piece-card [pieza]="p" />
+                  <vt-piece-card [pieza]="p" [ids]="idsDestacadas()" />
                 }
               </div>
               @if (hayAtras()) {
@@ -178,7 +178,7 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
         </section>
       </main>
       <aside class="lateral" aria-label="Tu comunidad">
-        <vt-comunidad-lateral modo="novedades" />
+        <vt-comunidad-lateral />
       </aside>
     </div>
   `,
@@ -311,6 +311,7 @@ export class ExplorePage {
   protected readonly piezasDestacadas = computed(() =>
     this.destacadas.hasValue() ? this.destacadas.value().items : [],
   );
+  protected readonly idsDestacadas = computed(() => this.piezasDestacadas().map((p) => p.id));
   private readonly riel = viewChild<ElementRef<HTMLElement>>('riel');
   protected readonly hayAtras = signal(false);
   protected readonly hayAdelante = signal(false);
