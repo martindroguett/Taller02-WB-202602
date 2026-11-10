@@ -1,3 +1,4 @@
 export const environment = {
-  apiUrl: 'http://localhost:8000/api',
+  // Caddy redirige /api al backend; el navegador usa el mismo origen que Angular.
+  apiUrl: '/api',
 };

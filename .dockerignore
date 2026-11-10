@@ -1,0 +1,14 @@
+.git
+.agents
+.codex
+.local
+.env
+.env.*
+**/node_modules
+**/dist
+**/.angular
+**/__pycache__
+**/.venv
+**/.DS_Store
+frontend/public/fotos-demo
+*.log

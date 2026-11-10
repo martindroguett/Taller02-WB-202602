@@ -102,8 +102,7 @@
           },
           "defaultConfiguration": "development",
           "options": {
-            "proxyConfig": "proxy.conf.json",
-            "allowedHosts": ["taller02-wb-202602-production.up.railway.app","taller02-wb-202602-production-5381.up.railway.app"]
+            "proxyConfig": "proxy.conf.json"
           }
         }
       }
