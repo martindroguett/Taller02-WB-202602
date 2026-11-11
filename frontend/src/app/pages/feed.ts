@@ -7,7 +7,6 @@ import { ComunidadLateral } from '../components/comunidad-lateral';
 import { EmptyState } from '../components/empty-state';
 import { FeedPost } from '../components/feed-post';
 import { Icon } from '../components/icon';
-import { IconButton } from '../components/icon-button';
 import { TopBar } from '../components/top-bar';
 import { AuthService } from '../services/auth.service';
 import { InteraccionesService } from '../services/interacciones.service';
@@ -24,7 +23,6 @@ const POR_PAGINA = 20;
     EmptyState,
     FeedPost,
     Icon,
-    IconButton,
     MatProgressSpinnerModule,
     RouterLink,
     TopBar,
@@ -33,10 +31,6 @@ const POR_PAGINA = 20;
     <div class="vt-screen pagina">
       <main class="feed">
         <vt-top-bar titulo="Feed" [subtitulo]="subtitulo()">
-          <a vt-icon-button tone="surface" icon="search" label="Buscar piezas" routerLink="/"></a>
-          <a [routerLink]="['/coleccionistas', yo()?.username]" aria-label="Ir a tu perfil"
-            ><vt-avatar [nombre]="yo()?.username ?? ''" anillo="brand" [tam]="40"
-          /></a>
         </vt-top-bar>
         <section class="vt-section" aria-label="Coleccionistas que sigues">
           <div class="vt-rail">
@@ -161,6 +155,10 @@ const POR_PAGINA = 20;
         position: sticky;
         top: 24px;
       }
+    }
+    .vt-rail {
+      margin-inline: 0;
+      padding-inline: var(--space-2);
     }
     .persona {
       display: flex;

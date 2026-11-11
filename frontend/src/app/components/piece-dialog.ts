@@ -120,6 +120,7 @@ export interface DatosDialogoPieza {
 export class PieceDialog {
   protected readonly datos = inject<DatosDialogoPieza>(MAT_DIALOG_DATA);
   protected readonly ref = inject<MatDialogRef<PieceDialog>>(MatDialogRef);
+  readonly datosOrigen = this.datos.anterior;
   private readonly location = inject(Location);
   private readonly api = inject(CatalogoPublicoService);
   private readonly id = signal(this.datos.id);

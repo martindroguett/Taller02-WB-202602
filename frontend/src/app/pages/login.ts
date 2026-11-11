@@ -1,3 +1,4 @@
+import { DetalleDialogo } from '../services/detalle-dialogo';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, input, signal } from '@angular/core';
 import {
@@ -293,11 +294,13 @@ function mensajeError(error: HttpErrorResponse): string {
 })
 export class LoginPage {
   private readonly auth = inject(AuthService);
+  private readonly detalle = inject(DetalleDialogo);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(NonNullableFormBuilder);
 
   readonly returnUrl = input<string>();
+  readonly pieza = input<string>();
 
   protected readonly opciones = [
     { id: 'ingreso', texto: 'Ingresar' },
@@ -343,7 +346,12 @@ export class LoginPage {
     peticion.pipe(finalize(() => this.enviando.set(false))).subscribe({
       next: ({ usuario }) => {
         this.toast.show(`Hola, @${usuario.username}`, 'success');
-        this.router.navigateByUrl(this.destino());
+        const pieza = Number(this.pieza());
+        void this.router.navigateByUrl(this.destino()).then((navego) => {
+          if (navego && Number.isSafeInteger(pieza) && pieza > 0 && !this.detalle.abrir(pieza)) {
+            void this.router.navigate(['/pieza', pieza]);
+          }
+        });
       },
       error: (error: HttpErrorResponse) => this.toast.show(mensajeError(error), 'danger'),
     });

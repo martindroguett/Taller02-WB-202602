@@ -45,6 +45,17 @@ export class DetalleDialogo {
     setTimeout(buscar, 50);
   }
 
+  /** Conserva la lista de fondo al pedir ingreso desde una ventana de pieza. */
+  destinoParaIngresar(): { returnUrl: string; pieza?: number } {
+    const ref = this.dialogo.openDialogs.find(
+      (dialogo) => dialogo.componentInstance instanceof PieceDialog,
+    );
+    const id = this.location.path().match(/^\/pieza\/(\d+)$/)?.[1];
+    return ref && id
+      ? { returnUrl: (ref.componentInstance as PieceDialog).datosOrigen, pieza: Number(id) }
+      : { returnUrl: this.location.path() };
+  }
+
   /** Devuelve true si abrió la ventana; si no, el enlace debe seguir su curso. */
   abrir(id: number, ids = this.lista()): boolean {
     if (!this.pantalla.escritorio()) return false;
