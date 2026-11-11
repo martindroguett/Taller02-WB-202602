@@ -107,7 +107,7 @@ def main() -> None:
 
     with SessionLocal() as db:
         db.execute(delete(Usuario).where(Usuario.username.in_([u[0] for u in USUARIOS])))
-        db.commit()
+        # Un solo commit al final: si falla la carga, también se revierte el borrado.
 
         categorias = {c.slug: c for c in db.scalars(select(Categoria))}
         usuarios = {}
@@ -203,4 +203,5 @@ def main() -> None:
         print(f"Ingresa con camila@vitrina.app (o diego@, sofia@, mateo@, etc.) y la clave {CLAVE}")
 
 
-main()
+if __name__ == "__main__":
+    main()
