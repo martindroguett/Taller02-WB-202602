@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
@@ -8,6 +9,7 @@ import { AuthService } from '../services/auth.service';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   const router = inject(Router);
+  const location = inject(Location);
 
   const token = auth.token();
   const esApi = req.url.startsWith(environment.apiUrl);
@@ -20,7 +22,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       // Sin token enviado no hay sesión que vencer (p. ej. justo después de cerrar sesión).
       if (error.status === 401 && esApi && !esAuth && token) {
         auth.cerrarSesion();
-        router.navigate(['/ingresar'], { queryParams: { returnUrl: router.url } });
+        router.navigate(['/ingresar'], { queryParams: { returnUrl: location.path() } });
       }
       return throwError(() => error);
     }),

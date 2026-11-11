@@ -1,4 +1,4 @@
-import { NgTemplateOutlet } from '@angular/common';
+import { Location, NgTemplateOutlet } from '@angular/common';
 import { Component, computed, ElementRef, inject, input, signal, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bottom-sheet';
@@ -386,6 +386,7 @@ export class CommentSheet {
   readonly enLinea = input(false);
   protected readonly duenoId = computed(() => this.duenoIdEntrada() ?? this.datos?.duenoId ?? -1);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   private readonly lista = viewChild<ElementRef<HTMLElement>>('lista');
   private readonly campo = viewChild<ElementRef<HTMLTextAreaElement>>('campo');
   protected readonly respondiendo = signal<ComentarioLocal | null>(null);
@@ -443,6 +444,6 @@ export class CommentSheet {
 
   protected ingresar(): void {
     this.ref?.dismiss();
-    void this.router.navigate(['/ingresar'], { queryParams: { returnUrl: this.router.url } });
+    void this.router.navigate(['/ingresar'], { queryParams: { returnUrl: this.location.path() } });
   }
 }

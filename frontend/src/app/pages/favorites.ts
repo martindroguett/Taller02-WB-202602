@@ -158,8 +158,8 @@ const POR_PAGINA = 20;
         display: flex;
         align-items: center;
         gap: 14px;
-        min-height: 112px;
-        padding: var(--space-4) var(--space-5);
+        min-height: 140px;
+        padding: 64px var(--space-5) var(--space-4);
         border: 0;
         border-radius: 28px;
         background: var(--c-soft);
@@ -192,6 +192,7 @@ const POR_PAGINA = 20;
       }
       .datos .title {
         font-size: 16px;
+        overflow-wrap: anywhere;
       }
       .cuenta {
         font: var(--text-catalog);

@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { Injectable, effect, inject, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
@@ -27,6 +28,7 @@ export class InteraccionesService {
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   private readonly toast = inject(ToastService);
 
   // Cambios hechos en esta sesión, por id de pieza. Las listas que ya se cargaron (Explorar, el detalle,
@@ -180,7 +182,7 @@ export class InteraccionesService {
   private exigirSesion(): boolean {
     if (this.auth.autenticado()) return true;
     this.toast.show('Ingresa para dar me gusta y guardar piezas');
-    this.router.navigate(['/ingresar'], { queryParams: { returnUrl: this.router.url } });
+    this.router.navigate(['/ingresar'], { queryParams: { returnUrl: this.location.path() } });
     return false;
   }
 

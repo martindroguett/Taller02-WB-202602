@@ -1,6 +1,7 @@
 import { Location } from '@angular/common';
 import { inject, Injectable, signal } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogState } from '@angular/material/dialog';
+import { NavigationStart, Router } from '@angular/router';
 import { DatosDialogoPieza, PieceDialog } from '../components/piece-dialog';
 import { Pantalla } from './pantalla';
 
@@ -13,6 +14,7 @@ import { Pantalla } from './pantalla';
 export class DetalleDialogo {
   private readonly dialogo = inject(MatDialog);
   private readonly location = inject(Location);
+  private readonly router = inject(Router);
   private readonly pantalla = inject(Pantalla);
 
   /** Piezas de la lista visible; la página que la muestra la registra. */
@@ -63,11 +65,19 @@ export class DetalleDialogo {
       autoFocus: 'dialog',
       ariaLabel: 'Detalle de la pieza',
     });
+    const navegacion = this.router.events.subscribe((evento) => {
+      if (evento instanceof NavigationStart && ref.getState() === MatDialogState.OPEN) {
+        // En una navegación del historial, el navegador ya cambió la dirección.
+        if (evento.navigationTrigger === 'imperative') this.location.replaceState(anterior);
+        ref.close('salir');
+      }
+    });
     ref.afterClosed().subscribe((resultado) => {
+      navegacion.unsubscribe();
       // Si se cerró sin salir de la lista, no hay nada que restaurar.
       if (resultado !== 'navegar') this.ultima = null;
-      // Si se fue a otra página, la dirección ya se restauró antes de navegar.
-      if (resultado !== 'navegar' && this.location.path().startsWith('/pieza/'))
+      // Las navegaciones ya restauraron la dirección antes de cerrar.
+      if (!resultado && this.location.path().startsWith('/pieza/'))
         this.location.replaceState(anterior);
     });
     return true;
