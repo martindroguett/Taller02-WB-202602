@@ -1,0 +1,17 @@
+:{$PORT:8080} {
+	encode zstd gzip
+
+	@api path /api /api/*
+	handle @api {
+		reverse_proxy {$API_UPSTREAM} {
+			# Railway termina HTTPS antes de Caddy. Conserva el esquema público para las fotos.
+			header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+		}
+	}
+
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}
