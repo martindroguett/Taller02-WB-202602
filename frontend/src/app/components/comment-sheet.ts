@@ -1,11 +1,10 @@
-import { NgTemplateOutlet } from '@angular/common';
+import { Location, NgTemplateOutlet } from '@angular/common';
 import { Component, computed, ElementRef, inject, input, signal, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bottom-sheet';
 import { Router } from '@angular/router';
 import { relativo } from '../models/format';
 import { AuthService } from '../services/auth.service';
-import { DetalleDialogo } from '../services/detalle-dialogo';
 import {
   ComentarioLocal,
   ComentariosService,
@@ -385,9 +384,10 @@ export class CommentSheet {
   });
   readonly duenoIdEntrada = input<number>(undefined, { alias: 'duenoId' });
   readonly enLinea = input(false);
+  readonly origen = input<string>();
   protected readonly duenoId = computed(() => this.duenoIdEntrada() ?? this.datos?.duenoId ?? -1);
   private readonly router = inject(Router);
-  private readonly detalle = inject(DetalleDialogo);
+  private readonly location = inject(Location);
   private readonly lista = viewChild<ElementRef<HTMLElement>>('lista');
   private readonly campo = viewChild<ElementRef<HTMLTextAreaElement>>('campo');
   protected readonly respondiendo = signal<ComentarioLocal | null>(null);
@@ -444,7 +444,12 @@ export class CommentSheet {
   }
 
   protected ingresar(): void {
+    const origen = this.origen();
+    const queryParams =
+      origen === undefined
+        ? { returnUrl: this.location.path() }
+        : { returnUrl: origen, pieza: this.comentarios.piezaActual };
     this.ref?.dismiss();
-    void this.router.navigate(['/ingresar'], { queryParams: this.detalle.destinoParaIngresar() });
+    void this.router.navigate(['/ingresar'], { queryParams });
   }
 }

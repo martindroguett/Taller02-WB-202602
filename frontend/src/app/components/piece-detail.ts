@@ -146,7 +146,7 @@ import { PieceArt } from './piece-art';
           Compartir
         </button>
       </div>
-      <vt-comment-sheet [duenoId]="p.dueno.id" [enLinea]="true" />
+      <vt-comment-sheet [duenoId]="p.dueno.id" [enLinea]="true" [origen]="origen()" />
     </aside>
 
     @if (soyDueno()) {
@@ -300,6 +300,8 @@ export class PieceDetail {
 
   readonly pieza = input.required<PiezaPublica>();
   readonly modo = input<'pagina' | 'ventana'>('pagina');
+  /** Lista de fondo que se recupera al ingresar desde la ventana. */
+  readonly origen = input<string>();
   /** La ventana se cierra sin volver atrás en el historial cuando se va a otra página. */
   readonly irA = output<void>();
 

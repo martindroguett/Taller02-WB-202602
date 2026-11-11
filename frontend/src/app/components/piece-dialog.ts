@@ -26,7 +26,12 @@ export interface DatosDialogoPieza {
   template: `
     <div class="marco" role="dialog" aria-modal="true" aria-label="Detalle de la pieza">
       @if (pieza.hasValue()) {
-        <vt-piece-detail [pieza]="pieza.value()" modo="ventana" (irA)="irA()" />
+        <vt-piece-detail
+          [pieza]="pieza.value()"
+          modo="ventana"
+          [origen]="datos.anterior"
+          (irA)="irA()"
+        />
       } @else if (pieza.error()) {
         <div class="vacio">
           <vt-empty-state
@@ -120,7 +125,6 @@ export interface DatosDialogoPieza {
 export class PieceDialog {
   protected readonly datos = inject<DatosDialogoPieza>(MAT_DIALOG_DATA);
   protected readonly ref = inject<MatDialogRef<PieceDialog>>(MatDialogRef);
-  readonly datosOrigen = this.datos.anterior;
   private readonly location = inject(Location);
   private readonly api = inject(CatalogoPublicoService);
   private readonly id = signal(this.datos.id);
