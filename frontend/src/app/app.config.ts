@@ -6,7 +6,13 @@ import {
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
-import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
+import {
+  PreloadAllModules,
+  provideRouter,
+  withComponentInputBinding,
+  withInMemoryScrolling,
+  withPreloading,
+} from '@angular/router';
 import { routes } from './app.routes';
 import { AuthService } from './services/auth.service';
 
@@ -16,6 +22,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(
       routes,
       withComponentInputBinding(),
+      withPreloading(PreloadAllModules),
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
     ),
     provideHttpClient(withInterceptors([authInterceptor])),

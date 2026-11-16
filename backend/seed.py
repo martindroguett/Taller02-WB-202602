@@ -49,6 +49,28 @@ USUARIOS = [
     ("martin", "Martín Espinoza", "Vinilos y Lego. Armar y escuchar al mismo tiempo.", ["vinilos", "juguetes"]),
 ]
 
+# Dónde «se consiguieron» las piezas de prueba, todas en la región de Coquimbo
+# (lugar, latitud, longitud, peso).
+LUGARES = [
+    ("La Serena", -29.9027, -71.2520, 6),
+    ("Coquimbo", -29.9533, -71.3436, 5),
+    ("Ovalle", -30.6015, -71.1993, 3),
+    ("Vicuña", -30.0319, -70.7081, 2),
+    ("Andacollo", -30.2367, -71.0856, 1),
+    ("Illapel", -31.6308, -71.1653, 2),
+    ("Los Vilos", -31.9105, -71.5120, 2),
+    ("Salamanca", -31.7762, -70.9645, 1),
+    ("Monte Patria", -30.6933, -70.9433, 1),
+    ("Combarbalá", -31.1775, -71.0022, 1),
+    ("Paihuano", -30.0300, -70.5190, 1),
+    ("Tongoy", -30.2563, -71.4953, 2),
+]
+# Códigos de barras de prueba por categoría. Los vinilos repiten un código: el mismo disco en dos colecciones.
+CODIGOS_DEMO = {
+    "vinilos": ["7801610001234", "7801610001234", "5099902988818"],
+    "videojuegos": ["4902370536485", "0045496590086"],
+}
+
 COMENTARIOS = {
     "cartas": [
         "¡Qué buen estado! ¿La compraste o te la regalaron?",
@@ -123,14 +145,23 @@ def main() -> None:
         coleccionistas = {slug: [u[0] for u in USUARIOS if slug in u[3]] for slug in categorias}
         turno = dict.fromkeys(categorias, 0)
         piezas = []
+        geo = random.Random(7)  # aparte de `azar`, para no cambiar el resto de los datos de prueba
+        codigos = {slug: iter(lista) for slug, lista in CODIGOS_DEMO.items()}
         for foto in fotos:
             slug = foto["categoria"]
             dueno = coleccionistas[slug][turno[slug] % len(coleccionistas[slug])]
             turno[slug] += 1
             fecha = hace(DIAS)
+            latitud = longitud = codigo = lugar = None
+            if geo.random() < 0.8:
+                lugar, lat, lng, _ = geo.choices(LUGARES, weights=[l[3] for l in LUGARES])[0]
+                latitud, longitud = round(lat + geo.uniform(-0.012, 0.012), 6), round(lng + geo.uniform(-0.012, 0.012), 6)
+            if slug in codigos and turno[slug] % 3 == 1:
+                codigo = next(codigos[slug], None)
             piezas.append(Pieza(
                 nombre=foto["nombre"], descripcion=foto["descripcion"], imagen_url=f"/fotos-demo/{foto['archivo']}",
                 usuario_id=usuarios[dueno].id, categoria_id=categorias[slug].id, creado_en=fecha, actualizado_en=fecha,
+                codigo=codigo, latitud=latitud, longitud=longitud, lugar=lugar,
             ))
         db.add_all(piezas)
         db.flush()

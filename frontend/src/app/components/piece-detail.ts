@@ -28,6 +28,7 @@ import { IconButton } from './icon-button';
 import { LikeButton } from './like-button';
 import { LikeBurst } from './like-burst';
 import { PieceArt } from './piece-art';
+import { enlacePieza, PieceExtra } from './piece-extra';
 
 /**
  * Detalle de la pieza en escritorio: la foto a un lado y, al otro, los datos, las acciones y los
@@ -45,6 +46,7 @@ import { PieceArt } from './piece-art';
     LikeButton,
     LikeBurst,
     PieceArt,
+    PieceExtra,
     RouterLink,
   ],
   host: { '[class]': '"vt-c-" + pieza().categoria', '[attr.data-modo]': 'modo()' },
@@ -131,6 +133,7 @@ import { PieceArt } from './piece-art';
       <div class="texto">
         <h1 class="display-lg nombre">{{ p.nombre }}</h1>
         <p class="body descripcion">{{ p.descripcion }}</p>
+        <vt-piece-extra [pieza]="p" />
       </div>
       <div class="acciones">
         <vt-like-button [pieza]="p" />
@@ -333,14 +336,14 @@ export class PieceDetail {
   protected async compartir(): Promise<void> {
     if (typeof navigator.share === 'function') {
       try {
-        await navigator.share({ title: this.pieza().nombre, url: window.location.href });
+        await navigator.share({ title: this.pieza().nombre, url: enlacePieza(this.pieza().id) });
         return;
       } catch (error) {
         if ((error as DOMException).name === 'AbortError') return;
       }
     }
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(enlacePieza(this.pieza().id));
       this.toast.show('Enlace copiado', 'success');
     } catch {
       this.toast.show(

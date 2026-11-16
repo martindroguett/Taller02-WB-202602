@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, String, func, ForeignKey, LargeBinary, select
+from sqlalchemy import CheckConstraint, DateTime, Float, String, func, ForeignKey, LargeBinary, select
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from database import Base
@@ -26,6 +26,13 @@ class Pieza(Base):
     imagen_url: Mapped[str | None] = mapped_column(String(2000))
     imagen_datos: Mapped[bytes | None] = mapped_column(LargeBinary, deferred=True)
     imagen_tipo: Mapped[str | None] = mapped_column(String(20))
+
+    # Datos que llegan desde el celular (Taller 3): el código de barras o QR escaneado
+    # y las coordenadas del lugar donde se consiguió la pieza.
+    codigo: Mapped[str | None] = mapped_column(String(128), index=True)
+    latitud: Mapped[float | None] = mapped_column(Float)
+    longitud: Mapped[float | None] = mapped_column(Float)
+    lugar: Mapped[str | None] = mapped_column(String(100))  # ciudad o comuna, para mostrar
 
     creado_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     actualizado_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

@@ -12,6 +12,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { AccionesMovil, RADIOS_KM } from '../components/acciones-movil';
 import { Avatar } from '../components/avatar';
 import { ComunidadLateral } from '../components/comunidad-lateral';
 import { RouterLink } from '@angular/router';
@@ -23,15 +24,23 @@ import { IconButton } from '../components/icon-button';
 import { PromoBanner } from '../components/promo-banner';
 import { PieceCard } from '../components/piece-card';
 import { SearchField } from '../components/search-field';
+import { SorpresaSheet } from '../components/sorpresa-sheet';
 import { TopBar } from '../components/top-bar';
 import { CATEGORIAS, Filtro } from '../models/vitrina';
 import { CatalogoPublicoService, PiezaPublica } from '../services/catalogo-publico.service';
 import { DetalleDialogo } from '../services/detalle-dialogo';
+import { ToastService } from '../services/toast.service';
+import {
+  DispositivoService,
+  interpretarCodigo,
+  mensajeDispositivo,
+} from '../services/dispositivo.service';
 
 @Component({
   selector: 'vt-explore-page',
   host: { '(window:resize)': 'medirRiel()', '(document:keydown)': 'atajo($event)' },
   imports: [
+    AccionesMovil,
     Avatar,
     Button,
     CategoryChip,
@@ -43,6 +52,7 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
     PromoBanner,
     RouterLink,
     SearchField,
+    SorpresaSheet,
     TopBar,
   ],
   template: `
@@ -53,7 +63,7 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
             <a
               class="mi-avatar"
               [routerLink]="
-                auth.usuario() ? ['/coleccionistas', auth.usuario()?.username] : ['/ingresar']
+                auth.usuario() ? ['/perfil'] : ['/ingresar']
               "
               [attr.aria-label]="auth.usuario() ? 'Ir a tu perfil' : 'Ingresar'"
               ><vt-avatar [nombre]="auth.usuario()?.username ?? ''" anillo="brand" [tam]="40"
@@ -65,7 +75,33 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
             placeholder="Busca cartas, vinilos, juguetes…"
           />
         </div>
-        <vt-promo-banner class="portada" (accion)="elegirCategoria('vinilos')" />
+        <vt-acciones-movil
+          [escaneando]="escaneando()"
+          [ubicando]="ubicando()"
+          [cercaActiva]="!!cerca()"
+          [radioKm]="radioKm()"
+          (escanear)="escanear()"
+          (cerca)="alternarCerca()"
+          (radioKmChange)="cambiarRadio($event)"
+        />
+        @if (codigo()) {
+          <p class="filtro-activo caption">
+            Piezas con el código <strong>{{ codigo() }}</strong>
+            <button
+              type="button"
+              vt-button
+              size="sm"
+              variant="secondary"
+              icon="close"
+              (click)="quitarCodigo()"
+            >
+              Quitar
+            </button>
+          </p>
+        }
+        @if (!cerca() && !codigo()) {
+          <vt-promo-banner class="portada" (accion)="elegirCategoria('vinilos')" />
+        }
         <mat-chip-listbox
           class="vt-rail vt-category-list categorias"
           aria-label="Categorías"
@@ -81,7 +117,13 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
             </mat-basic-chip-option>
           }
         </mat-chip-listbox>
-        @if (!busqueda().trim() && filtro() === 'todas' && piezasDestacadas().length) {
+        @if (
+          !busqueda().trim() &&
+          filtro() === 'todas' &&
+          !codigo() &&
+          !cerca() &&
+          piezasDestacadas().length
+        ) {
           <section class="vt-section" aria-labelledby="destacadas-titulo">
             <h2 class="title" id="destacadas-titulo">Destacadas</h2>
             <div class="carrusel">
@@ -118,7 +160,13 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
         <section class="vt-section" aria-labelledby="resultados-titulo">
           <div class="seccion-titulo">
             <h2 class="title" id="resultados-titulo">
-              {{ busqueda().trim() || filtro() !== 'todas' ? 'Resultados' : 'Recién llegadas' }}
+              {{
+                cerca()
+                  ? 'Cerca de ti'
+                  : busqueda().trim() || filtro() !== 'todas' || codigo()
+                    ? 'Resultados'
+                    : 'Recién llegadas'
+              }}
             </h2>
             @if (!cargando() || resultados().length) {
               <span class="caption vt-muted" role="status">{{
@@ -131,7 +179,7 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
           @if (resultados().length) {
             <div class="vt-grid">
               @for (p of resultados(); track p.id) {
-                <vt-piece-card [pieza]="p" />
+                <vt-piece-card [pieza]="p" [distanciaKm]="cerca() ? p.distancia_km : null" />
               }
             </div>
           }
@@ -155,16 +203,37 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
           } @else if (!cargando() && !resultados().length) {
             <vt-empty-state
               [titulo]="
-                busqueda().trim() || filtro() !== 'todas'
-                  ? 'No encontramos piezas'
-                  : 'Aún no hay piezas'
+                cerca()
+                  ? 'No hay piezas a menos de ' + radioKm() + ' km'
+                  : codigo()
+                    ? 'Nadie tiene esta pieza todavía'
+                    : busqueda().trim() || filtro() !== 'todas'
+                      ? 'No encontramos piezas'
+                      : 'Aún no hay piezas'
               "
               [texto]="
-                busqueda().trim() || filtro() !== 'todas'
-                  ? 'Prueba con otra palabra o cambia de categoría.'
-                  : 'El catálogo todavía está vacío.'
+                cerca()
+                  ? 'Prueba con un radio mayor o agrega una pieza con tu ubicación para que otros la encuentren.'
+                  : codigo()
+                    ? 'Agrégala a tu colección con este código y sé el primero.'
+                    : busqueda().trim() || filtro() !== 'todas'
+                      ? 'Prueba con otra palabra o cambia de categoría.'
+                      : 'El catálogo todavía está vacío.'
               "
             >
+              @if (cerca() && radioSiguiente(); as siguiente) {
+                <button type="button" vt-button (click)="cambiarRadio(siguiente)">
+                  Ampliar a {{ siguiente }} km
+                </button>
+              }
+              @if (codigo() && auth.usuario()) {
+                <a
+                  vt-button
+                  [routerLink]="['/coleccion/nueva']"
+                  [queryParams]="{ codigo: codigo() }"
+                  >Agregar pieza</a
+                >
+              }
               <button type="button" vt-button variant="secondary" (click)="limpiar()">
                 Borrar filtros
               </button>
@@ -181,6 +250,14 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
         <vt-comunidad-lateral />
       </aside>
     </div>
+    <vt-sorpresa-sheet
+      [pieza]="sorpresa()"
+      [cargando]="sorprendiendo()"
+      [consejo]="sensorActivo() ? 'También puedes sacudir el celular otra vez.' : ''"
+      (otra)="sorprender()"
+      (ver)="verSorpresa()"
+      (cerrada)="sorpresa.set(null)"
+    />
   `,
   styles: `
     .principal,
@@ -198,6 +275,13 @@ import { DetalleDialogo } from '../services/detalle-dialogo';
     }
     .categorias {
       margin-block: -4px;
+    }
+    .filtro-activo {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      overflow-wrap: anywhere;
     }
     .seccion-titulo {
       display: flex;
@@ -327,6 +411,24 @@ export class ExplorePage {
   protected readonly error = signal(false);
   protected desplazamiento = 0;
 
+  // ───── Funciones del celular (Taller 3) ─────
+  private readonly dispositivo = inject(DispositivoService);
+  private readonly toast = inject(ToastService);
+  /** Código de barras escaneado: filtra las piezas con ese mismo código. */
+  protected readonly codigo = signal('');
+  /** Ubicación actual cuando está activo «Cerca de mí». */
+  protected readonly cerca = signal<{ latitud: number; longitud: number } | null>(null);
+  protected readonly escaneando = signal(false);
+  protected readonly ubicando = signal(false);
+  protected readonly sorprendiendo = signal(false);
+  protected readonly sensorActivo = signal(false);
+  /** Radio de «Cerca de mí», en km. */
+  protected readonly radioKm = signal<number>(10);
+  /** Pieza que salió con «Sorpréndeme»: se muestra en una hoja antes de abrirla. */
+  protected readonly sorpresa = signal<PiezaPublica | null>(null);
+  private dejarDeEscuchar?: () => void;
+  private ultimaSorpresa?: number;
+
   constructor() {
     effect(() => {
       this.detalle.lista.set(this.resultados().map((p) => p.id));
@@ -340,12 +442,134 @@ export class ExplorePage {
       clearTimeout(this.espera);
       this.busqueda.set(params.get('q') ?? '');
       this.filtro.set(this.filtros.find((f) => f === params.get('categoria')) ?? 'todas');
+      this.codigo.set(params.get('codigo') ?? '');
       this.reiniciar();
     });
     this.destroy.onDestroy(() => {
       clearTimeout(this.espera);
       this.solicitud?.unsubscribe();
+      this.dejarDeEscuchar?.();
     });
+    // Acelerómetro: en la app, agitar el celular abre una pieza al azar.
+    if (this.dispositivo.nativa) {
+      this.dispositivo
+        .escucharSacudidas(() => this.sorprender())
+        .then((detener) => {
+          if (this.destroy.destroyed) return detener();
+          this.dejarDeEscuchar = detener;
+          this.sensorActivo.set(true);
+          this.avisarSacudida();
+        })
+        .catch((e) => {
+          const mensaje = mensajeDispositivo(e);
+          if (mensaje) this.toast.show(mensaje, 'info');
+        });
+    }
+  }
+
+  /** Cámara: QR de Vitrina → abre la pieza o el perfil; código de barras → busca ese producto. */
+  protected async escanear(): Promise<void> {
+    this.escaneando.set(true);
+    try {
+      const leido = interpretarCodigo(
+        await this.dispositivo.escanear(() =>
+          this.toast.show('Preparando el lector de códigos… se descarga una sola vez.', 'info'),
+        ),
+      );
+      if (leido.tipo === 'pieza') {
+        void this.router.navigate(['/pieza', leido.id]);
+      } else if (leido.tipo === 'coleccionista') {
+        void this.router.navigate(['/coleccionistas', leido.username]);
+      } else {
+        this.cerca.set(null);
+        void this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { q: null, categoria: null, codigo: leido.codigo },
+        });
+      }
+    } catch (e) {
+      const mensaje = mensajeDispositivo(e);
+      if (mensaje) this.toast.show(mensaje, 'danger');
+    } finally {
+      this.escaneando.set(false);
+    }
+  }
+
+  protected quitarCodigo(): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { codigo: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  /** GPS: muestra las piezas conseguidas cerca, ordenadas por distancia. */
+  protected async alternarCerca(): Promise<void> {
+    if (this.cerca()) {
+      this.cerca.set(null);
+      this.reiniciar();
+      return;
+    }
+    this.ubicando.set(true);
+    try {
+      const { latitud, longitud } = await this.dispositivo.ubicacion();
+      this.cerca.set({ latitud, longitud });
+      this.reiniciar();
+    } catch (e) {
+      const mensaje = mensajeDispositivo(e);
+      if (mensaje) this.toast.show(mensaje, 'danger');
+    } finally {
+      this.ubicando.set(false);
+    }
+  }
+
+  protected cambiarRadio(km: number): void {
+    this.radioKm.set(km);
+    this.reiniciar();
+  }
+
+  /** Siguiente radio más amplio, para ofrecerlo cuando no hay resultados. */
+  protected radioSiguiente(): number | undefined {
+    return RADIOS_KM.find((r) => r > this.radioKm());
+  }
+
+  /** Sin botón: se avisa una vez por sesión que la sorpresa llega al agitar el celular. */
+  private avisarSacudida(): void {
+    try {
+      if (sessionStorage.getItem('vt-aviso-sacudida')) return;
+      sessionStorage.setItem('vt-aviso-sacudida', '1');
+    } catch {
+      /* sin almacenamiento: se avisa igual */
+    }
+    this.toast.show('Agita el celular para descubrir una pieza sorpresa', 'info');
+  }
+
+  /** Pide una pieza al azar y la muestra en una hoja (al agitar el celular). */
+  protected sorprender(): void {
+    if (this.sorprendiendo()) return;
+    this.sorprendiendo.set(true);
+    this.api
+      .aleatoria(this.sorpresa()?.id ?? this.ultimaSorpresa)
+      .pipe(takeUntilDestroyed(this.destroy))
+      .subscribe({
+        next: (pieza) => {
+          this.sorprendiendo.set(false);
+          this.ultimaSorpresa = pieza.id;
+          this.sorpresa.set(pieza);
+          navigator.vibrate?.([40, 50, 40]);
+        },
+        error: () => {
+          this.sorprendiendo.set(false);
+          this.toast.show('No pudimos traer una pieza al azar. Revisa tu conexión.', 'danger');
+        },
+      });
+  }
+
+  protected verSorpresa(): void {
+    const pieza = this.sorpresa();
+    this.sorpresa.set(null);
+    if (pieza) void this.router.navigate(['/pieza', pieza.id]);
   }
 
   /** Con «/» el cursor salta al buscador, como en otros sitios. */
@@ -395,6 +619,11 @@ export class ExplorePage {
     clearTimeout(this.espera);
     this.busqueda.set('');
     this.filtro.set('todas');
+    this.cerca.set(null);
+    if (this.codigo()) {
+      void this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
+      return;
+    }
     this.actualizarUrl();
   }
 
@@ -414,6 +643,7 @@ export class ExplorePage {
       queryParams: {
         q: q || null,
         categoria: categoria === 'todas' ? null : categoria,
+        codigo: this.codigo() || null,
       },
       replaceUrl: true,
     });
@@ -433,7 +663,10 @@ export class ExplorePage {
     this.cargando.set(true);
     this.error.set(false);
     this.solicitud = this.api
-      .listar(this.busqueda(), this.filtro(), this.desplazamiento)
+      .listar(this.busqueda(), this.filtro(), this.desplazamiento, {
+        codigo: this.codigo() || undefined,
+        cerca: this.cerca() ? { ...this.cerca()!, radioKm: this.radioKm() } : undefined,
+      })
       .subscribe({
         next: (pagina) => {
           this.resultados.update((actuales) => {

@@ -31,16 +31,39 @@ import { abrirListaUsuarios } from './user-list-dialog';
     </div>
     <div class="vitrina vt-showcase"></div>
     <div class="cuerpo">
-      <vt-avatar class="avatar" [nombre]="usuario().username" [tam]="pantalla.escritorio() ? 120 : 88" anillo="brand" />
-      <div class="acciones">
-        <a vt-button variant="accent" size="sm" icon="add" routerLink="/coleccion/nueva"
-          >Agregar pieza</a
-        >
-      </div>
+      <vt-avatar
+        class="avatar"
+        [nombre]="usuario().username"
+        [tam]="pantalla.escritorio() ? 120 : 88"
+        [anillo]="propio() ? 'brand' : 'none'"
+      />
       <div class="quien">
         <h1 class="title">&#64;{{ usuario().username }}</h1>
         @if (usuario().bio) {
           <p class="body bio">{{ usuario().bio }}</p>
+        } @else if (propio()) {
+          <p class="body bio vacia">Cuéntale a la gente qué coleccionas.</p>
+        }
+      </div>
+      <div class="acciones">
+        @if (propio()) {
+          <button type="button" vt-button variant="secondary" icon="edit" (click)="editar.emit()">
+            Editar perfil
+          </button>
+          <a vt-button variant="accent" icon="add" routerLink="/coleccion/nueva">Agregar pieza</a>
+        } @else if (vistaPrevia()) {
+          <span class="falso">Seguir</span>
+        } @else {
+          <button
+            type="button"
+            vt-button
+            [variant]="usuario().lo_sigo ? 'secondary' : 'accent'"
+            [attr.aria-pressed]="usuario().lo_sigo"
+            [disabled]="enviando()"
+            (click)="seguir.emit()"
+          >
+            {{ enviando() ? 'Actualizando…' : usuario().lo_sigo ? 'Siguiendo' : 'Seguir' }}
+          </button>
         }
       </div>
       <div class="cifras">
@@ -114,15 +137,31 @@ import { abrirListaUsuarios } from './user-list-dialog';
       grid-row: 1;
     }
     .acciones {
-      grid-row: 1;
-      justify-self: end;
-      align-self: center;
+      grid-column: 1 / -1;
+      grid-row: 3;
       display: flex;
       align-items: center;
       gap: var(--space-2);
-      padding-top: var(--space-3);
+      margin-top: calc(-1 * var(--space-2));
+    }
+    .acciones > * {
+      flex: 1;
+    }
+    .falso {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: var(--tap-target);
+      border-radius: var(--radius-pill);
+      background: var(--brand);
+      color: var(--on-brand);
+      font: var(--text-body-strong);
+    }
+    .vacia {
+      color: var(--ink-muted);
     }
     .quien {
+      grid-row: 2;
       grid-column: 1 / -1;
       display: flex;
       flex-direction: column;
@@ -133,6 +172,7 @@ import { abrirListaUsuarios } from './user-list-dialog';
     }
     .cifras {
       grid-column: 1 / -1;
+      grid-row: 4;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       padding: var(--space-3) 0 0;
@@ -191,7 +231,11 @@ import { abrirListaUsuarios } from './user-list-dialog';
         grid-column: 3;
         grid-row: 1;
         align-self: start;
+        margin-top: 0;
         padding-top: var(--space-4);
+      }
+      .acciones > * {
+        flex: none;
       }
       .cifras {
         grid-column: 1 / -1;
@@ -207,6 +251,13 @@ export class ProfileHeader {
   protected readonly giros = [-10, 4, 12];
 
   readonly usuario = input.required<UsuarioPublico>();
+  /** Es tu propio perfil: se ven Editar perfil y Agregar pieza. */
+  readonly propio = input(false);
+  /** «Como te ven»: muestra el botón de una visita, sin que haga nada. */
+  readonly vistaPrevia = input(false);
+  readonly enviando = input(false);
+  readonly editar = output<void>();
+  readonly seguir = output<void>();
   readonly piezas = input<number | null>(null);
   readonly abanico = input<PiezaPublica[]>([]);
   /** Se pulsa «Piezas»: la página lleva a la colección. */

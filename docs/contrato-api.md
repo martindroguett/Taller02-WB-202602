@@ -65,6 +65,7 @@ Lo que muestra un perfil. Coincide con la interfaz `Usuario` del frontend, más 
 
 - `bio` siempre es texto: `""` si el usuario no escribió nada.
 - `seguidores` y `siguiendo` se calculan al consultar; no se envían al crear ni al editar.
+- El propio usuario cambia su bio con `PATCH /auth/yo` (`{"bio": "..."}`, hasta 300 caracteres) y recibe el `UsuarioPrivado` actualizado.
 
 ### UsuarioPrivado
 
@@ -189,7 +190,8 @@ Router `routers/piezas.py`, prefijo `/api/piezas`.
 
 | Método y ruta | Acceso | Envía | Responde | Errores | Estado |
 | --- | --- | --- | --- | --- | --- |
-| `GET /piezas` | Opcional | `?q&categoria&orden&limite&desplazamiento` | `200` + página de `Pieza` | `422` | Listo |
+| `GET /piezas` | Opcional | `?q&categoria&codigo&orden&lat&lng&radio_km&limite&desplazamiento` (`orden=cercanas` exige `lat` y `lng`) | `200` + página de `Pieza` | `400`, `422` | Listo |
+| `GET /piezas/aleatoria` | Opcional | `?excluir` | `200` + `Pieza` al azar (la app la pide al agitar el celular) | `404` | Listo |
 | `GET /piezas/{id}` | Opcional | — | `200` + `Pieza` | `404` | Listo |
 | `GET /piezas/{id}/imagen` | Pública | — | `200` + la imagen (`image/jpeg`, `image/png` o `image/webp`) | `404` | Listo |
 | `POST /piezas` | Token | `DatosPieza` | `201` + `Pieza` | `400`, `401`, `422` | Listo |
@@ -280,3 +282,8 @@ Ocho tablas en PostgreSQL, creadas con migraciones de Alembic (`backend/migratio
 
 - Los totales (`seguidores`, `siguiendo`, `megusta`, `guardados`) se calculan con `COUNT` al consultar; no se guardan en columnas, así nunca quedan desfasados.
 - Al borrar un usuario o una pieza, sus filas en las tablas de unión se borran solas (`ON DELETE CASCADE`).
+
+
+## Taller 3: datos desde el celular
+
+`DatosPieza` acepta `codigo` (máx. 128, código de barras o QR escaneado), `latitud` y `longitud` (opcionales, van juntas). `Pieza` los devuelve, y en las búsquedas con `lat`/`lng` agrega `distancia_km`.

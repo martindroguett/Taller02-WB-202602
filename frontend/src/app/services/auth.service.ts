@@ -55,6 +55,13 @@ export class AuthService {
     );
   }
 
+  /** Guarda la bio del perfil y deja la sesión con el usuario actualizado. */
+  actualizarBio(bio: string): Observable<UsuarioPrivadoApi> {
+    return this.http
+      .patch<UsuarioPrivadoApi>(`${URL_AUTH}/yo`, { bio })
+      .pipe(tap((usuario) => this.usuarioActual.set(usuario)));
+  }
+
   cerrarSesion(): void {
     this.tokenActual.set(null);
     this.usuarioActual.set(null);

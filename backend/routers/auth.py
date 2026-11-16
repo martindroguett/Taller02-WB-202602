@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 
 from database import Sesion
 from models import Usuario
-from schemas import TokenRespuesta, UsuarioLogin, UsuarioPrivado, UsuarioRegistro
+from schemas import TokenRespuesta, UsuarioEditar, UsuarioLogin, UsuarioPrivado, UsuarioRegistro
 from seguridad import UsuarioActual, crear_token, hashear_password, verificar_password
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
@@ -55,4 +55,12 @@ def ingresar(datos: UsuarioLogin, db: Sesion):
 
 @router.get("/yo", response_model=UsuarioPrivado)
 def yo(usuario: UsuarioActual):
+    return usuario
+
+
+@router.patch("/yo", response_model=UsuarioPrivado)
+def editar_yo(datos: UsuarioEditar, usuario: UsuarioActual, db: Sesion):
+    usuario.bio = datos.bio or None
+    db.commit()
+    db.refresh(usuario)
     return usuario

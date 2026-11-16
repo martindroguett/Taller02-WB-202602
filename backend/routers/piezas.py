@@ -1,3 +1,4 @@
+import math
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response, status
@@ -23,6 +24,10 @@ def a_respuesta(pieza: Pieza, request: Request, gustada: bool, guardada: bool) -
         descripcion=pieza.descripcion,
         categoria=pieza.categoria.slug,
         imagen_url=url_imagen(pieza, request),
+        codigo=pieza.codigo,
+        latitud=pieza.latitud,
+        longitud=pieza.longitud,
+        lugar=pieza.lugar,
         dueno=Dueno.model_validate(pieza.usuario),
         megusta=pieza.megusta,
         guardados=pieza.guardados,
@@ -98,6 +103,24 @@ def categoria_por_slug(db: Session, slug: str) -> Categoria:
     return categoria
 
 
+KM_POR_GRADO = 111.32
+
+
+def distancia_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """Distancia real sobre la Tierra (fórmula del haversine), para mostrarla en la respuesta."""
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp, dl = p2 - p1, math.radians(lng2 - lng1)
+    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return round(2 * 6371.0 * math.asin(math.sqrt(a)), 2)
+
+
+def distancia_aprox(lat: float, lng: float):
+    """Distancia aproximada en km calculada por la base (proyección plana): sirve para ordenar y filtrar."""
+    dx = (Pieza.longitud - lng) * math.cos(math.radians(lat))
+    dy = Pieza.latitud - lat
+    return func.sqrt(dx * dx + dy * dy) * KM_POR_GRADO
+
+
 @router.get("", response_model=Pagina[PiezaRespuesta])
 def listar_piezas(
     request: Request,
@@ -105,11 +128,20 @@ def listar_piezas(
     usuario: UsuarioOpcional,
     q: str | None = None,
     categoria: str | None = None,
-    orden: Literal["recientes", "populares"] = "recientes",
+    codigo: Annotated[str | None, Query(max_length=128)] = None,
+    lat: Annotated[float | None, Query(ge=-90, le=90)] = None,
+    lng: Annotated[float | None, Query(ge=-180, le=180)] = None,
+    radio_km: Annotated[float, Query(gt=0, le=20000)] = 50,
+    orden: Literal["recientes", "populares", "cercanas"] = "recientes",
     limite: Limite = 20,
     desplazamiento: Desplazamiento = 0,
 ):
+    if orden == "cercanas" and (lat is None or lng is None):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Para buscar cerca se necesitan lat y lng")
     consulta = select(Pieza)
+    if codigo and codigo.strip():
+        # El código escaneado se compara exacto: identifica un producto (EAN, UPC) o una entidad (QR).
+        consulta = consulta.where(Pieza.codigo == codigo.strip())
     if q and q.strip():
         texto = q.strip()
 
@@ -121,13 +153,39 @@ def listar_piezas(
         consulta = consulta.join(Pieza.categoria).where(Categoria.slug == categoria)
 
     recientes = (Pieza.creado_en.desc(), Pieza.id.desc())
-    if orden == "populares":
+    if orden == "cercanas":
+        # Solo piezas con ubicación, dentro del radio pedido y de la más cercana a la más lejana.
+        cerca = distancia_aprox(lat, lng)
+        consulta = consulta.where(Pieza.latitud.is_not(None), cerca <= radio_km).order_by(cerca, *recientes)
+    elif orden == "populares":
         # Más me gusta primero; si empatan, la más nueva.
         consulta = consulta.order_by(Pieza.megusta.desc(), *recientes)
     else:
         consulta = consulta.order_by(*recientes)
 
-    return paginar(db, consulta, request, usuario, limite, desplazamiento)
+    pagina = paginar(db, consulta, request, usuario, limite, desplazamiento)
+    if lat is not None and lng is not None:
+        for item in pagina.items:
+            if item.latitud is not None and item.longitud is not None:
+                item.distancia_km = distancia_km(lat, lng, item.latitud, item.longitud)
+    return pagina
+
+
+@router.get("/aleatoria", response_model=PiezaRespuesta)
+def pieza_aleatoria(
+    request: Request,
+    db: Sesion,
+    usuario: UsuarioOpcional,
+    excluir: Annotated[int | None, Query(ge=1)] = None,
+):
+    """Una pieza al azar del catálogo. La app la pide al agitar el celular (acelerómetro)."""
+    consulta = select(Pieza)
+    if excluir is not None:
+        consulta = consulta.where(Pieza.id != excluir)
+    pieza = db.scalar(consulta.order_by(func.random()).limit(1))
+    if pieza is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Todavía no hay piezas")
+    return a_respuestas(db, [pieza], request, usuario)[0]
 
 
 @router.get("/{id}", response_model=PiezaRespuesta)
@@ -156,6 +214,10 @@ def crear_pieza(datos: DatosPieza, usuario: UsuarioActual, request: Request, db:
         descripcion=datos.descripcion,
         categoria=categoria_por_slug(db, datos.categoria),
         usuario=usuario,
+        codigo=datos.codigo,
+        latitud=datos.latitud,
+        longitud=datos.longitud,
+        lugar=datos.lugar,
     )
     asignar_imagen(pieza, datos.imagen_url)
     db.add(pieza)
@@ -170,6 +232,10 @@ def editar_pieza(id: int, datos: DatosPieza, usuario: UsuarioActual, request: Re
     pieza.nombre = datos.nombre
     pieza.descripcion = datos.descripcion
     pieza.categoria = categoria_por_slug(db, datos.categoria)
+    pieza.codigo = datos.codigo
+    pieza.latitud = datos.latitud
+    pieza.longitud = datos.longitud
+    pieza.lugar = datos.lugar
     asignar_imagen(pieza, datos.imagen_url)
     db.commit()
     db.refresh(pieza)

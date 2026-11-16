@@ -10,15 +10,15 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { distinctUntilChanged, map } from 'rxjs';
-import { Avatar } from '../components/avatar';
 import { Button } from '../components/button';
 import { abrirListaUsuarios } from '../components/user-list-dialog';
 import { EmptyState } from '../components/empty-state';
 import { PieceCard } from '../components/piece-card';
+import { ProfileHeader } from '../components/profile-header';
+import { TopBar } from '../components/top-bar';
 import { compacto } from '../models/format';
 import { AuthService } from '../services/auth.service';
 import { DetalleDialogo } from '../services/detalle-dialogo';
@@ -29,17 +29,17 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
 @Component({
   selector: 'vt-public-profile-page',
   imports: [
-    Avatar,
     Button,
     EmptyState,
-    MatButtonModule,
     MatProgressSpinnerModule,
     PieceCard,
+    ProfileHeader,
     RouterLink,
+    TopBar,
   ],
   template: `
     <main class="vt-screen perfil">
-      <a routerLink="/">← Explorar</a>
+      <vt-top-bar [titulo]="'@' + username()" [small]="true" />
       @if (perfil.isLoading()) {
         <div class="cargando" role="status"><mat-spinner diameter="28" /> Cargando perfil…</div>
       } @else if (perfil.error()) {
@@ -59,69 +59,15 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
           >
         }
       } @else if (perfil.value(); as usuario) {
-        <header class="cabecera">
-          <div class="vitrina vt-showcase" aria-hidden="true"></div>
-          @if (abanico().length) {
-            <div class="abanico" aria-hidden="true">
-              @for (p of abanico(); track p.id; let i = $index) {
-                <span
-                  class="carta vt-c-{{ p.categoria }}"
-                  [style.--giro.deg]="giros[i]"
-                  [style.--x.px]="i * 78"
-                >
-                  <img [src]="p.imagen_url" alt="" />
-                </span>
-              }
-            </div>
-          }
-          <div class="cuerpo">
-            <vt-avatar
-              class="avatar"
-              [nombre]="usuario.username"
-              [tam]="avatarTam()"
-              [anillo]="auth.usuario()?.id === usuario.id ? 'brand' : 'none'"
-            />
-            <div class="quien">
-              <h1 class="title">&#64;{{ usuario.username }}</h1>
-              @if (usuario.bio) {
-                <p class="body bio">{{ usuario.bio }}</p>
-              }
-            </div>
-            <div class="datos">
-              <div class="cifras">
-                <button type="button" (click)="coleccion.scrollIntoView({ behavior: 'smooth' })">
-                  <span class="stat">{{
-                    compacto(piezas.hasValue() ? piezas.value().total : 0)
-                  }}</span>
-                  <span>Piezas</span>
-                </button>
-                <button type="button" (click)="verLista('seguidores')">
-                  <span class="stat">{{ compacto(usuario.seguidores) }}</span>
-                  <span>Seguidores</span>
-                </button>
-                <button type="button" (click)="verLista('seguidos')">
-                  <span class="stat">{{ compacto(usuario.siguiendo) }}</span>
-                  <span>Siguiendo</span>
-                </button>
-              </div>
-              @if (auth.usuario()?.id !== usuario.id) {
-                <button
-                  mat-flat-button
-                  type="button"
-                  [attr.aria-pressed]="usuario.lo_sigo"
-                  [disabled]="enviando()"
-                  (click)="alternar()"
-                >
-                  {{ enviando() ? 'Actualizando…' : usuario.lo_sigo ? 'Siguiendo' : 'Seguir' }}
-                </button>
-              } @else {
-                <a vt-button variant="accent" icon="add" routerLink="/coleccion/nueva"
-                  >Agregar pieza</a
-                >
-              }
-            </div>
-          </div>
-        </header>
+        <vt-profile-header
+          class="cabecera"
+          [usuario]="usuario"
+          [piezas]="piezas.hasValue() ? piezas.value().total : null"
+          [abanico]="piezas.hasValue() ? piezas.value().items.slice(0, 3) : []"
+          [enviando]="enviando()"
+          (verPiezas)="coleccion.scrollIntoView({ behavior: 'smooth' })"
+          (seguir)="alternar()"
+        />
         <section class="vt-section" aria-labelledby="piezas-titulo" #coleccion>
           <h2 class="title" id="piezas-titulo">Colección</h2>
           @if (piezas.isLoading()) {
@@ -171,128 +117,12 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
   `,
   styles: `
     .perfil {
-      padding-top: var(--space-5);
+      padding-top: var(--space-3);
     }
-    button[mat-flat-button] {
-      font: var(--text-label);
-      min-height: var(--tap-target);
-    }
-    /* En el teléfono la cabecera es simple; desde 600 px es una vitrina con el abanico de piezas. */
     .cabecera {
-      position: relative;
-    }
-    .vitrina,
-    .abanico {
-      display: none;
-    }
-    .cuerpo {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: var(--space-4);
-      padding-block: var(--space-6);
-    }
-    .quien {
-      flex: 1;
-      min-width: 180px;
-      overflow-wrap: anywhere;
-    }
-    .datos {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: var(--space-4);
-    }
-    .cifras {
-      display: flex;
-      gap: var(--space-4);
-      margin: 0;
-    }
-    .cifras button {
-      display: flex;
-      flex-direction: column-reverse;
-      align-items: flex-start;
-      min-height: var(--tap-target);
-      padding: 0;
-      border: 0;
-      background: transparent;
-      font: var(--text-caption);
-      color: var(--ink-muted);
-      cursor: pointer;
-    }
-    .cifras .stat {
-      color: var(--ink);
-    }
-    @media (min-width: 600px) {
-      .cabecera {
-        margin-top: 34px;
-        background: var(--surface);
-        border-radius: var(--radius-xl);
-        box-shadow: var(--shadow-card);
-      }
-      .vitrina {
-        display: block;
-        height: 132px;
-        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-      }
-      .abanico {
-        display: block;
-        position: absolute;
-        z-index: 2;
-        top: -34px;
-        right: 44px;
-        width: 300px;
-        height: 150px;
-      }
-      .carta {
-        position: absolute;
-        top: 0;
-        left: var(--x);
-        width: 84px;
-        height: 112px;
-        overflow: hidden;
-        border: 3px solid var(--on-night);
-        border-radius: var(--radius-md);
-        background: var(--c-soft);
-        box-shadow: var(--shadow-pop);
-        transform: rotate(var(--giro));
-      }
-      .carta img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-      .cuerpo {
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto;
-        align-items: start;
-        gap: var(--space-6);
-        padding: 0 var(--space-8) var(--space-6);
-      }
-      .avatar {
-        margin-top: -36px;
-      }
-      .quien {
-        padding-top: var(--space-4);
-        min-width: 0;
-      }
-      .bio {
-        max-width: 56ch;
-        color: var(--ink-muted);
-      }
-      .datos {
-        padding-top: var(--space-4);
-        gap: var(--space-6);
-        flex-wrap: nowrap;
-      }
-      .cifras {
-        gap: 28px;
-      }
+      margin-top: 54px;
     }
     @media (min-width: 1000px) {
-      .avatar {
-        margin-top: -56px;
-      }
       .vt-grid {
         grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
         gap: var(--space-4);
@@ -350,6 +180,10 @@ export class PublicProfilePage {
   private version = 0;
 
   constructor() {
+    effect(() => {
+      const yo = this.auth.usuario()?.username;
+      if (yo && yo === this.username()) void this.router.navigateByUrl('/perfil', { replaceUrl: true });
+    });
     effect(() => {
       this.detalle.lista.set(
         this.piezas.hasValue() ? this.piezas.value().items.map((p) => p.id) : [],

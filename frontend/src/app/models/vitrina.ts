@@ -23,4 +23,11 @@ export interface DatosPieza {
   descripcion: string;
   categoria: CategoriaSlug;
   imagen_url: string;
+  /** Código de barras o QR leído con la cámara del celular. */
+  codigo?: string | null;
+  /** Dónde se consiguió la pieza (GPS del celular). */
+  latitud?: number | null;
+  longitud?: number | null;
+  /** Ciudad o comuna donde se consiguió. */
+  lugar?: string | null;
 }

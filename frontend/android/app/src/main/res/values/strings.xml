@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Vitrina</string>
+    <string name="title_activity_main">Vitrina</string>
+    <string name="package_name">cl.vitrina.app</string>
+    <string name="custom_url_scheme">cl.vitrina.app</string>
+</resources>
