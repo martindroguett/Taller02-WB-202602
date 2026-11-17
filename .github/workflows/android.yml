@@ -1,0 +1,60 @@
+name: Android APK (debug)
+
+# Se ejecuta con cada cambio en la rama principal, en los pull requests hacia ella
+# (para revisar el APK antes de fusionar) y a mano desde la pestaña Actions.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  apk-debug:
+    # Versión fija: ubuntu-latest está migrando a Ubuntu 26 y rompía la instalación del SDK.
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Obtener el código fuente
+        uses: actions/checkout@v7
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar Java 21 (lo pide Capacitor 8 / Gradle)
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Instalar el SDK de Android
+        uses: android-actions/setup-android@v4
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Build de producción de Angular
+        run: npx ng build --configuration production
+
+      - name: Sincronizar con Android (Capacitor)
+        run: npx cap sync android
+
+      - name: Compilar el proyecto Android y generar el APK debug
+        working-directory: frontend/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Publicar el APK como artefacto descargable
+        uses: actions/upload-artifact@v7
+        with:
+          name: vitrina-debug-apk
+          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

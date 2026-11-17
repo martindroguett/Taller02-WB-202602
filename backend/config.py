@@ -8,7 +8,7 @@ class Configuracion(BaseSettings):
     # "../.env" sirve al ejecutar desde backend/; en Docker las variables llegan por env_file.
     model_config = SettingsConfigDict(env_file=("../.env", ".env"), extra="ignore")
 
-    postgres_user: str
+    postgres_user: str 
     postgres_password: str
     postgres_db: str
     postgres_host: str = "localhost"
@@ -17,7 +17,8 @@ class Configuracion(BaseSettings):
     jwt_algoritmo: str = "HS256"
     jwt_expira_minutos: int = 60 * 24
 
-    cors_origenes: list[str] = ["http://localhost:4200"]
+    # https://localhost y capacitor://localhost son el origen de la app Android/iOS hecha con Capacitor.
+    cors_origenes: list[str] = ["http://localhost:4200", "https://localhost", "capacitor://localhost"]
 
     @property
     def url_base_datos(self) -> URL:

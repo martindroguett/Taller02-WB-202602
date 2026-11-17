@@ -9,7 +9,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { Button } from '../components/button';
 import { IconButton } from '../components/icon-button';
@@ -54,7 +54,17 @@ function mensajeError(error: HttpErrorResponse): string {
 
 @Component({
   selector: 'vt-login-page',
-  imports: [Button, IconButton, Icon, Logo, PieceArt, ReactiveFormsModule, Tabs, TextField],
+  imports: [
+    Button,
+    IconButton,
+    Icon,
+    Logo,
+    PieceArt,
+    ReactiveFormsModule,
+    RouterLink,
+    Tabs,
+    TextField,
+  ],
   template: `
     <main class="ingreso">
       <section class="hero vt-showcase">
@@ -120,6 +130,7 @@ function mensajeError(error: HttpErrorResponse): string {
           {{ modo() === 'ingreso' ? 'Ingresar' : 'Crear cuenta' }}
           <vt-icon name="arrow_forward" [size]="22" />
         </button>
+        <a vt-button variant="secondary" [block]="true" routerLink="/">Seguir explorando sin cuenta</a>
         <p class="alternar">
           {{ modo() === 'ingreso' ? '¿Primera vez?' : '¿Ya tienes cuenta?' }}
           <button type="button" (click)="modo.set(modo() === 'ingreso' ? 'registro' : 'ingreso')">

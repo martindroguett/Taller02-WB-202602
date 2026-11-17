@@ -29,12 +29,14 @@ import { CatalogoPublicoService } from '../services/catalogo-publico.service';
 import { ComentariosService } from '../services/comentarios.service';
 import { Pantalla } from '../services/pantalla';
 import { PieceDetail } from '../components/piece-detail';
+import { enlacePieza, PieceExtra } from '../components/piece-extra';
 import { ToastService } from '../services/toast.service';
 import { InteraccionesService } from '../services/interacciones.service';
 
 @Component({
   selector: 'vt-piece-page',
   imports: [
+    PieceExtra,
     Avatar,
     Button,
     CatalogTag,
@@ -97,6 +99,7 @@ import { InteraccionesService } from '../services/interacciones.service';
               · {{ cuando(p.creado_en) }}
             </p>
             <p class="body">{{ p.descripcion }}</p>
+            <vt-piece-extra [pieza]="p" />
             @if (interacciones.estado(p).megusta || interacciones.estado(p).guardados) {
               <dl class="cifras">
                 <div>
@@ -428,14 +431,18 @@ export class PiecePage {
     // En el teléfono se abre el menú de compartir del sistema; si no existe o se falla, se copia el enlace.
     if (typeof navigator.share === 'function' && this.pieza.hasValue()) {
       try {
-        await navigator.share({ title: this.pieza.value().nombre, url: window.location.href });
+        await navigator.share({
+          title: this.pieza.value().nombre,
+          url: enlacePieza(this.pieza.value().id),
+        });
         return;
       } catch (error) {
         if ((error as DOMException).name === 'AbortError') return;
       }
     }
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      if (!this.pieza.hasValue()) return;
+      await navigator.clipboard.writeText(enlacePieza(this.pieza.value().id));
       this.toast.show('Enlace copiado', 'success');
     } catch {
       this.toast.show(

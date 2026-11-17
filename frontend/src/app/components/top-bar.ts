@@ -84,6 +84,6 @@ export class TopBar {
 
   protected volver(): void {
     if (window.history.state?.navigationId > 1) this.location.back();
-    else this.router.navigateByUrl('/perfil');
+    else this.router.navigateByUrl('/');
   }
 }

@@ -52,6 +52,9 @@ import { CatalogTag } from './catalog-tag';
       </div>
       <div class="info">
         <a class="nombre" [routerLink]="detalleLink()">{{ pieza().nombre }}</a>
+        @if (distancia(); as d) {
+          <span class="cerca caption"><vt-icon name="location_on" [size]="16" />{{ d }}</span>
+        }
         <p class="meta caption">
           <a class="dueno publico" [routerLink]="['/coleccionistas', dueno().username]">
             <vt-avatar [nombre]="dueno().username" [tam]="24" />
@@ -155,6 +158,14 @@ import { CatalogTag } from './catalog-tag';
       gap: 2px;
       white-space: nowrap;
     }
+    .cerca {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      color: var(--brand);
+      font-weight: 700;
+      white-space: nowrap;
+    }
     .dato.gustado {
       color: var(--like);
     }
@@ -193,6 +204,15 @@ export class PieceCard {
   }
   readonly pieza = input.required<PiezaPublica>();
   readonly ids = input<number[]>();
+  /** Solo en búsquedas por cercanía: kilómetros hasta donde se consiguió la pieza. */
+  readonly distanciaKm = input<number | null | undefined>(null);
+  protected readonly distancia = computed(() => {
+    const km = this.distanciaKm();
+    if (km == null) return '';
+    return km < 1
+      ? `${Math.max(10, Math.round(km * 100) * 10)} m`
+      : `${km.toLocaleString('es-CL', { maximumFractionDigits: 1 })} km`;
+  });
   protected readonly fallo = linkedSignal(() => {
     this.pieza().imagen_url;
     return false;

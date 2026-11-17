@@ -40,6 +40,15 @@ class UsuarioLogin(BaseModel):
         return valor.lower()
 
 
+class UsuarioEditar(BaseModel):
+    bio: str = Field(max_length=300)
+
+    @field_validator("bio")
+    @classmethod
+    def limpiar_bio(cls, valor: str) -> str:
+        return valor.strip()
+
+
 class UsuarioPrivado(BaseModel):
     """Datos que solo ve el propio usuario. Nunca incluye password_hash."""
 

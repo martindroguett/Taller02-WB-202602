@@ -34,6 +34,7 @@ import { CATEGORIAS, CategoriaSlug, categoriaDe } from '../models/vitrina';
 import { AuthService } from '../services/auth.service';
 import { CatalogoPublicoService } from '../services/catalogo-publico.service';
 import { ToastService } from '../services/toast.service';
+import { DispositivoService, mensajeDispositivo } from '../services/dispositivo.service';
 
 // Pydantic cuenta puntos Unicode después de quitar espacios, no unidades UTF-16.
 const texto: (max: number) => ValidatorFn = (max) => (control) => {
@@ -115,6 +116,70 @@ const texto: (max: number) => ValidatorFn = (max) => (control) => {
             @if (intento() && formulario.controls.categoria.invalid) {
               <p class="error-txt" role="alert">Elige la categoría de tu pieza.</p>
             }
+          </fieldset>
+          <fieldset class="movil">
+            <legend class="label">Código de barras o QR <span class="vt-muted">(opcional)</span></legend>
+            <div class="fila">
+              <input
+                class="codigo"
+                formControlName="codigo"
+                placeholder="Escanéalo o escríbelo"
+                aria-label="Código de barras o QR"
+                maxlength="128"
+              />
+              <button
+                type="button"
+                vt-button
+                variant="secondary"
+                size="md"
+                icon="qr_code_scanner"
+                [disabled]="ocupado() || escaneando()"
+                (click)="escanearCodigo()"
+              >
+                {{ escaneando() ? 'Leyendo…' : 'Escanear' }}
+              </button>
+            </div>
+            <p class="caption vt-muted">
+              Con el código de la caja (EAN/UPC) otros coleccionistas que escaneen el mismo producto
+              encontrarán tu pieza.
+            </p>
+          </fieldset>
+          <fieldset class="movil">
+            <legend class="label">¿Dónde la conseguiste?</legend>
+            @if (formulario.controls.latitud.value !== null) {
+              <div class="fila">
+                <span class="caption ubicacion">
+                  <vt-icon name="location_on" [size]="18" />
+                  {{ formulario.controls.lugar.value ?? (formulario.controls.latitud.value!.toFixed(5) + ', ' + formulario.controls.longitud.value!.toFixed(5)) }}
+                </span>
+                <button
+                  type="button"
+                  vt-button
+                  variant="secondary"
+                  size="md"
+                  icon="close"
+                  [disabled]="ocupado()"
+                  (click)="quitarUbicacion()"
+                >
+                  Quitar
+                </button>
+              </div>
+            } @else {
+              <button
+                type="button"
+                vt-button
+                variant="secondary"
+                size="md"
+                icon="my_location"
+                [disabled]="ocupado() || ubicando()"
+                (click)="usarUbicacion()"
+              >
+                {{ ubicando() ? 'Buscando tu ubicación…' : 'Usar mi ubicación actual' }}
+              </button>
+            }
+            <p class="caption vt-muted">
+              Opcional. Sirve para que otros vean piezas conseguidas cerca de ellos.
+            </p>
           </fieldset>
           @if (errorAccion()) {
             <p class="error-txt" role="alert">{{ errorAccion() }}</p>
@@ -434,6 +499,29 @@ const texto: (max: number) => ValidatorFn = (max) => (control) => {
       color: var(--danger);
       font: var(--text-label);
     }
+    .fila {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .codigo {
+      flex: 1;
+      outline-offset: 2px;
+      min-width: 0;
+      height: 52px;
+      padding: 0 var(--space-4);
+      border: 2px solid var(--line-strong);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      color: var(--ink);
+      font: var(--text-body);
+    }
+    .ubicacion {
+      display: inline-flex;
+      flex: 1;
+      align-items: center;
+      gap: 4px;
+    }
   `,
 })
 export class PieceFormPage {
@@ -443,6 +531,8 @@ export class PieceFormPage {
   private readonly toast = inject(ToastService);
   private readonly destroy = inject(DestroyRef);
   readonly id = input<string>();
+  /** ?codigo=… llega desde Explorar al escanear un producto que nadie tiene todavía. */
+  readonly codigoEscaneado = input<string | undefined>(undefined, { alias: 'codigo' });
   protected readonly pieza = this.api.detalle(this.id);
   protected readonly categorias = CATEGORIAS;
   protected readonly formulario = new FormGroup({
@@ -450,7 +540,14 @@ export class PieceFormPage {
     descripcion: new FormControl('', { nonNullable: true, validators: texto(2000) }),
     categoria: new FormControl<CategoriaSlug | null>(null, { validators: Validators.required }),
     imagen_url: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    codigo: new FormControl('', { nonNullable: true }),
+    latitud: new FormControl<number | null>(null),
+    lugar: new FormControl<string | null>(null),
+    longitud: new FormControl<number | null>(null),
   });
+  private readonly dispositivo = inject(DispositivoService);
+  protected readonly escaneando = signal(false);
+  protected readonly ubicando = signal(false);
   protected readonly estado = computed(() => {
     if (this.id() === undefined) return 'lista';
     if (this.pieza.isLoading()) return 'cargando';
@@ -488,10 +585,60 @@ export class PieceFormPage {
 
   constructor() {
     effect(() => {
-      if (!this.pieza.hasValue()) return;
-      const { nombre, descripcion, categoria, imagen_url } = this.pieza.value();
-      untracked(() => this.formulario.reset({ nombre, descripcion, categoria, imagen_url }));
+      const codigo = this.codigoEscaneado();
+      if (codigo && !this.id()) untracked(() => this.formulario.controls.codigo.setValue(codigo));
     });
+    effect(() => {
+      if (!this.pieza.hasValue()) return;
+      const { nombre, descripcion, categoria, imagen_url, codigo, latitud, longitud, lugar } =
+        this.pieza.value();
+      untracked(() =>
+        this.formulario.reset({
+          nombre,
+          descripcion,
+          categoria,
+          imagen_url,
+          codigo: codigo ?? '',
+          latitud,
+          longitud,
+          lugar: lugar ?? null,
+        }),
+      );
+    });
+  }
+  /** Cámara: lee un código de barras o QR y lo guarda en la pieza. */
+  protected async escanearCodigo(): Promise<void> {
+    this.escaneando.set(true);
+    try {
+      const valor = await this.dispositivo.escanear(() =>
+        this.toast.show('Preparando el lector de códigos… se descarga una sola vez.', 'info'),
+      );
+      this.formulario.controls.codigo.setValue(valor.slice(0, 128));
+      this.formulario.controls.codigo.markAsDirty();
+      this.toast.show('Código leído', 'success');
+    } catch (e) {
+      const mensaje = mensajeDispositivo(e);
+      if (mensaje) this.toast.show(mensaje, 'danger');
+    } finally {
+      this.escaneando.set(false);
+    }
+  }
+  /** GPS: guarda en la pieza el lugar donde se consiguió. */
+  protected async usarUbicacion(): Promise<void> {
+    this.ubicando.set(true);
+    try {
+      const { latitud, longitud, precision } = await this.dispositivo.ubicacion();
+      this.formulario.patchValue({ latitud, longitud, lugar: await this.dispositivo.ciudad(latitud, longitud) });
+      this.toast.show(`Ubicación agregada (±${Math.round(precision)} m)`, 'success');
+    } catch (e) {
+      const mensaje = mensajeDispositivo(e);
+      if (mensaje) this.toast.show(mensaje, 'danger');
+    } finally {
+      this.ubicando.set(false);
+    }
+  }
+  protected quitarUbicacion(): void {
+    this.formulario.patchValue({ latitud: null, longitud: null, lugar: null });
   }
   protected coleccion(): string[] {
     return ['/coleccionistas', this.auth.usuario()?.username ?? ''];
@@ -516,6 +663,7 @@ export class PieceFormPage {
       nombre: valor.nombre.trim(),
       descripcion: valor.descripcion.trim(),
       categoria: valor.categoria,
+      codigo: valor.codigo.trim() || null,
     };
     const id = this.id();
     this.ocupado.set(true);

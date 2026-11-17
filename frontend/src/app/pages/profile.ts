@@ -1,6 +1,11 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog } from '@angular/material/dialog';
 import { Router, RouterLink } from '@angular/router';
+import { abrirCuenta, abrirEditarPerfil } from '../components/cuenta-sheet';
+import { IconButton } from '../components/icon-button';
+import { Icon } from '../components/icon';
+import { Tabs } from '../components/tabs';
 import { Button } from '../components/button';
 import { EmptyState } from '../components/empty-state';
 import { PieceCard } from '../components/piece-card';
@@ -12,9 +17,36 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
 
 @Component({
   selector: 'vt-profile-page',
-  imports: [Button, EmptyState, MatProgressSpinnerModule, PieceCard, ProfileHeader, RouterLink],
+  imports: [
+    Button,
+    EmptyState,
+    Icon,
+    IconButton,
+    MatProgressSpinnerModule,
+    PieceCard,
+    ProfileHeader,
+    RouterLink,
+    Tabs,
+  ],
   template: `
     <div class="vt-screen perfil">
+      <div class="barra">
+        <vt-tabs [opciones]="vistas" etiqueta="Cómo ver tu perfil" [(valor)]="vista" />
+        <button
+          type="button"
+          vt-icon-button
+          tone="surface"
+          icon="tune"
+          label="Tu cuenta y ajustes"
+          (click)="cuenta()"
+        ></button>
+      </div>
+      @if (vista() === 'publica') {
+        <p class="aviso" role="status">
+          <vt-icon name="visibility" [size]="20" />
+          Así te ve cualquier visita. Tu correo y tus ajustes no se muestran.
+        </p>
+      }
       @if (perfil.isLoading()) {
         <div class="cargando" role="status"><mat-spinner diameter="28" /> Cargando perfil…</div>
       } @else if (perfil.error()) {
@@ -25,20 +57,21 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
           <button vt-button type="button" (click)="perfil.reload()">Reintentar</button>
         </vt-empty-state>
       } @else if (perfil.value(); as usuario) {
-        <vt-profile-header [usuario]="usuario" [piezas]="total()" [abanico]="abanico()" (verPiezas)="coleccion.scrollIntoView({ behavior: 'smooth' })" />
-
-        <section class="cuenta">
-          <p>{{ auth.usuario()?.email }}</p>
-          <p class="caption vt-muted">Miembro desde {{ miembroDesde() }}</p>
-          <div class="enlaces">
-            <a vt-button variant="secondary" [routerLink]="['/coleccionistas', usuario.username]"
-              >Ver mi perfil público</a
-            >
-          </div>
-        </section>
+        <vt-profile-header
+          class="cabecera"
+          [usuario]="usuario"
+          [propio]="vista() === 'mia'"
+          [vistaPrevia]="vista() === 'publica'"
+          [piezas]="total()"
+          [abanico]="abanico()"
+          (verPiezas)="coleccion.scrollIntoView({ behavior: 'smooth' })"
+          (editar)="editar()"
+        />
 
         <section class="vt-section" aria-labelledby="coleccion-titulo" #coleccion>
-          <h2 class="title" id="coleccion-titulo">Mi colección</h2>
+          <h2 class="title" id="coleccion-titulo">
+            {{ vista() === 'mia' ? 'Mi colección' : 'Colección' }}
+          </h2>
           @if (piezas.isLoading()) {
             <div class="cargando" role="status"><mat-spinner diameter="28" /> Cargando piezas…</div>
           } @else if (piezas.error()) {
@@ -89,57 +122,40 @@ import { UsuariosPublicosService } from '../services/usuarios-publicos.service';
           }
         </section>
       }
-      <button type="button" class="salir caption vt-muted" (click)="cerrarSesion()">
-        Cerrar sesión
-      </button>
     </div>
   `,
   styles: `
     .perfil {
       max-width: 720px;
     }
-    .cuenta {
+    .barra {
       display: flex;
-      flex-direction: column;
-      gap: var(--space-1);
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .barra vt-tabs {
+      flex: 1;
+    }
+    .aviso {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin: var(--space-3) 0 0;
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-lg);
+      background: var(--night);
+      color: var(--on-night);
+      font: var(--text-label);
     }
     @media (min-width: 1000px) {
       .perfil {
         max-width: var(--content-max);
         padding-top: var(--space-6);
       }
-      .cuenta {
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: var(--space-4);
-      }
-      .enlaces {
-        margin: 0 0 0 auto;
-      }
       .vt-grid {
         grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
         gap: var(--space-4);
       }
-    }
-    .cuenta p {
-      margin: 0;
-    }
-    .enlaces {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: var(--space-4);
-      margin-top: var(--space-3);
-    }
-    .salir {
-      min-height: var(--tap-target);
-      padding: 0;
-      border: 0;
-      background: transparent;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-      cursor: pointer;
     }
     .cargando,
     .paginacion {
@@ -158,6 +174,12 @@ export class ProfilePage {
   protected readonly auth = inject(AuthService);
   private readonly api = inject(UsuariosPublicosService);
   private readonly detalle = inject(DetalleDialogo);
+  private readonly dialogo = inject(MatDialog);
+  protected readonly vistas = [
+    { id: 'mia', texto: 'Mi perfil' },
+    { id: 'publica', texto: 'Como te ven' },
+  ];
+  protected readonly vista = signal('mia');
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
@@ -172,13 +194,6 @@ export class ProfilePage {
   protected readonly abanico = computed(() =>
     (this.piezas.hasValue() ? this.piezas.value().items : []).slice(0, 3),
   );
-  protected readonly miembroDesde = computed(() => {
-    const fecha = this.auth.usuario()?.creado_en;
-    return fecha
-      ? new Date(fecha).toLocaleDateString('es-CL', { month: 'long', year: 'numeric' })
-      : '';
-  });
-
   constructor() {
     effect(() => {
       this.detalle.lista.set(
@@ -188,9 +203,13 @@ export class ProfilePage {
     });
   }
 
-  protected cerrarSesion(): void {
-    this.auth.cerrarSesion();
-    this.toast.show('Cerraste sesión.');
-    this.router.navigateByUrl('/');
+  protected cuenta(): void {
+    abrirCuenta(this.dialogo);
+  }
+
+  protected editar(): void {
+    abrirEditarPerfil(this.dialogo)
+      .afterClosed()
+      .subscribe((guardado) => guardado && this.perfil.reload());
   }
 }
