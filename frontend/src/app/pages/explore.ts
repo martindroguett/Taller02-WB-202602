@@ -20,6 +20,7 @@ import { AuthService } from '../services/auth.service';
 import { Button } from '../components/button';
 import { CategoryChip } from '../components/category-chip';
 import { EmptyState } from '../components/empty-state';
+import { Icon } from '../components/icon';
 import { IconButton } from '../components/icon-button';
 import { PromoBanner } from '../components/promo-banner';
 import { PieceCard } from '../components/piece-card';
@@ -47,6 +48,7 @@ import {
     MatChipsModule,
     EmptyState,
     ComunidadLateral,
+    Icon,
     IconButton,
     PieceCard,
     PromoBanner,
@@ -76,13 +78,12 @@ import {
           />
         </div>
         <vt-acciones-movil
+          [escaner]="dispositivo.nativa"
           [escaneando]="escaneando()"
           [ubicando]="ubicando()"
           [cercaActiva]="!!cerca()"
-          [radioKm]="radioKm()"
           (escanear)="escanear()"
           (cerca)="alternarCerca()"
-          (radioKmChange)="cambiarRadio($event)"
         />
         @if (codigo()) {
           <p class="filtro-activo caption">
@@ -102,21 +103,34 @@ import {
         @if (!cerca() && !codigo()) {
           <vt-promo-banner class="portada" (accion)="elegirCategoria('vinilos')" />
         }
-        <mat-chip-listbox
-          class="vt-rail vt-category-list categorias"
-          aria-label="Categorías"
-          [value]="filtro()"
-          (change)="elegirCategoria($event.value)"
-        >
-          @for (f of filtros; track f) {
-            <mat-basic-chip-option
-              [value]="f"
-              (selectionChange)="$event.isUserInput && !$event.selected && $event.source.select()"
-            >
-              <vt-category-chip [slug]="f" [active]="filtro() === f" />
-            </mat-basic-chip-option>
-          }
-        </mat-chip-listbox>
+        <div class="filtros">
+          <mat-chip-listbox
+            class="vt-rail vt-category-list categorias"
+            aria-label="Categorías"
+            [value]="filtro()"
+            (change)="elegirCategoria($event.value)"
+          >
+            @for (f of filtros; track f) {
+              <mat-basic-chip-option
+                [value]="f"
+                (selectionChange)="$event.isUserInput && !$event.selected && $event.source.select()"
+              >
+                <vt-category-chip [slug]="f" [active]="filtro() === f" />
+              </mat-basic-chip-option>
+            }
+          </mat-chip-listbox>
+          <button
+            type="button"
+            class="cerca-chip"
+            [class.on]="!!cerca()"
+            [disabled]="ubicando()"
+            [attr.aria-pressed]="!!cerca()"
+            (click)="alternarCerca()"
+          >
+            <span class="disco"><vt-icon name="near_me" [size]="20" [filled]="!!cerca()" /></span>
+            <span>{{ ubicando() ? 'Ubicándote…' : 'Cerca de mí' }}</span>
+          </button>
+        </div>
         @if (
           !busqueda().trim() &&
           filtro() === 'todas' &&
@@ -176,6 +190,25 @@ import {
               }}</span>
             }
           </div>
+          @if (cerca()) {
+            <div class="radio-fila">
+              <span class="caption vt-muted" id="radio-etiqueta">Distancia</span>
+              <div class="segmentos" role="radiogroup" aria-labelledby="radio-etiqueta">
+                @for (r of radios; track r) {
+                  <button
+                    type="button"
+                    role="radio"
+                    class="segmento"
+                    [class.elegido]="radioKm() === r"
+                    [attr.aria-checked]="radioKm() === r"
+                    (click)="cambiarRadio(r)"
+                  >
+                    {{ r }} km
+                  </button>
+                }
+              </div>
+            </div>
+          }
           @if (resultados().length) {
             <div class="vt-grid">
               @for (p of resultados(); track p.id) {
@@ -222,7 +255,13 @@ import {
               "
             >
               @if (cerca() && radioSiguiente(); as siguiente) {
-                <button type="button" vt-button (click)="cambiarRadio(siguiente)">
+                <button
+                  type="button"
+                  vt-button
+                  variant="accent"
+                  icon="zoom_out_map"
+                  (click)="cambiarRadio(siguiente)"
+                >
                   Ampliar a {{ siguiente }} km
                 </button>
               }
@@ -234,7 +273,13 @@ import {
                   >Agregar pieza</a
                 >
               }
-              <button type="button" vt-button variant="secondary" (click)="limpiar()">
+              <button
+                type="button"
+                vt-button
+                variant="secondary"
+                icon="filter_alt_off"
+                (click)="limpiar()"
+              >
                 Borrar filtros
               </button>
             </vt-empty-state>
@@ -276,6 +321,13 @@ import {
     .categorias {
       margin-block: -4px;
     }
+    .filtros {
+      display: contents;
+    }
+    /* «Cerca de mí» como una categoría más, solo en pantallas anchas (en el celular va en las acciones). */
+    .cerca-chip {
+      display: none;
+    }
     .filtro-activo {
       display: flex;
       flex-wrap: wrap;
@@ -288,6 +340,55 @@ import {
       align-items: baseline;
       justify-content: space-between;
       gap: 12px;
+    }
+    /* Selector de distancia: segmentos dentro de una píldora, en la cabecera de los resultados. */
+    .radio-fila {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+      margin-top: calc(var(--space-2) * -1);
+    }
+    .segmentos {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 4px;
+      padding: 4px;
+      border-radius: var(--radius-pill);
+      background: var(--surface);
+      box-shadow: var(--shadow-card);
+    }
+    .segmento {
+      min-height: 40px;
+      padding: 0 var(--space-3);
+      border: 0;
+      border-radius: var(--radius-pill);
+      background: transparent;
+      color: var(--ink-muted);
+      font: var(--text-label);
+      white-space: nowrap;
+      cursor: pointer;
+      transition:
+        background-color 160ms ease,
+        color 160ms ease;
+    }
+    .segmento:hover:not(.elegido) {
+      background: var(--brand-soft);
+      color: var(--brand);
+    }
+    .segmento.elegido {
+      background: var(--brand);
+      color: var(--on-brand);
+    }
+    @media (min-width: 600px) {
+      .radio-fila {
+        flex-direction: row;
+        align-items: center;
+        gap: var(--space-4);
+        margin-block: var(--space-2) var(--space-4);
+      }
+      .segmentos {
+        grid-template-columns: repeat(4, 92px);
+      }
     }
     .seccion-titulo .title {
       font-size: clamp(17px, 4.6vw, 21px);
@@ -342,13 +443,71 @@ import {
         margin-top: 28px;
       }
       /* Los filtros quedan pegados arriba al bajar por la lista. */
-      .categorias {
+      .filtros {
+        display: flex;
+        align-items: center;
+        gap: 8px;
         position: sticky;
         top: 0;
         z-index: 3;
         margin-block: -4px;
         padding-block: 8px;
         background: var(--bg);
+      }
+      .categorias {
+        flex: 0 1 auto;
+        min-width: 0;
+        margin-block: 0;
+      }
+      .cerca-chip {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        gap: var(--space-2);
+        min-height: var(--tap-target);
+        margin-left: auto;
+        padding: 0 var(--space-4) 0 6px;
+        border: 1.5px dashed var(--line-strong);
+        border-radius: var(--radius-pill);
+        background: transparent;
+        color: var(--ink);
+        font: var(--text-label);
+        white-space: nowrap;
+        cursor: pointer;
+        transition:
+          background-color 160ms ease,
+          border-color 160ms ease,
+          transform 120ms ease;
+      }
+      .cerca-chip .disco {
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-pill);
+        background: var(--brand-soft);
+        color: var(--brand);
+      }
+      .cerca-chip:hover:not(.on):not(:disabled) {
+        border-style: solid;
+        border-color: var(--brand);
+        background: var(--surface);
+      }
+      .cerca-chip:active {
+        transform: scale(0.96);
+      }
+      .cerca-chip:disabled {
+        opacity: 0.6;
+        cursor: progress;
+      }
+      .cerca-chip.on {
+        border-style: solid;
+        border-color: var(--brand);
+        background: var(--brand);
+        color: var(--on-brand);
+      }
+      .cerca-chip.on .disco {
+        background: var(--surface);
       }
       /* La grilla suma columnas según el ancho disponible, sin saltos por breakpoint. */
       .vt-grid {
@@ -412,7 +571,7 @@ export class ExplorePage {
   protected desplazamiento = 0;
 
   // ───── Funciones del celular (Taller 3) ─────
-  private readonly dispositivo = inject(DispositivoService);
+  protected readonly dispositivo = inject(DispositivoService);
   private readonly toast = inject(ToastService);
   /** Código de barras escaneado: filtra las piezas con ese mismo código. */
   protected readonly codigo = signal('');
@@ -424,6 +583,7 @@ export class ExplorePage {
   protected readonly sensorActivo = signal(false);
   /** Radio de «Cerca de mí», en km. */
   protected readonly radioKm = signal<number>(10);
+  protected readonly radios = RADIOS_KM;
   /** Pieza que salió con «Sorpréndeme»: se muestra en una hoja antes de abrirla. */
   protected readonly sorpresa = signal<PiezaPublica | null>(null);
   private dejarDeEscuchar?: () => void;

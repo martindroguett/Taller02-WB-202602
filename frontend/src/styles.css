@@ -260,7 +260,7 @@ img {
 }
 
 /* Material maneja selección, foco y teclado; Vitrina conserva el riel y su presentación. */
-.vt-category-list .mdc-evolution-chip-set__chips {
+.vt-category-list.mat-mdc-chip-set .mdc-evolution-chip-set__chips {
   flex-wrap: nowrap;
   gap: var(--space-2);
   margin: 0;
@@ -272,7 +272,7 @@ img {
   opacity: 0.5;
 }
 @media (min-width: 1000px) {
-  .vt-category-list.form-categorias .mdc-evolution-chip-set__chips {
+  .vt-category-list.form-categorias.mat-mdc-chip-set .mdc-evolution-chip-set__chips {
     flex-wrap: wrap;
   }
 }

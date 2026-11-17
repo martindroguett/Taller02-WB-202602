@@ -40,8 +40,22 @@ import { PieceArt } from './piece-art';
     p {
       max-width: 32ch;
     }
+    /* Botones apilados y a todo el ancho en el celular; en fila y centrados desde 600 px. */
     .accion {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--space-2);
+      width: min(100%, 320px);
       margin-top: var(--space-3);
+    }
+    @media (min-width: 600px) {
+      .accion {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        width: auto;
+      }
     }
     .accion:empty {
       display: none;

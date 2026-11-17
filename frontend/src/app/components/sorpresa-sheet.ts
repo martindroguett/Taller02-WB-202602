@@ -2,6 +2,7 @@ import {
   Component,
   TemplateRef,
   computed,
+  DestroyRef,
   effect,
   inject,
   input,
@@ -51,7 +52,7 @@ import { PieceArt } from './piece-art';
             >
               {{ cargando() ? 'Buscando…' : 'Otra' }}
             </button>
-            <button type="button" vt-button variant="accent" cdkFocusInitial (click)="ver.emit()">
+            <button type="button" vt-button variant="accent" cdkFocusInitial (click)="abrirPieza()">
               Ver pieza
             </button>
           </div>
@@ -148,9 +149,13 @@ export class SorpresaSheet {
   });
   private readonly plantilla = viewChild.required<TemplateRef<unknown>>('plantilla');
   private readonly dialogo = inject(MatDialog);
+  private readonly destroy = inject(DestroyRef);
   private ref?: MatDialogRef<unknown>;
+  private yendoAVer = false;
 
   constructor() {
+    // Si la página se destruye (por ejemplo al navegar), la hoja no debe quedar abierta y sin estilos.
+    this.destroy.onDestroy(() => this.ref?.close());
     effect(() => {
       if (this.pieza()) untracked(() => this.abrir());
       else this.ref?.close();
@@ -170,7 +175,22 @@ export class SorpresaSheet {
     ref.afterClosed().subscribe(() => {
       this.ref = undefined;
       // Cerrada con Escape o tocando fuera: se le avisa a quien la abrió.
-      if (this.pieza()) this.cerrada.emit();
+      if (this.pieza() && !this.yendoAVer) this.cerrada.emit();
     });
+  }
+
+  /** Cierra la hoja y recién cuando terminó de cerrarse avisa, para que la página no cambie con la hoja aún abierta. */
+  protected abrirPieza(): void {
+    const ref = this.ref;
+    if (!ref) {
+      this.ver.emit();
+      return;
+    }
+    this.yendoAVer = true;
+    ref.afterClosed().subscribe(() => {
+      this.yendoAVer = false;
+      this.ver.emit();
+    });
+    ref.close();
   }
 }
