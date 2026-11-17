@@ -18,7 +18,6 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
 
-  // Esto puede cambiar la sesión
   private readonly tokenActual = signal<string | null>(localStorage.getItem(CLAVE_TOKEN));
   private readonly usuarioActual = signal<UsuarioPrivadoApi | null>(null);
 

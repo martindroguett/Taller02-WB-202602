@@ -22,6 +22,8 @@ El servidor de desarrollo redirige `/api` a `http://localhost:8000`.
   - `usuarios-publicos.service.ts`: perfiles y seguir.
   - `interacciones.service.ts`: me gusta, guardados, Feed y Favoritos.
   - `comentarios.service.ts`: comentarios.
+  - `dispositivo.service.ts`: cámara (QR y códigos de barras), GPS y acelerómetro mediante Capacitor.
+  - `sacudida.ts`: detecta cuándo se agita el celular a partir del acelerómetro.
 - `guards/`: `authGuard` protege las rutas privadas e `invitadoGuard` evita volver al ingreso con sesión.
 - `interceptors/`: `authInterceptor` agrega el JWT a cada petición a la API y cierra la sesión si responde 401.
 - `models/`: tipos de datos.

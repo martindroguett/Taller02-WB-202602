@@ -27,7 +27,7 @@ class Pieza(Base):
     imagen_datos: Mapped[bytes | None] = mapped_column(LargeBinary, deferred=True)
     imagen_tipo: Mapped[str | None] = mapped_column(String(20))
 
-    # Datos que llegan desde el celular (Taller 3): el código de barras o QR escaneado
+    # Datos que llegan desde el celular: el código de barras o QR escaneado
     # y las coordenadas del lugar donde se consiguió la pieza.
     codigo: Mapped[str | None] = mapped_column(String(128), index=True)
     latitud: Mapped[float | None] = mapped_column(Float)

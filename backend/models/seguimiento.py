@@ -11,7 +11,7 @@ class Seguimiento(Base):
     __tablename__ = "seguimientos"
     __table_args__ = (CheckConstraint("seguidor_id <> seguido_id", name="no_seguirse"),)
 
-    #las dos claves foráneas forman juntas la clave primaria: no se puede seguir dos veces a alguien.
+    # Las dos claves foráneas forman juntas la clave primaria: no se puede seguir dos veces a alguien.
     seguidor_id: Mapped[int] = mapped_column(
         ForeignKey("usuarios.id", ondelete="CASCADE"), primary_key=True
     )

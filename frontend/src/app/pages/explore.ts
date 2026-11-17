@@ -570,7 +570,7 @@ export class ExplorePage {
   protected readonly error = signal(false);
   protected desplazamiento = 0;
 
-  // ───── Funciones del celular (Taller 3) ─────
+  // Funciones del celular
   protected readonly dispositivo = inject(DispositivoService);
   private readonly toast = inject(ToastService);
   /** Código de barras escaneado: filtra las piezas con ese mismo código. */

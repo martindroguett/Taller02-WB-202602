@@ -10,6 +10,8 @@ Aplicación web y Android (Capacitor) para organizar y mostrar colecciones (cart
 | Base de datos | PostgreSQL con SQLAlchemy y Alembic |
 | Autenticación | JWT, contraseñas con hash bcrypt |
 
+**Web:** https://taller02-wb-202602-production.up.railway.app · **APK Android:** pestaña [Releases](../../releases/latest) del repositorio.
+
 ## Integrantes
 
 - Gael Ortega
@@ -77,7 +79,7 @@ La misma aplicación Angular se empaqueta como app Android con [Capacitor](https
 
 | Capacidad | Plugin | Dónde se usa |
 | --- | --- | --- |
-| Cámara + QR / código de barras | `@capacitor-mlkit/barcode-scanning` | **Explorar › Escanear**: un QR de Vitrina abre la pieza o el perfil; un código de barras (EAN/UPC) muestra quién tiene ese producto, o permite agregarlo con el código ya puesto. **Agregar pieza › Escanear** guarda el código en la pieza. Cada pieza tiene **Mostrar QR** para compartirla. |
+| Cámara + QR / código de barras | `@capacitor-mlkit/barcode-scanning` | **Explorar › Escanear** (solo en la app, porque el navegador no tiene lector): un QR de Vitrina abre la pieza o el perfil; un código de barras (EAN/UPC) muestra quién tiene ese producto, o permite agregarlo con el código ya puesto. **Agregar pieza › Escanear** guarda el código en la pieza. Cada pieza tiene **Mostrar QR** para compartirla. |
 | Ubicación (GPS) | `@capacitor/geolocation` | **Agregar pieza › Usar mi ubicación actual** guarda dónde se consiguió. **Explorar › Cerca de mí** lista las piezas conseguidas cerca, de la más cercana a la más lejana, con la distancia en cada tarjeta y un radio a elegir (2, 10, 50 o 200 km). Si el GPS tarda (por ejemplo bajo techo) usa la ubicación aproximada de la red. |
 | Acelerómetro | `@capacitor/motion` | En **Explorar**, sacudir el celular (basta un movimiento suave de muñeca) saca una pieza sorpresa en una hoja «Te tocó…»: se puede abrir o volver a sacudir para otra. No tiene botón: la app avisa una vez por sesión que hay que agitar. La sensibilidad se ajusta en `frontend/src/app/services/sacudida.ts`. |
 
@@ -93,7 +95,11 @@ Dentro de la app, Angular corre en `https://localhost`, así que la ruta relativ
 CORS_ORIGENES=["http://localhost:4200","https://localhost","capacitor://localhost"]
 ```
 
-En Railway hay que agregar estos orígenes a la variable `CORS_ORIGENES` del servicio de la API y volver a desplegar, para que se aplique la migración `0007`.
+En Railway hay que agregar estos orígenes a la variable `CORS_ORIGENES` del servicio de la API.
+
+### Instalar el APK
+
+El APK debug de la última versión está en la pestaña [Releases](../../releases/latest) del repositorio (archivo `vitrina-debug.apk`). Se descarga desde el celular, se abre y se permite instalar apps de origen desconocido. Esa app usa la API desplegada en Railway.
 
 ### Construir y ejecutar
 
@@ -122,7 +128,7 @@ npm run android:local    # build "local" + adb reverse del puerto 8000 + instala
 
 Esto deja el proyecto Android apuntando al backend local; para volver a producción se corre `npm run build:movil`. El APK de GitHub Actions y el build de producción no cambian.
 
-Para instalarlo en el celular, se copia el APK y se abre (hay que permitir apps de origen desconocido), o con `adb install -r app-debug.apk`.
+También se puede instalar con `adb install -r app-debug.apk`.
 
 El ícono y la pantalla de inicio salen de `frontend/resources/`. Para regenerarlos: `npm run assets:movil`.
 

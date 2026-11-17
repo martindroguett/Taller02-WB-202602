@@ -35,7 +35,7 @@ const AJUSTES = 'Actívalo en Ajustes › Apps › Vitrina › Permisos.';
 export class DispositivoService {
   readonly nativa = Capacitor.isNativePlatform();
 
-  // ───────────── Cámara: QR y códigos de barras ─────────────
+  // Cámara: QR y códigos de barras
 
   /** Abre la cámara y devuelve el texto del primer QR o código de barras que lea. */
   async escanear(alPreparar?: () => void): Promise<string> {
@@ -121,7 +121,7 @@ export class DispositivoService {
     }
   }
 
-  // ───────────── Ubicación (GPS) ─────────────
+  // Ubicación (GPS)
 
   /** Nombre de la ciudad o comuna de unas coordenadas (OpenStreetMap). Si falla, `null`. */
   async ciudad(latitud: number, longitud: number): Promise<string | null> {
@@ -203,7 +203,7 @@ export class DispositivoService {
     }
   }
 
-  // ───────────── Acelerómetro: agitar el celular ─────────────
+  // Acelerómetro: agitar el celular
 
   /**
    * Llama a `alAgitar` cada vez que se sacude el celular, con una pausa entre sacudidas.
