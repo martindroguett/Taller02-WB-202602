@@ -1,5 +1,6 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './interceptors/auth.interceptor';
+import { imagenesInterceptor } from './interceptors/imagenes.interceptor';
 import {
   ApplicationConfig,
   inject,
@@ -25,7 +26,7 @@ export const appConfig: ApplicationConfig = {
       withPreloading(PreloadAllModules),
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
     ),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, imagenesInterceptor])),
     provideAppInitializer(() => inject(AuthService).recuperarSesion()),
   ],
 };
